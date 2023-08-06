@@ -5,6 +5,9 @@ import { getList as getListApi, setList as setListApi } from "./api";
 import TrashCanCursor from "./assets/TrashCanCursor24fat.png";
 import InclusiveDiagram from "./assets/InclusiveDiagramFat.png";
 import ExclusiveDiagram from "./assets/ExclusiveDiagramFat.png";
+import CompletedCheckMark from "./assets/CompletedCheckMark.png";
+import UncompletedCheckMark from "./assets/UncompletedCheckMark.png";
+import TrashCanIcon from "./assets/TrashCanIcon.png";
 
 export interface ListItem {
   id: string;
@@ -24,6 +27,7 @@ export default function App() {
   const [list, setList] = useState<{ [itemId: string]: ListItem }>({});
   const [tagsList, setTagsList] = useState<{ [tag: string]: boolean }>({});
   const [isFilteringInclusive, setIsFilteringInclusive] = useState(true);
+  const [isShowCompleted, setIsShowCompleted] = useState(false);
   const [focusedListItemId, setFocusedListItemId] = useState<string>("0");
   const [newTag, setNewTag] = useState("");
 
@@ -172,11 +176,11 @@ export default function App() {
     tempTagsList: {
       [tag: string]: boolean;
     },
-    fullList: { [itemId: string]: ListItem },
-    isFilteringInclusiveLocal: boolean
+    listParam: { [itemId: string]: ListItem },
+    isFilteringInclusiveParam: boolean
   ): Promise<{ [itemId: string]: ListItem }> => {
     if (!Object.values(tempTagsList).some((tagHighlight) => tagHighlight)) {
-      return fullList;
+      return listParam;
     }
 
     let filteredList: { [itemId: string]: ListItem } = {};
@@ -184,22 +188,22 @@ export default function App() {
       (tag) => tempTagsList[tag]
     );
 
-    if (isFilteringInclusiveLocal) {
+    if (isFilteringInclusiveParam) {
       activeTags.forEach((tag) => {
-        Object.keys(fullList).forEach((listItemId) => {
+        Object.keys(listParam).forEach((listItemId) => {
           if (
-            fullList[listItemId].tags.includes(tag) &&
+            listParam[listItemId].tags.includes(tag) &&
             !Object.keys(filteredList).includes(listItemId)
           ) {
-            filteredList[listItemId] = fullList[listItemId];
+            filteredList[listItemId] = listParam[listItemId];
           }
         });
       });
     } else {
-      Object.assign(filteredList, fullList);
+      Object.assign(filteredList, listParam);
       activeTags.forEach((tag) => {
-        Object.keys(fullList).forEach((listItemId) => {
-          if (!fullList[listItemId].tags.includes(tag)) {
+        Object.keys(listParam).forEach((listItemId) => {
+          if (!listParam[listItemId].tags.includes(tag)) {
             delete filteredList[listItemId];
           }
         });
@@ -212,7 +216,34 @@ export default function App() {
   return (
     <MainPage>
       <TagSidePanel>
-        <FilteringType>
+        <TagElement
+          style={{
+            gridTemplateColumns: "80% 20%",
+          }}
+        >
+          <div>
+            Filters Used:{" "}
+            {Object.keys(tagsList).filter((tag) => tagsList[tag]).length}
+          </div>
+          <FilteringTypeElement
+            style={{
+              width: "4rem",
+              backgroundColor: isShowCompleted ? "lightgray" : "transparent",
+              borderLeft: "lightgray solid 2px",
+              borderRadius: "0rem 0.4rem  0rem 0rem",
+            }}
+            onClick={() => {
+              setIsShowCompleted(!isShowCompleted);
+            }}
+          >
+            <img src={CompletedCheckMark} style={{ height: "2rem" }} />
+          </FilteringTypeElement>
+        </TagElement>
+        <TagElement
+          style={{
+            gridTemplateColumns: "50% 50%",
+          }}
+        >
           <FilteringTypeElement
             style={{
               backgroundColor: isFilteringInclusive
@@ -243,38 +274,70 @@ export default function App() {
           >
             <img src={InclusiveDiagram} style={{ height: "2rem" }} />
           </FilteringTypeElement>
-        </FilteringType>
-        {Object.keys(tagsList).map((tag) => (
-          <TagElement
-            style={{
-              backgroundColor: tagsList[tag] ? "lightgrey" : "transparent",
-            }}
-            onClick={() => highlightTag(tag)}
-          >
-            {tag}
-          </TagElement>
-        ))}
+        </TagElement>
+        {Object.keys(tagsList)
+          .filter((tag) => tag !== "Completed")
+          .map((tag) => (
+            <TagElement
+              key={tag}
+              style={{
+                backgroundColor: tagsList[tag] ? "lightgrey" : "transparent",
+              }}
+              onClick={() => highlightTag(tag)}
+            >
+              {tag}
+            </TagElement>
+          ))}
       </TagSidePanel>
       <ListPanel onClick={createNewListItem}>
         {Object.keys(list).length !== 0 &&
-          Object.keys(list).map((id) => (
-            <ListElement key={id} onClick={(e) => e.stopPropagation()}>
-              <ListElementInputField
-                value={list[id].summary}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                  setListItemSummary(id, e.target.value);
-                }}
-                onFocus={() => handleItemFocus(list[id])}
-              />
-            </ListElement>
-          ))}
+          Object.keys(list)
+            .filter(
+              (id) =>
+                !list[id].tags.includes("Completed") ||
+                (list[id].tags.includes("Completed") && isShowCompleted)
+            )
+            .map((id) => (
+              <ListElement key={id} onClick={(e) => e.stopPropagation()}>
+                <img
+                  src={
+                    list[id].tags.includes("Completed")
+                      ? CompletedCheckMark
+                      : UncompletedCheckMark
+                  }
+                  style={{ height: "1.2rem", marginRight: "1rem" }}
+                  onClick={() => {
+                    if (list[id].tags.includes("Completed")) {
+                      removeTag(id, "Completed");
+                    } else {
+                      addTag(id, "Completed");
+                    }
+                  }}
+                />
+                <ListElementInputField
+                  value={list[id].summary}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                    setListItemSummary(id, e.target.value);
+                  }}
+                  onFocus={() => handleItemFocus(list[id])}
+                />
+              </ListElement>
+            ))}
       </ListPanel>
       {focusedListItemId !== "0" && list[focusedListItemId] && (
         <ItemDetailsPanel>
-          <DetailsSummary>{list[focusedListItemId].summary}</DetailsSummary>
+          <DetailsSummary>
+            <div>{list[focusedListItemId].summary}</div>
+            <img
+              src={TrashCanIcon}
+              style={{ height: "0.8em", display: "block", cursor: "pointer" }}
+              onClick={() => removeElement(focusedListItemId)}
+            />
+          </DetailsSummary>
           <DetailsTags>
             {list[focusedListItemId].tags.map((t) => (
               <TagChip
+                key={t}
                 style={{ width: t.length + "ch" }}
                 onClick={() => removeTag(focusedListItemId, t)}
               >
@@ -363,6 +426,7 @@ const ListElement = styled.div`
   background-color: transparent;
   padding: 0.5rem;
   display: grid;
+  grid-template-columns: auto auto;
   justify-items: start;
   align-items: center;
   &:first-child {
@@ -379,7 +443,7 @@ const ListElementInputField = styled.input`
   border-width: 0px 0px 1px 0px;
   color: inherit;
   outline: none;
-  width: 50rem;
+  width: 47rem;
 `;
 
 const ItemDetailsPanel = styled.div`
@@ -396,6 +460,10 @@ const DetailsSummary = styled.div`
   font-size: 22pt;
   padding: 1rem;
   min-height: 2rem;
+  display: grid;
+  width: 35rem;
+  grid-template-columns: 90% 10%;
+  justify-content: start;
 `;
 
 const DetailsTags = styled.div`
@@ -429,21 +497,6 @@ const TagChip = styled.div`
   padding: 0.1rem;
 `;
 
-const FilteringType = styled.div`
-  margin: 0rem;
-  padding: 0rem;
-  border-width: 2px;
-  border-style: solid;
-  border-color: lightgrey;
-  margin-top: 1rem;
-  margin-bottom: 0.1rem;
-  display: grid;
-  grid-template-columns: 50% 50%;
-  width: 20rem;
-  column-gap: 0rem;
-  border-radius: 0.5rem 0.5rem 0rem 0rem;
-`;
-
 const FilteringTypeElement = styled.div`
   background-color: lightgrey;
   border: none;
@@ -453,11 +506,5 @@ const FilteringTypeElement = styled.div`
   justify-items: center;
   width: 10rem;
   margin: 0rem;
-  &:first-child {
-    border-radius: 0.5rem 0rem 0rem 0rem;
-  }
-  &:last-child {
-    border-radius: 0rem 0.5rem 0rem 0rem;
-  }
   cursor: pointer;
 `;
