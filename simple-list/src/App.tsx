@@ -30,6 +30,7 @@ export default function App() {
   const [isShowCompleted, setIsShowCompleted] = useState(false);
   const [focusedListItemId, setFocusedListItemId] = useState<string>("0");
   const [newTag, setNewTag] = useState("");
+  const [isSummaryFocused, setIsSummaryFocused] = useState(false);
 
   useEffect(() => {
     if (Object.keys(list).length > 0 && list[focusedListItemId] === undefined) {
@@ -74,17 +75,29 @@ export default function App() {
     setTagsList(tempTagsList);
   };
 
-  const setListItemSummary = async (id: string, summary: string) => {
-    let tempList: { [itemId: string]: ListItem } = await getListApi();
+  const setListItemSummary = (id: string, summary: string) => {
+    let tempList: { [itemId: string]: ListItem } = {};
+    Object.assign(tempList, list);
 
     tempList[id].summary = summary;
 
-    setList(await getFilteredList(tagsList, tempList, isFilteringInclusive));
+    setList(tempList);
     setListApi(tempList);
   };
 
-  const createNewListItem = async () => {
-    let tempList: { [itemId: string]: ListItem } = await getListApi();
+  const setListItemDescription = (id: string, description: string) => {
+    let tempList: { [itemId: string]: ListItem } = {};
+    Object.assign(tempList, list);
+
+    tempList[id].description = description;
+
+    setList(tempList);
+    setListApi(tempList);
+  };
+
+  const createNewListItem = () => {
+    let tempList: { [itemId: string]: ListItem } = {};
+    Object.assign(tempList, list);
 
     const lastElementId =
       Object.keys(tempList)[Object.keys(tempList).length - 1];
@@ -109,16 +122,17 @@ export default function App() {
       };
     }
 
-    setList(await getFilteredList(tagsList, tempList, isFilteringInclusive));
+    setList(tempList);
     setListApi(tempList);
   };
 
-  const removeElement = async (id: string) => {
-    let tempList: { [itemId: string]: ListItem } = await getListApi();
+  const removeElement = (id: string) => {
+    let tempList: { [itemId: string]: ListItem } = {};
+    Object.assign(tempList, list);
 
     delete tempList[id];
 
-    setList(await getFilteredList(tagsList, tempList, isFilteringInclusive));
+    setList(tempList);
     setListApi(tempList);
   };
 
@@ -129,8 +143,9 @@ export default function App() {
     setFocusedListItemId(listItem.id);
   };
 
-  const addTag = async (id: string, tag: string) => {
-    let tempList: { [itemId: string]: ListItem } = await getListApi();
+  const addTag = (id: string, tag: string) => {
+    let tempList: { [itemId: string]: ListItem } = {};
+    Object.assign(tempList, list);
 
     if (tempList[id].tags.includes(tag)) {
       return;
@@ -138,47 +153,41 @@ export default function App() {
       tempList[id].tags.push(tag);
     }
 
-    setList(await getFilteredList(tagsList, tempList, isFilteringInclusive));
+    setList(tempList);
     setListApi(tempList);
     addNewTagToList(tag);
   };
 
-  const removeTag = async (id: string, tag: string) => {
-    let tempList: { [itemId: string]: ListItem } = await getListApi();
+  const removeTag = (id: string, tag: string) => {
+    let tempList: { [itemId: string]: ListItem } = {};
+    Object.assign(tempList, list);
 
     if (tempList[id].tags.includes(tag)) {
       tempList[id].tags.splice(tempList[id].tags.indexOf(tag), 1);
     }
 
-    setList(await getFilteredList(tagsList, tempList, isFilteringInclusive));
+    setList(tempList);
     setListApi(tempList);
     if (!Object.keys(generateTagsList(tempList)).includes(tag))
       removeTagFromList(tag);
   };
 
-  const highlightTag = async (tag: string) => {
+  const highlightTag = (tag: string) => {
     let tempTagsList: { [tag: string]: boolean } = {};
     Object.assign(tempTagsList, tagsList);
 
     tempTagsList[tag] = !tempTagsList[tag];
 
     setTagsList(tempTagsList);
-    setList(
-      await getFilteredList(
-        tempTagsList,
-        await getListApi(),
-        isFilteringInclusive
-      )
-    );
   };
 
-  const getFilteredList = async (
+  const getFilteredList = (
     tempTagsList: {
       [tag: string]: boolean;
     },
     listParam: { [itemId: string]: ListItem },
     isFilteringInclusiveParam: boolean
-  ): Promise<{ [itemId: string]: ListItem }> => {
+  ): { [itemId: string]: ListItem } => {
     if (!Object.values(tempTagsList).some((tagHighlight) => tagHighlight)) {
       return listParam;
     }
@@ -250,11 +259,8 @@ export default function App() {
                 ? "transparent"
                 : "lightgrey",
             }}
-            onClick={async () => {
+            onClick={() => {
               setIsFilteringInclusive(false);
-              setList(
-                await getFilteredList(tagsList, await getListApi(), false)
-              );
             }}
           >
             <img src={ExclusiveDiagram} style={{ height: "2rem" }} />
@@ -265,11 +271,8 @@ export default function App() {
                 ? "lightgrey"
                 : "transparent",
             }}
-            onClick={async () => {
+            onClick={() => {
               setIsFilteringInclusive(true);
-              setList(
-                await getFilteredList(tagsList, await getListApi(), true)
-              );
             }}
           >
             <img src={InclusiveDiagram} style={{ height: "2rem" }} />
@@ -290,8 +293,9 @@ export default function App() {
           ))}
       </TagSidePanel>
       <ListPanel onClick={createNewListItem}>
-        {Object.keys(list).length !== 0 &&
-          Object.keys(list)
+        {Object.keys(getFilteredList(tagsList, list, isFilteringInclusive))
+          .length !== 0 &&
+          Object.keys(getFilteredList(tagsList, list, isFilteringInclusive))
             .filter(
               (id) =>
                 !list[id].tags.includes("Completed") ||
@@ -327,21 +331,56 @@ export default function App() {
       {focusedListItemId !== "0" && list[focusedListItemId] && (
         <ItemDetailsPanel>
           <DetailsSummary>
-            <div>{list[focusedListItemId].summary}</div>
             <img
-              src={TrashCanIcon}
-              style={{ height: "0.8em", display: "block", cursor: "pointer" }}
-              onClick={() => removeElement(focusedListItemId)}
+              src={
+                list[focusedListItemId].tags.includes("Completed")
+                  ? CompletedCheckMark
+                  : UncompletedCheckMark
+              }
+              style={{
+                height: "1em",
+                display: "block",
+                cursor: "pointer",
+                justifySelf: "start",
+                alignSelf: "start",
+              }}
+              onClick={() => {
+                if (list[focusedListItemId].tags.includes("Completed")) {
+                  removeTag(focusedListItemId, "Completed");
+                } else {
+                  addTag(focusedListItemId, "Completed");
+                }
+              }}
             />
+            {!isSummaryFocused && (
+              <div
+                onClick={() => setIsSummaryFocused(true)}
+                style={{ justifySelf: "start" }}
+              >
+                {list[focusedListItemId].summary}
+              </div>
+            )}
+            {isSummaryFocused && (
+              <DetailsSummaryInput
+                value={list[focusedListItemId].summary}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                  setListItemSummary(focusedListItemId, e.target.value);
+                }}
+                onBlur={() => setIsSummaryFocused(false)}
+                autoFocus={true}
+              />
+            )}
           </DetailsSummary>
           <DetailsTags>
-            {list[focusedListItemId].tags.map((t) => (
+            <span style={{ padding: "0.25rem 0.25rem 0.25rem 0rem" }}>
+              Tags:
+            </span>
+            {list[focusedListItemId].tags.map((tag) => (
               <TagChip
-                key={t}
-                style={{ width: t.length + "ch" }}
-                onClick={() => removeTag(focusedListItemId, t)}
+                key={tag}
+                onClick={() => removeTag(focusedListItemId, tag)}
               >
-                {t}
+                {tag}
               </TagChip>
             ))}
             {list[focusedListItemId].summary.length > 0 && (
@@ -362,11 +401,71 @@ export default function App() {
               />
             )}
           </DetailsTags>
+          <div
+            style={{
+              width: "33rem",
+              textAlign: "start",
+              color: "black",
+              fontSize: "1.2rem",
+            }}
+          >
+            Description:
+          </div>
+          <DescriptionArea
+            value={list[focusedListItemId].description}
+            onChange={(e) => {
+              setListItemDescription(focusedListItemId, e.target.value);
+            }}
+          />
+          <TagChip
+            onClick={() => removeElement(focusedListItemId)}
+            style={{
+              cursor: "pointer",
+              width: "5rem",
+              display: "grid",
+              justifyContent: "center",
+              alignContent: "center",
+            }}
+          >
+            <img
+              src={TrashCanIcon}
+              style={{ height: "1rem", display: "block", cursor: "pointer" }}
+            />
+          </TagChip>
         </ItemDetailsPanel>
       )}
     </MainPage>
   );
 }
+
+const DescriptionArea = styled.textarea`
+  width: 33rem;
+  height: 35rem;
+  background-color: lightgrey;
+  color: black;
+  border-width: 0px;
+  display: block;
+  resize: vertical;
+  border-radius: 0.5rem;
+  outline: none;
+  box-sizing: border-box;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  margin-top: 0.5rem;
+`;
+
+const DetailsSummaryInput = styled.input`
+  background-color: transparent;
+  font: inherit;
+  outline: none;
+  border-width: 0px;
+  color: inherit;
+  justify-self: start;
+  &:focus {
+    border-bottom: solid black 1px;
+  }
+  width: 31rem;
+`;
 
 const MainPage = styled.div`
   height: 100vh;
@@ -461,14 +560,21 @@ const DetailsSummary = styled.div`
   padding: 1rem;
   min-height: 2rem;
   display: grid;
-  width: 35rem;
-  grid-template-columns: 90% 10%;
-  justify-content: start;
+  width: 33rem;
+  grid-template-columns: 7% 93%;
+  justify-items: center;
+  align-items: center;
 `;
 
 const DetailsTags = styled.div`
+  color: black;
+  text-align: start;
   padding: 1rem;
   padding-top: 0rem;
+  width: 33rem;
+  font-size: 1.2rem;
+  display: flex;
+  flex-wrap: wrap;
 `;
 
 const AddTagChip = styled.input`
@@ -479,22 +585,25 @@ const AddTagChip = styled.input`
   text-align: center;
   margin-right: 0.5rem;
   margin-bottom: 0.5rem;
-  height: 1.2rem;
-  display: inline-block;
-  vertical-align: baseline;
+  height: 1.5rem;
+  padding: 0.25rem;
 `;
 
 const TagChip = styled.div`
-  display: inline-block;
-  height: 1.2rem;
+  height: 1.5rem;
   background-color: lightgrey;
   color: #000000be;
   border-radius: 0.2rem;
-  text-align: center;
   margin-right: 0.5rem;
   margin-bottom: 0.5rem;
   cursor: url(${TrashCanCursor}), crosshair;
-  padding: 0.1rem;
+  padding: 0.25rem;
+  font-size: 1rem;
+  text-align: center;
+  text-justify: center;
+  &:nth-child(2) {
+    margin-left: 0.5rem;
+  }
 `;
 
 const FilteringTypeElement = styled.div`
