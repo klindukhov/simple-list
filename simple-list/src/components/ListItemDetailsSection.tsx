@@ -184,25 +184,29 @@ export default function ListItemDetailSection(
             )}
           </ListItemDetailsFieldElement>
         ))}
-      <ListItemDetailsFieldElement style={{ border: "none" }}>
-        <ListItemDetailsFieldInput
-          placeholder='Add new field'
-          onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
-          onBlur={() => {
-            if (newCustomFieldInput !== "") {
-              props.addTagToListItem(
-                props.focusedListItemId,
-                "$" + newCustomFieldInput + "="
-              );
-            }
-            setNewCustomFieldInput("");
-          }}
-          value={newCustomFieldInput}
-          onChange={(e) => setNewCustomFieldInput(e.target.value)}
-        ></ListItemDetailsFieldInput>
-      </ListItemDetailsFieldElement>
+      {areFieldsBeingEdited && (
+        <ListItemDetailsFieldElement style={{ border: "none" }}>
+          <ListItemDetailsFieldInput
+            placeholder='Add new field'
+            onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
+            onBlur={() => {
+              if (newCustomFieldInput !== "") {
+                props.addTagToListItem(
+                  props.focusedListItemId,
+                  "$" + newCustomFieldInput + "="
+                );
+              }
+              setNewCustomFieldInput("");
+            }}
+            value={newCustomFieldInput}
+            onChange={(e) => setNewCustomFieldInput(e.target.value)}
+          ></ListItemDetailsFieldInput>
+        </ListItemDetailsFieldElement>
+      )}
       <ListItemDetailsTags>
-        <span style={{ padding: "0.25rem 0.25rem 0.25rem 0rem" }}>Tags:</span>
+        <TagChip style={{ backgroundColor: "transparent", padding: "0px" }}>
+          Tags:
+        </TagChip>
         {props.list[props.focusedListItemId].tags
           .filter((e) => e[0] != "$")
           .map((tag) => (
@@ -312,10 +316,9 @@ const ListItemDetailsSummary = styled.div`
 
 const ListItemDetailsTags = styled.div`
   align-items: center;
-  text-align: start;
   padding: 1rem;
   width: 33rem;
-  font-size: 1.2rem;
+  font-size: 1rem;
   display: flex;
   flex-wrap: wrap;
 `;
@@ -334,12 +337,13 @@ const AddTagChip = styled.input`
 
 const TagChip = styled.div`
   height: 2rem;
-  padding: 0 0.4rem 0 0.4rem;
+  padding: 0.1rem 0.4rem 0 0.4rem;
   background-color: ${(props) => props.theme.background};
   border-radius: 0.2rem;
   margin-right: 0.5rem;
   margin-bottom: 0.5rem;
   font-size: 1rem;
+  text-align: center;
   display: grid;
   align-items: center;
   &:nth-child(2) {

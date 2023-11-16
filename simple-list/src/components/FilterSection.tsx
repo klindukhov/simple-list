@@ -110,81 +110,61 @@ export default function FilterSection(props: FilterSectionProps) {
     link.click();
   };
 
+  const getIsTagHighlighted = (tag: string) => {
+    return (tag[0] === "$" &&
+      Object.keys(props.tagsList)
+        .filter((e) => e.includes(tag))
+        .some((e) => props.tagsList[e])) ||
+      props.tagsList[tag]
+      ? true
+      : false;
+  };
+
   return (
     <>
-      <input
+      <HiddenInput
         type='file'
-        style={{ position: "absolute", zIndex: "-200", visibility: "hidden" }}
         id='importFileInput'
         onChange={(e) => handleFileUpload(e)}
         accept='.json'
-      ></input>
+      />
       <FilteringSidePanel>
-        <span>
-          <span style={{ height: "0px" }}></span>
-          <FilteringElement
-            style={{
-              gridTemplateColumns: "auto auto auto",
-              backgroundColor: "transparent",
-            }}
+        <ExportImportPanel>
+          <SquareButton
+            onClick={() =>
+              props.setTheme(props.theme === "dark" ? "light" : "dark")
+            }
           >
-            <SortDirectionButton
-              onClick={() =>
-                props.setTheme(props.theme === "dark" ? "light" : "dark")
-              }
-            >
-              <img
-                src={props.theme === "dark" ? SunWhite : SunBlack}
-                style={{
-                  height: "1rem",
-                  display: "grid",
-                  alignSelf: "center",
-                  cursor: "pointer",
-                }}
-              />
-            </SortDirectionButton>
-            <ImportExportButton onClick={exportList}>
-              {"Export  "}
-              <img
-                src={props.theme === "dark" ? ExportWhite : ExportBlack}
-                style={{ height: "1rem" }}
-              />
-            </ImportExportButton>
-            <ImportExportButton
-              onClick={() =>
-                document.getElementById("importFileInput")?.click()
-              }
-            >
-              Import
-              <img
-                src={props.theme === "dark" ? ImportWhite : ImportBlack}
-                style={{ height: "1rem" }}
-              />
-            </ImportExportButton>
-          </FilteringElement>
-        </span>
-        <span>
-          <FilteringElement
-            style={{
-              gridTemplateColumns: "15% 85%",
-              backgroundColor: "transparent",
-            }}
+            <SquareButtonImage
+              src={props.theme === "dark" ? SunWhite : SunBlack}
+            />
+          </SquareButton>
+          <ImportExportButton onClick={exportList}>
+            {"Export  "}
+            <SquareButtonImage
+              src={props.theme === "dark" ? ExportWhite : ExportBlack}
+            />
+          </ImportExportButton>
+          <ImportExportButton
+            onClick={() => document.getElementById("importFileInput")?.click()}
           >
-            <img
+            Import
+            <SquareButtonImage
+              src={props.theme === "dark" ? ImportWhite : ImportBlack}
+            />
+          </ImportExportButton>
+        </ExportImportPanel>
+        <span>
+          <FilteringPanelControls15_85>
+            <Img1_5rem
               src={props.theme === "dark" ? SearchIconWhite : SearchIconBlack}
-              style={{ height: "1.5rem" }}
             />
             <SearchBarInput
               onChange={(e) => props.setSearchBarValue(e.target.value)}
-            ></SearchBarInput>
-          </FilteringElement>
-          <FilteringElement
-            style={{
-              gridTemplateColumns: "25% 60% 15%",
-              backgroundColor: "transparent",
-            }}
-          >
-            <div>Sort by:</div>
+            />
+          </FilteringPanelControls15_85>
+          <FilteringPanelControls25_60_15>
+            Sort by:
             <SortBySelect
               onChange={(e) => handleSortBySelectChange(e.target.value)}
             >
@@ -199,8 +179,8 @@ export default function FilterSection(props: FilterSectionProps) {
               text={props.isSortAsc ? "Acsending" : "Descending"}
               style={{ left: "85%" }}
             >
-              <SortDirectionButton>
-                <img
+              <SquareButton>
+                <SquareButtonImage
                   src={
                     props.isSortAsc
                       ? props.theme === "dark"
@@ -211,123 +191,64 @@ export default function FilterSection(props: FilterSectionProps) {
                       : SortDesc
                   }
                   onClick={() => props.setIsSortAcs(!props.isSortAsc)}
-                  style={{
-                    height: "0.8rem",
-                    display: "grid",
-                    alignSelf: "center",
-                    cursor: "pointer",
-                  }}
                 />
-              </SortDirectionButton>
+              </SquareButton>
             </Tooltip>
-          </FilteringElement>
-          <FilteringElement
-            style={{
-              gridTemplateColumns: "80% 20%",
-              backgroundColor: "transparent",
-            }}
-          >
-            <div>
-              {"Filters Used: "}
-              {getNumberOfFiltersUsed()}
-            </div>
+          </FilteringPanelControls25_60_15>
+          <FilteringPanelControls80_20>
+            {"Filters Used: "}
+            {getNumberOfFiltersUsed()}
             <Tooltip
               text={
                 props.isShowingCompleted ? "Hide completed" : "Show completed"
               }
             >
-              <FilteringElementSectionShowingCompleted
-                style={
-                  props.isShowingCompleted
-                    ? {}
-                    : { backgroundColor: "transparent" }
-                }
+              <FilteringPanelControlsShowCompleted
+                isShowingCompleted={props.isShowingCompleted}
                 onClick={() =>
                   props.setIsShowingCompleted(!props.isShowingCompleted)
                 }
               >
-                <img
+                <Img2rem
                   src={
                     props.theme === "dark"
                       ? CheckedCheckmarkWhite
                       : CheckedCheckmarkBlack
                   }
-                  style={{ height: "2rem" }}
                 />
-              </FilteringElementSectionShowingCompleted>
+              </FilteringPanelControlsShowCompleted>
             </Tooltip>
-          </FilteringElement>
-          <FilteringElement
-            style={{
-              gridTemplateColumns: "50% 50%",
-              backgroundColor: "transparent",
-            }}
-          >
-            <FilteringElementSection
-              style={
-                props.isFilteringMatchAny
-                  ? { backgroundColor: "transparent" }
-                  : {}
-              }
+          </FilteringPanelControls80_20>
+          <FilteringPanelControls50_50>
+            <FilteringMatch
+              isFilteringMatchAny={props.isFilteringMatchAny}
               onClick={() => props.setIsFilteringMatchAny(false)}
             >
-              <span
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "auto auto",
-                  columnGap: "1rem",
-                  alignItems: "center",
-                }}
-              >
-                <div>{"Match all"}</div>
-                <img
-                  src={props.theme === "dark" ? MatchAllWhite : MatchAllBlack}
-                  style={{ height: "1.5rem" }}
-                />
-              </span>
-            </FilteringElementSection>
-            <FilteringElementSection
-              style={
-                !props.isFilteringMatchAny
-                  ? { backgroundColor: "transparent" }
-                  : {}
-              }
+              Match all
+              <Img1_5rem
+                src={props.theme === "dark" ? MatchAllWhite : MatchAllBlack}
+              />
+            </FilteringMatch>
+            <FilteringMatch
+              isFilteringMatchAny={props.isFilteringMatchAny}
               onClick={() => props.setIsFilteringMatchAny(true)}
             >
-              <span
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "auto auto",
-                  columnGap: "1rem",
-                  alignItems: "center",
-                }}
-              >
-                <div>{"Match any"}</div>
-                <img
-                  src={props.theme === "dark" ? MatchAnyWhite : MatchAnyBlack}
-                  style={{ height: "1.5rem" }}
-                />
-              </span>
-            </FilteringElementSection>
-          </FilteringElement>
+              Match any
+              <Img1_5rem
+                src={props.theme === "dark" ? MatchAnyWhite : MatchAnyBlack}
+              />
+            </FilteringMatch>
+          </FilteringPanelControls50_50>
         </span>
         <span>
           {getFiltersList().map((tag) => (
-            <FilteringElement
+            <FilteringPanelFilter
               key={tag}
-              style={
-                (tag[0] === "$" &&
-                  Object.keys(props.tagsList)
-                    .filter((e) => e.includes(tag))
-                    .some((e) => props.tagsList[e])) ||
-                props.tagsList[tag]
-                  ? { cursor: "pointer" }
-                  : { backgroundColor: "transparent", cursor: "pointer" }
-              }
+              isHighlighted={getIsTagHighlighted(tag)}
               onClick={() => highlightTag(tag)}
             >
               {tag[0] === "$" ? "Have " + tag.slice(1) : tag}
-            </FilteringElement>
+            </FilteringPanelFilter>
           ))}
         </span>
       </FilteringSidePanel>
@@ -335,18 +256,26 @@ export default function FilterSection(props: FilterSectionProps) {
   );
 }
 
-const FilteringElement = styled.div`
-  background-color: ${(props) => props.theme.background};
-  border-width: 2px;
+const HiddenInput = styled.input`
+  position: absolute;
+  z-index: -200;
+  visibility: hidden;
+`;
+
+const FilteringPanelElement = styled.div`
+  border-width: 0px 2px 2px 2px;
   border-style: solid;
   border-color: ${(props) => props.theme.background};
   height: 3rem;
+  width: 20rem;
   display: grid;
   align-items: center;
   justify-items: center;
-  width: 20rem;
-  margin: 0.1rem;
+`;
+
+const FilteringPanelGroupElement = styled(FilteringPanelElement)`
   &:first-child {
+    border-width: 2px 2px 2px 2px;
     border-radius: 0.5rem 0.5rem 0rem 0rem;
     margin-top: 1rem;
   }
@@ -358,6 +287,36 @@ const FilteringElement = styled.div`
       margin-top: 1rem;
     }
   }
+`;
+
+const FilteringPanelControls15_85 = styled(FilteringPanelGroupElement)`
+  grid-template-columns: 15% 85%;
+`;
+
+const FilteringPanelControls25_60_15 = styled(FilteringPanelGroupElement)`
+  grid-template-columns: 25% 60% 15%;
+`;
+
+const FilteringPanelControls80_20 = styled(FilteringPanelGroupElement)`
+  grid-template-columns: 80% 20%;
+`;
+
+const FilteringPanelControls50_50 = styled(FilteringPanelGroupElement)`
+  grid-template-columns: 50% 50%;
+`;
+
+const FilteringPanelFilter = styled(FilteringPanelGroupElement)<{
+  isHighlighted: boolean;
+}>`
+  background-color: ${(props) =>
+    props.isHighlighted ? props.theme.background : "transparent"};
+  cursor: pointer;
+`;
+
+const ExportImportPanel = styled(FilteringPanelElement)`
+  grid-template-columns: auto auto auto;
+  border-radius: 0rem 0rem 0.5rem 0.5rem;
+  margin-bottom: 2rem;
 `;
 
 const FilteringSidePanel = styled.div`
@@ -393,7 +352,7 @@ const SortBySelect = styled.select`
   padding: 0.5rem;
 `;
 
-const SortDirectionButton = styled.button`
+const SquareButton = styled.button`
   background-color: ${(props) => props.theme.background};
   color: inherit;
   outline: none;
@@ -402,12 +361,28 @@ const SortDirectionButton = styled.button`
   width: 2rem;
   height: 2rem;
   box-sizing: border-box;
-  padding: 0.5rem;
   margin: 0.5rem;
   justify-self: center;
+  display: grid;
 `;
 
-const ImportExportButton = styled(SortDirectionButton)`
+const SquareButtonImage = styled.img`
+  height: 1rem;
+  display: grid;
+  justify-self: center;
+  align-self: center;
+  cursor: pointer;
+`;
+
+const Img1_5rem = styled.img`
+  height: 1.5rem;
+`;
+
+const Img2rem = styled.img`
+  height: 2rem;
+`;
+
+const ImportExportButton = styled(SquareButton)`
   width: 6rem;
   display: grid;
   align-items: center;
@@ -420,16 +395,36 @@ const FilteringElementSection = styled.div`
   height: 3rem;
   display: grid;
   align-items: center;
-  justify-items: center;
+  justify-content: center;
   width: 10rem;
   margin: 0rem;
   cursor: pointer;
   background-color: ${(props) => props.theme.background};
+  grid-template-columns: auto auto;
+  column-gap: 1rem;
 `;
 
-const FilteringElementSectionShowingCompleted = styled(FilteringElementSection)`
+const FilteringMatch = styled(FilteringElementSection)<{
+  isFilteringMatchAny: boolean;
+}>`
+  &:first-child {
+    background-color: ${(props) =>
+      !props.isFilteringMatchAny ? props.theme.background : "transparent"};
+  }
+  &:last-child {
+    background-color: ${(props) =>
+      props.isFilteringMatchAny ? props.theme.background : "transparent"};
+  }
+`;
+
+const FilteringPanelControlsShowCompleted = styled(FilteringElementSection)<{
+  isShowingCompleted: boolean;
+}>`
+  display: grid;
+  grid-template-columns: auto;
+  justify-items: center;
   width: 4rem;
-  background-color: ${(props) => props.theme.background};
+  background-color: ${(props) =>
+    props.isShowingCompleted ? props.theme.background : "transparent"};
   border-left: ${(props) => props.theme.background} solid 2px;
-  border-radius: 0rem 0.4rem 0rem 0rem;
 `;
