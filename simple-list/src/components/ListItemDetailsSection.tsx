@@ -63,7 +63,7 @@ export default function ListItemDetailSection(
   return (
     <ListItemDetailsPanel>
       <ListItemDetailsSummary>
-        <img
+        <SummaryCheckmark
           src={
             props.list[props.focusedListItemId].tags.includes("Completed")
               ? props.theme === "dark"
@@ -73,13 +73,6 @@ export default function ListItemDetailSection(
               ? UncheckedCheckmarkWhite
               : UncheckedCheckmarkBlack
           }
-          style={{
-            height: "1em",
-            display: "block",
-            cursor: "pointer",
-            justifySelf: "start",
-            alignSelf: "start",
-          }}
           onClick={() => {
             if (
               props.list[props.focusedListItemId].tags.includes("Completed")
@@ -91,12 +84,9 @@ export default function ListItemDetailSection(
           }}
         />
         {!isSummaryFocused && (
-          <div
-            onClick={() => setIsSummaryFocused(true)}
-            style={{ justifySelf: "start" }}
-          >
+          <UnfocusedSummary onClick={() => setIsSummaryFocused(true)}>
             {props.list[props.focusedListItemId].summary}
-          </div>
+          </UnfocusedSummary>
         )}
         {isSummaryFocused && (
           <DetailsSummaryInput
@@ -110,13 +100,7 @@ export default function ListItemDetailSection(
           />
         )}
       </ListItemDetailsSummary>
-      <ListItemDetailsFieldElement
-        style={{
-          display: "grid",
-          gridTemplateColumns: "auto auto",
-          border: "none",
-        }}
-      >
+      <ListItemDetailsFieldElementCreated>
         Created:{" "}
         {new Date(
           +(
@@ -125,37 +109,22 @@ export default function ListItemDetailSection(
               ?.split("=")[1] ?? 0
           )
         ).toLocaleDateString("en-GB")}
-        <span
-          style={{ justifySelf: "end", cursor: "pointer" }}
+        <EditButton
           onClick={() => setAreFieldsBeingEdited(!areFieldsBeingEdited)}
         >
           {areFieldsBeingEdited ? "Save" : "Edit"}
-        </span>
-      </ListItemDetailsFieldElement>
-      {props.list[props.focusedListItemId].tags
-        .filter((e) => e[0] === "$" && !e.includes("$Created="))
-        .map((tag) => (
-          <ListItemDetailsFieldElement
-            key={tag.split("$")[1].split("=")[0]}
-            style={
-              !areFieldsBeingEdited
-                ? {
-                    border: "none",
-                  }
-                : { display: "grid", gridTemplateColumns: "auto auto" }
-            }
-          >
-            <span>
-              <span>{tag.split("$")[1].split("=")[0]}</span>
-              {": "}
+        </EditButton>
+      </ListItemDetailsFieldElementCreated>
+      <ListItemFiedls areFieldsBeingEdited={areFieldsBeingEdited}>
+        {props.list[props.focusedListItemId].tags
+          .filter((e) => e[0] === "$" && !e.includes("$Created="))
+          .map((tag) => (
+            <>
+              <div key={tag.split("$")[1].split("=")[0]}>
+                {tag.split("$")[1].split("=")[0] + ": "}
+              </div>
               <ListItemDetailsFieldInput
                 value={tag.split("$")[1].split("=")[1]}
-                style={{
-                  width:
-                    (tag.split("$")[1].split("=")[1]?.length + 1 < 2
-                      ? 2
-                      : tag.split("$")[1].split("=")[1]?.length + 1) + "ch",
-                }}
                 onChange={(e) =>
                   editTagInListItem(
                     props.focusedListItemId,
@@ -165,88 +134,73 @@ export default function ListItemDetailSection(
                 }
                 onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
                 placeholder='value'
-              ></ListItemDetailsFieldInput>
-            </span>
-            {areFieldsBeingEdited && (
-              <img
-                src={props.theme === "dark" ? TrashCanWhite : TrashCanBlack}
-                onClick={() =>
-                  props.removeTagFromListItem(props.focusedListItemId, tag)
-                }
-                style={{
-                  height: "1rem",
-                  display: "block",
-                  cursor: "pointer",
-                  justifySelf: "end",
-                  alignSelf: "center",
-                }}
               />
-            )}
-          </ListItemDetailsFieldElement>
-        ))}
-      {areFieldsBeingEdited && (
-        <ListItemDetailsFieldElement style={{ border: "none" }}>
-          <ListItemDetailsFieldInput
-            placeholder='Add new field'
-            onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
-            onBlur={() => {
-              if (newCustomFieldInput !== "") {
-                props.addTagToListItem(
-                  props.focusedListItemId,
-                  "$" + newCustomFieldInput + "="
-                );
-              }
-              setNewCustomFieldInput("");
-            }}
-            value={newCustomFieldInput}
-            onChange={(e) => setNewCustomFieldInput(e.target.value)}
-          ></ListItemDetailsFieldInput>
-        </ListItemDetailsFieldElement>
-      )}
-      <ListItemDetailsTags>
-        <TagChip style={{ backgroundColor: "transparent", padding: "0px" }}>
-          Tags:
-        </TagChip>
-        {props.list[props.focusedListItemId].tags
-          .filter((e) => e[0] != "$")
-          .map((tag) => (
-            <TagChip key={tag}>
-              <span>
-                {tag}
-                <span
+              {areFieldsBeingEdited && (
+                <DeleteImg
+                  src={props.theme === "dark" ? TrashCanWhite : TrashCanBlack}
                   onClick={() =>
                     props.removeTagFromListItem(props.focusedListItemId, tag)
                   }
-                  style={{
-                    opacity: "0.7",
-                    marginLeft: "1rem",
-                    cursor: "pointer",
-                  }}
-                >
-                  {"x"}
-                </span>
-              </span>
-            </TagChip>
+                />
+              )}
+            </>
           ))}
-        {props.list[props.focusedListItemId].summary.length > 0 && (
-          <AddTagChip
-            style={{
-              width: (newTag.length + 1 < 2 ? 2 : newTag.length + 1) + "ch",
-              cursor: "pointer",
-            }}
-            value={newTag}
-            onChange={(e) => setNewTag(e.target.value)}
-            placeholder='+'
-            onBlur={() => {
-              if (newTag !== "+" && newTag !== "") {
-                props.addTagToListItem(props.focusedListItemId, newTag);
-              }
-              setNewTag("");
-            }}
-            onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
-          />
+        {areFieldsBeingEdited && (
+          <>
+            <ListItemDetailsFieldInput
+              placeholder='Add new field'
+              onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
+              onBlur={() => {
+                if (newCustomFieldInput !== "") {
+                  props.addTagToListItem(
+                    props.focusedListItemId,
+                    "$" + newCustomFieldInput + "="
+                  );
+                }
+                setNewCustomFieldInput("");
+              }}
+              value={newCustomFieldInput}
+              onChange={(e) => setNewCustomFieldInput(e.target.value)}
+            />
+            <div></div>
+            <div></div>
+          </>
         )}
-      </ListItemDetailsTags>
+        Tags:
+        <ListItemDetailsTagsList>
+          {props.list[props.focusedListItemId].tags
+            .filter((e) => e[0] != "$")
+            .map((tag) => (
+              <TagChip key={tag}>
+                <span>
+                  {tag}
+                  <DeleteTag
+                    onClick={() =>
+                      props.removeTagFromListItem(props.focusedListItemId, tag)
+                    }
+                  >
+                    {"x"}
+                  </DeleteTag>
+                </span>
+              </TagChip>
+            ))}
+          {props.list[props.focusedListItemId].summary.length > 0 && (
+            <AddTagChip
+              width={(newTag.length + 1 < 2 ? 2 : newTag.length + 1) + "ch"}
+              value={newTag}
+              onChange={(e) => setNewTag(e.target.value)}
+              placeholder='+'
+              onBlur={() => {
+                if (newTag !== "+" && newTag !== "") {
+                  props.addTagToListItem(props.focusedListItemId, newTag);
+                }
+                setNewTag("");
+              }}
+              onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
+            />
+          )}
+        </ListItemDetailsTagsList>
+      </ListItemFiedls>
       <DescriptionTitle>Description:</DescriptionTitle>
       <DescriptionArea
         value={props.list[props.focusedListItemId].description}
@@ -254,45 +208,16 @@ export default function ListItemDetailSection(
           setListItemDescription(props.focusedListItemId, e.target.value);
         }}
       />
-      <TagChip
+      <DeleteElementChip
         onClick={() => props.removeListItem(props.focusedListItemId)}
-        style={{
-          cursor: "pointer",
-          width: "5rem",
-          display: "grid",
-          justifyContent: "center",
-          alignContent: "center",
-        }}
       >
-        <img
+        <DeleteImg
           src={props.theme === "dark" ? TrashCanWhite : TrashCanBlack}
-          style={{ height: "1rem", display: "block", cursor: "pointer" }}
         />
-      </TagChip>
+      </DeleteElementChip>
     </ListItemDetailsPanel>
   );
 }
-
-const DescriptionTitle = styled.div`
-  width: 33rem;
-  text-align: start;
-  font-size: 1.2rem;
-`;
-
-const DescriptionArea = styled.textarea`
-  width: 33rem;
-  height: 35rem;
-  background-color: ${(props) => props.theme.background};
-  border-width: 0px;
-  display: block;
-  resize: vertical;
-  border-radius: 0.5rem;
-  outline: none;
-  box-sizing: border-box;
-  padding: 1rem;
-  margin-bottom: 1rem;
-  margin-top: 0.5rem;
-`;
 
 const ListItemDetailsPanel = styled.div`
   height: 100vh;
@@ -303,75 +228,16 @@ const ListItemDetailsPanel = styled.div`
   align-content: start;
 `;
 
-const ListItemDetailsSummary = styled.div`
-  font-size: 22pt;
-  padding: 1rem;
-  min-height: 2rem;
-  display: grid;
-  width: 33rem;
-  grid-template-columns: 7% 93%;
-  justify-items: center;
-  align-items: center;
+const SummaryCheckmark = styled.img`
+  height: 1em;
+  display: block;
+  cursor: pointer;
+  justify-self: start;
+  align-self: start;
 `;
 
-const ListItemDetailsTags = styled.div`
-  align-items: center;
-  padding: 1rem;
-  width: 33rem;
-  font-size: 1rem;
-  display: flex;
-  flex-wrap: wrap;
-`;
-
-const AddTagChip = styled.input`
-  background-color: ${(props) => props.theme.background};
-  color: inherit;
-  border-radius: 0.2rem;
-  border-width: 0px;
-  text-align: center;
-  margin-right: 0.5rem;
-  margin-bottom: 0.5rem;
-  height: 1.5rem;
-  padding: 0.25rem;
-`;
-
-const TagChip = styled.div`
-  height: 2rem;
-  padding: 0.1rem 0.4rem 0 0.4rem;
-  background-color: ${(props) => props.theme.background};
-  border-radius: 0.2rem;
-  margin-right: 0.5rem;
-  margin-bottom: 0.5rem;
-  font-size: 1rem;
-  text-align: center;
-  display: grid;
-  align-items: center;
-  &:nth-child(2) {
-    margin-left: 0.5rem;
-  }
-`;
-
-const ListItemDetailsFieldElement = styled.div`
-  padding: 0.25rem 0.25rem 0.25rem 0rem;
-  text-align: start;
-  width: 33rem;
-  font-size: 1rem;
-  border-bottom: 1px solid ${(props) => props.theme.text};
-  &:nth-child(2) {
-    margin-bottom: 0.4rem;
-  }
-`;
-
-const ListItemDetailsFieldInput = styled.input`
-  background-color: ${(props) => props.theme.background};
-  color: inherit;
-  border-radius: 0.2rem;
-  border-width: 0px;
-  text-align: center;
-  margin-right: 0.5rem;
-  height: 1.2rem;
-  min-width: 4rem;
-  padding: 0.25rem;
+const UnfocusedSummary = styled.div`
+  justify-self: start;
 `;
 
 const DetailsSummaryInput = styled.input`
@@ -385,4 +251,147 @@ const DetailsSummaryInput = styled.input`
     border-bottom: solid ${(props) => props.theme.text} 1px;
   }
   width: 31rem;
+`;
+
+const ListItemDetailsSummary = styled.div`
+  font-size: 22pt;
+  padding: 1rem;
+  min-height: 2rem;
+  display: grid;
+  width: 33rem;
+  grid-template-columns: 7% 93%;
+  justify-items: center;
+  align-items: center;
+`;
+
+const ListItemDetailsFieldElementCreated = styled.div`
+  padding: 0.25rem 0.25rem 0.25rem 0rem;
+  text-align: start;
+  width: 33rem;
+  font-size: 0.8rem;
+  display: grid;
+  grid-template-columns: auto auto;
+  margin-bottom: 0.4rem;
+  opacity: 0.7;
+`;
+
+const EditButton = styled.span`
+  justify-self: end;
+  cursor: pointer;
+`;
+
+const ListItemFiedls = styled.div<{ areFieldsBeingEdited: boolean }>`
+  display: grid;
+  grid-template-columns: ${(props) =>
+    props.areFieldsBeingEdited
+      ? "fit-content(20%) auto 4%"
+      : "fit-content(20%) auto"};
+  text-align: start;
+  width: 33rem;
+  grid-column-gap: 1rem;
+  grid-row-gap: 0.5rem;
+  align-items: center;
+`;
+
+const ListItemDetailsFieldInput = styled.input`
+  background-color: ${(props) => props.theme.background};
+  color: inherit;
+  border-radius: 0.2rem;
+  border-width: 0px;
+  margin-right: 0.5rem;
+  height: 2rem;
+  width: 100%;
+  padding: 0rem 0.4rem 0 0.4rem;
+  box-sizing: border-box;
+  justify-self: start;
+`;
+
+const ListItemDetailsTagsList = styled.div`
+  background-color: ${(props) => props.theme.background};
+  color: inherit;
+  border-radius: 0.2rem;
+  border-width: 0px;
+  margin-right: 0.5rem;
+  min-height: 2.5rem;
+  width: 100%;
+  padding: 0.35rem 0.4rem 0.35rem 0.4rem;
+  justify-self: start;
+  font-size: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  row-gap: 0.5rem;
+  align-items: center;
+  box-sizing: border-box;
+`;
+
+const TagChip = styled.div`
+  height: 1.7rem;
+  padding: 0.1rem 0.4rem 0 0.4rem;
+  background-color: ${(props) => props.theme.panel};
+  border-radius: 0.2rem;
+  margin-right: 0.5rem;
+  margin-bottom: 0rem;
+  font-size: 1rem;
+  text-align: center;
+  display: grid;
+  align-items: center;
+`;
+
+const DeleteTag = styled.span`
+  opacity: 0.7;
+  margin-left: 1rem;
+  cursor: pointer;
+`;
+
+const AddTagChip = styled.input<{ width: string }>`
+  background-color: ${(props) => props.theme.panel};
+  color: inherit;
+  border-radius: 0.2rem;
+  border-width: 0px;
+  text-align: center;
+  height: 1.7rem;
+  cursor: pointer;
+  outline: none;
+  width: ${(props) => props.width};
+`;
+
+const DescriptionTitle = styled.div`
+  width: 33rem;
+  text-align: start;
+  font-size: 1.2rem;
+  margin-top: 2rem;
+`;
+
+const DescriptionArea = styled.textarea`
+  width: 33rem;
+  height: 35rem;
+  background-color: ${(props) => props.theme.background};
+  border-width: 0px;
+  display: block;
+  resize: vertical;
+  border-radius: 0.2rem;
+  outline: none;
+  box-sizing: border-box;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  margin-top: 0.5rem;
+`;
+
+const DeleteImg = styled.img`
+  height: 1rem;
+  display: block;
+  cursor: pointer;
+  justify-self: end;
+  align-self: center;
+`;
+
+const DeleteElementChip = styled.div`
+  background-color: ${(props) => props.theme.background};
+  border-radius: 0.2rem;
+  height: 2rem;
+  cursor: pointer;
+  width: 5rem;
+  display: grid;
+  justify-content: center;
+  align-content: center;
 `;

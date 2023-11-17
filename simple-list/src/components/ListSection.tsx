@@ -53,7 +53,7 @@ export default function ListSection(props: ListSectionProps) {
     }
   };
 
-  const itemsAreDisplayed = () => {
+  const areItemsToDisplay = () => {
     return !(
       Object.keys(
         getSearchResult(
@@ -182,14 +182,10 @@ export default function ListSection(props: ListSectionProps) {
   return (
     <ListSectionDiv
       onClick={handleListSectionClick}
-      style={
-        itemsAreDisplayed() ? { outline: "none" } : { alignContent: "center" }
-      }
+      areItemsToDisplay={areItemsToDisplay()}
     >
-      {!itemsAreDisplayed() && (
-        <div style={{ justifySelf: "center" }}>Click here to add an item</div>
-      )}
-      {itemsAreDisplayed() &&
+      {!areItemsToDisplay() && <div>Click here to add an item</div>}
+      {areItemsToDisplay() &&
         getListItems().map((id) => (
           <ListItemDiv
             key={id}
@@ -197,7 +193,7 @@ export default function ListSection(props: ListSectionProps) {
               e.stopPropagation();
             }}
           >
-            <img
+            <CheckMark
               src={
                 props.list[id].tags.includes("Completed")
                   ? props.theme === "dark"
@@ -207,11 +203,6 @@ export default function ListSection(props: ListSectionProps) {
                   ? UncheckedCheckmarkWhite
                   : UncheckedCheckmarkBlack
               }
-              style={{
-                height: "1.2rem",
-                marginRight: "1rem",
-                cursor: "pointer",
-              }}
               onClick={() => {
                 if (props.list[id].tags.includes("Completed")) {
                   props.removeTagFromListItem(id, "Completed");
@@ -239,18 +230,22 @@ export default function ListSection(props: ListSectionProps) {
   );
 }
 
-const ListSectionDiv = styled.div`
+const ListSectionDiv = styled.div<{ areItemsToDisplay: boolean }>`
   height: 100vh;
   overflow: scroll;
   display: grid;
   justify-items: center;
-  align-content: start;
-
-  outline: medium dashed ${(props) => props.theme.text};
+  align-content: ${(props) => (props.areItemsToDisplay ? "start" : "center")};
+  outline: ${(props) =>
+    props.areItemsToDisplay ? "none" : "medium dashed " + props.theme.text};
   justify-content: center;
   outline-offset: -8px;
 `;
-
+const CheckMark = styled.img`
+  height: 1.2rem;
+  margin-right: 1rem;
+  cursor: pointer;
+`;
 const ListItemDiv = styled.div`
   margin: 0.1rem;
   height: 1rem;
