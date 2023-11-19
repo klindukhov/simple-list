@@ -1,24 +1,19 @@
 import { styled } from "styled-components";
-import SearchIconBlack from "../assets/SearchBlack.png";
-import SearchIconWhite from "../assets/SearchWhite.png";
 import Tooltip from "./ui/Tooltip";
-import SortAsc from "../assets/SortAsc.png";
-import SortDesc from "../assets/SortDesc.png";
-import CheckedCheckmarkBlack from "../assets/CheckedCheckmarkBlack.png";
-import CheckedCheckmarkWhite from "../assets/CheckedCheckmarkWhite.png";
-import MatchAnyBlack from "../assets/MatchAnyBlack.png";
-import MatchAnyWhite from "../assets/MatchAnyWhite.png";
-import MatchAllBlack from "../assets/MatchAllBlack.png";
-import MatchAllWhite from "../assets/MatchAllWhite.png";
-import SunWhite from "../assets/SunWhite.png";
-import SunBlack from "../assets/SunBlack.png";
-import SortAscWhite from "../assets/SortAscWhite.png";
-import SortDescWhite from "../assets/SortDescWhite.png";
-import ExportWhite from "../assets/ExportWhite.png";
-import ImportWhite from "../assets/ImportWhite.png";
-import ExportBlack from "../assets/ExportBlack.png";
-import ImportBlack from "../assets/ImportBlack.png";
 import { ListItem } from "../App";
+import {
+  CheckCircle,
+  Circle,
+  DownloadSimple,
+  Intersect,
+  MagnifyingGlass,
+  Moon,
+  SortAscending,
+  SortDescending,
+  Sun,
+  Unite,
+  UploadSimple,
+} from "@phosphor-icons/react";
 
 interface FilterSectionProps {
   list: { [itemId: string]: ListItem };
@@ -60,10 +55,10 @@ export default function FilterSection(props: FilterSectionProps) {
 
   const getFiltersList = () => {
     return Array.from(
-      new Set( 
-      Object.keys(props.tagsList)
-        .filter((tag) => tag !== "Completed" && !tag.includes(`$Created=`))
-        .map((e) => (e[0] === "$" ? e.split("=")[0] : e))
+      new Set(
+        Object.keys(props.tagsList)
+          .filter((tag) => tag !== "Completed" && !tag.includes(`$Created=`))
+          .map((e) => (e[0] === "$" ? e.split("=")[0] : e))
       )
     );
   };
@@ -135,30 +130,23 @@ export default function FilterSection(props: FilterSectionProps) {
               props.setTheme(props.theme === "dark" ? "light" : "dark")
             }
           >
-            <SquareButtonImage
-              src={props.theme === "dark" ? SunWhite : SunBlack}
-            />
+            {props.theme === "dark" && <Sun />}
+            {props.theme === "light" && <Moon />}
           </SquareButton>
           <ImportExportButton onClick={exportList}>
             {"Export  "}
-            <SquareButtonImage
-              src={props.theme === "dark" ? ExportWhite : ExportBlack}
-            />
+            <UploadSimple />
           </ImportExportButton>
           <ImportExportButton
             onClick={() => document.getElementById("importFileInput")?.click()}
           >
             Import
-            <SquareButtonImage
-              src={props.theme === "dark" ? ImportWhite : ImportBlack}
-            />
+            <DownloadSimple />
           </ImportExportButton>
         </ExportImportPanel>
         <span>
           <FilteringPanelControls15_85>
-            <Img1_5rem
-              src={props.theme === "dark" ? SearchIconWhite : SearchIconBlack}
-            />
+            <MagnifyingGlass size={"1.5rem"} />
             <SearchBarInput
               onChange={(e) => props.setSearchBarValue(e.target.value)}
             />
@@ -175,25 +163,10 @@ export default function FilterSection(props: FilterSectionProps) {
                   </option>
                 ))}
             </SortBySelect>
-            <Tooltip
-              text={props.isSortAsc ? "Acsending" : "Descending"}
-              style={{ left: "85%" }}
-            >
-              <SquareButton>
-                <SquareButtonImage
-                  src={
-                    props.isSortAsc
-                      ? props.theme === "dark"
-                        ? SortAscWhite
-                        : SortAsc
-                      : props.theme === "dark"
-                      ? SortDescWhite
-                      : SortDesc
-                  }
-                  onClick={() => props.setIsSortAcs(!props.isSortAsc)}
-                />
-              </SquareButton>
-            </Tooltip>
+            <SquareButton onClick={() => props.setIsSortAcs(!props.isSortAsc)}>
+              {props.isSortAsc && <SortAscending />}
+              {!props.isSortAsc && <SortDescending />}
+            </SquareButton>
           </FilteringPanelControls25_60_15>
           <FilteringPanelControls80_20>
             {"Filters Used: "}
@@ -209,13 +182,8 @@ export default function FilterSection(props: FilterSectionProps) {
                   props.setIsShowingCompleted(!props.isShowingCompleted)
                 }
               >
-                <Img2rem
-                  src={
-                    props.theme === "dark"
-                      ? CheckedCheckmarkWhite
-                      : CheckedCheckmarkBlack
-                  }
-                />
+                {!props.isShowingCompleted && <CheckCircle size={"2rem"} />}
+                {props.isShowingCompleted && <Circle size={"2rem"} />}
               </FilteringPanelControlsShowCompleted>
             </Tooltip>
           </FilteringPanelControls80_20>
@@ -225,18 +193,14 @@ export default function FilterSection(props: FilterSectionProps) {
               onClick={() => props.setIsFilteringMatchAny(false)}
             >
               Match all
-              <Img1_5rem
-                src={props.theme === "dark" ? MatchAllWhite : MatchAllBlack}
-              />
+              <Intersect size={"1.5rem"} />
             </FilteringMatch>
             <FilteringMatch
               $isFilteringMatchAny={props.isFilteringMatchAny}
               onClick={() => props.setIsFilteringMatchAny(true)}
             >
               Match any
-              <Img1_5rem
-                src={props.theme === "dark" ? MatchAnyWhite : MatchAnyBlack}
-              />
+              <Unite size={"1.5rem"} />
             </FilteringMatch>
           </FilteringPanelControls50_50>
         </span>
@@ -248,7 +212,9 @@ export default function FilterSection(props: FilterSectionProps) {
                 $isHighlighted={getIsTagHighlighted(tag)}
                 onClick={() => highlightTag(tag)}
               >
-                {tag[0] === "$" ? "Have " + tag.slice(1) : tag}
+                <FilteringPanelFilterText>
+                  {tag[0] === "$" ? "Have " + tag.slice(1) : tag}
+                </FilteringPanelFilterText>
               </FilteringPanelFilter>
             ))}
         </span>
@@ -314,6 +280,14 @@ const FilteringPanelFilter = styled(FilteringPanelGroupElement)<{
   cursor: pointer;
 `;
 
+const FilteringPanelFilterText = styled.span`
+  display: inline-flex;
+  max-width: 15rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
 const ExportImportPanel = styled(FilteringPanelElement)`
   grid-template-columns: auto auto auto;
   border-radius: 0rem 0rem 0.5rem 0.5rem;
@@ -365,22 +339,9 @@ const SquareButton = styled.button`
   margin: 0.5rem;
   justify-self: center;
   display: grid;
-`;
-
-const SquareButtonImage = styled.img`
-  height: 1rem;
-  display: grid;
-  justify-self: center;
-  align-self: center;
+  justify-content: center;
+  align-content: center;
   cursor: pointer;
-`;
-
-const Img1_5rem = styled.img`
-  height: 1.5rem;
-`;
-
-const Img2rem = styled.img`
-  height: 2rem;
 `;
 
 const ImportExportButton = styled(SquareButton)`
@@ -388,6 +349,7 @@ const ImportExportButton = styled(SquareButton)`
   display: grid;
   align-items: center;
   grid-template-columns: auto auto;
+  justify-content: space-around;
   cursor: pointer;
 `;
 

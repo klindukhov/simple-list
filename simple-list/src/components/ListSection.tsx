@@ -1,10 +1,7 @@
 import { styled } from "styled-components";
 import { ListItem } from "../App";
 import { v4 as uuidv4 } from "uuid";
-import CheckedCheckmarkBlack from "../assets/CheckedCheckmarkBlack.png";
-import UncheckedCheckmarkBlack from "../assets/UncheckedCheckmarkBlack.png";
-import CheckedCheckmarkWhite from "../assets/CheckedCheckmarkWhite.png";
-import UncheckedCheckmarkWhite from "../assets/UncheckedCheckmarkWhite.png";
+import { CheckCircle, Circle } from "@phosphor-icons/react";
 
 interface ListSectionProps {
   list: { [itemId: string]: ListItem };
@@ -206,15 +203,6 @@ export default function ListSection(props: ListSectionProps) {
             }}
           >
             <CheckMark
-              src={
-                props.list[id].tags.includes("Completed")
-                  ? props.theme === "dark"
-                    ? CheckedCheckmarkWhite
-                    : CheckedCheckmarkBlack
-                  : props.theme === "dark"
-                  ? UncheckedCheckmarkWhite
-                  : UncheckedCheckmarkBlack
-              }
               onClick={() => {
                 if (props.list[id].tags.includes("Completed")) {
                   props.removeTagFromListItem(id, "Completed");
@@ -222,7 +210,14 @@ export default function ListSection(props: ListSectionProps) {
                   props.addTagToListItem(id, "Completed");
                 }
               }}
-            />
+            >
+              {props.list[id].tags.includes("Completed") && (
+                <CheckCircle size={"1.2rem"} />
+              )}
+              {!props.list[id].tags.includes("Completed") && (
+                <Circle size={"1.2rem"} />
+              )}
+            </CheckMark>
             <ListItemElementInput
               value={props.list[id].summary}
               onChange={(e) => props.setListItemSummary(id, e.target.value)}
@@ -253,9 +248,7 @@ const ListSectionDiv = styled.div<{ $areItemsToDisplay: boolean }>`
   justify-content: center;
   outline-offset: -8px;
 `;
-const CheckMark = styled.img`
-  height: 1.2rem;
-  margin-right: 1rem;
+const CheckMark = styled.span`
   cursor: pointer;
 `;
 const ListItemDiv = styled.div`

@@ -1,13 +1,15 @@
 import { styled } from "styled-components";
 import { ListItem } from "../App";
-import CheckedCheckmarkBlack from "../assets/CheckedCheckmarkBlack.png";
-import UncheckedCheckmarkBlack from "../assets/UncheckedCheckmarkBlack.png";
-import CheckedCheckmarkWhite from "../assets/CheckedCheckmarkWhite.png";
-import UncheckedCheckmarkWhite from "../assets/UncheckedCheckmarkWhite.png";
 import { useState } from "react";
-import TrashCanBlack from "../assets/TrashCanBlack.png";
-import TrashCanWhite from "../assets/TrashCanWhite.png";
 import React from "react";
+import {
+  Check,
+  CheckCircle,
+  Circle,
+  PencilSimple,
+  Trash,
+  X,
+} from "@phosphor-icons/react";
 
 interface ListItemdetailSectionProps {
   list: { [itemId: string]: ListItem };
@@ -59,15 +61,6 @@ export default function ListItemDetailSection(
     <ListItemDetailsPanel>
       <ListItemDetailsSummary>
         <SummaryCheckmark
-          src={
-            props.list[props.focusedListItemId].tags.includes("Completed")
-              ? props.theme === "dark"
-                ? CheckedCheckmarkWhite
-                : CheckedCheckmarkBlack
-              : props.theme === "dark"
-              ? UncheckedCheckmarkWhite
-              : UncheckedCheckmarkBlack
-          }
           onClick={() => {
             if (
               props.list[props.focusedListItemId].tags.includes("Completed")
@@ -77,7 +70,14 @@ export default function ListItemDetailSection(
               props.addTagToListItem(props.focusedListItemId, "Completed");
             }
           }}
-        />
+        >
+          {props.list[props.focusedListItemId].tags.includes("Completed") && (
+            <CheckCircle size={"1em"} />
+          )}
+          {!props.list[props.focusedListItemId].tags.includes("Completed") && (
+            <Circle size={"1em"} />
+          )}
+        </SummaryCheckmark>
         {!isSummaryFocused && (
           <UnfocusedSummary onClick={() => setIsSummaryFocused(true)}>
             {props.list[props.focusedListItemId].summary}
@@ -107,7 +107,18 @@ export default function ListItemDetailSection(
         <EditButton
           onClick={() => setAreFieldsBeingEdited(!areFieldsBeingEdited)}
         >
-          {areFieldsBeingEdited ? "Save" : "Edit"}
+          {areFieldsBeingEdited && (
+            <>
+              <Check />
+              Save
+            </>
+          )}
+          {!areFieldsBeingEdited && (
+            <>
+              <PencilSimple />
+              Edit
+            </>
+          )}
         </EditButton>
       </ListItemDetailsFieldElementCreated>
       <ListItemFiedls $areFieldsBeingEdited={areFieldsBeingEdited}>
@@ -129,12 +140,13 @@ export default function ListItemDetailSection(
                 placeholder='value'
               />
               {areFieldsBeingEdited && (
-                <DeleteImg
-                  src={props.theme === "dark" ? TrashCanWhite : TrashCanBlack}
+                <DeleteField
                   onClick={() =>
                     props.removeTagFromListItem(props.focusedListItemId, tag)
                   }
-                />
+                >
+                  <Trash />
+                </DeleteField>
               )}
             </React.Fragment>
           ))}
@@ -166,13 +178,13 @@ export default function ListItemDetailSection(
             .map((tag) => (
               <TagChip key={tag}>
                 <span>
-                  {tag}
+                  <TagChipText>{tag}</TagChipText>
                   <DeleteTag
                     onClick={() =>
                       props.removeTagFromListItem(props.focusedListItemId, tag)
                     }
                   >
-                    {"x"}
+                    <X size={"0.8rem"} />
                   </DeleteTag>
                 </span>
               </TagChip>
@@ -204,9 +216,7 @@ export default function ListItemDetailSection(
       <DeleteElementChip
         onClick={() => props.removeListItem(props.focusedListItemId)}
       >
-        <DeleteImg
-          src={props.theme === "dark" ? TrashCanWhite : TrashCanBlack}
-        />
+        <Trash size={"1.3rem"} />
       </DeleteElementChip>
     </ListItemDetailsPanel>
   );
@@ -221,7 +231,7 @@ const ListItemDetailsPanel = styled.div`
   align-content: start;
 `;
 
-const SummaryCheckmark = styled.img`
+const SummaryCheckmark = styled.span`
   height: 1em;
   display: block;
   cursor: pointer;
@@ -231,6 +241,9 @@ const SummaryCheckmark = styled.img`
 
 const UnfocusedSummary = styled.div`
   justify-self: start;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  width: 31rem;
 `;
 
 const DetailsSummaryInput = styled.input`
@@ -244,6 +257,9 @@ const DetailsSummaryInput = styled.input`
     border-bottom: solid ${(props) => props.theme.text} 1px;
   }
   width: 31rem;
+  box-sizing: border-box;
+  overflow: hidden;
+  text-overflow: ellipsis;
 `;
 
 const ListItemDetailsSummary = styled.div`
@@ -297,6 +313,9 @@ const ListItemDetailsFieldInput = styled.input`
   padding: 0rem 0.4rem 0 0.4rem;
   box-sizing: border-box;
   justify-self: start;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 `;
 
 const ListItemDetailsTagsList = styled.div`
@@ -328,6 +347,19 @@ const TagChip = styled.div`
   text-align: center;
   display: grid;
   align-items: center;
+  align-content: center;
+  max-width: 20rem;
+`;
+
+const TagChipText = styled.span`
+  margin: 0px;
+  padding: 0px;
+  border: none;
+  max-width: 18rem;
+  display: inline-flex;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 `;
 
 const DeleteTag = styled.span`
@@ -346,6 +378,7 @@ const AddTagChip = styled.input<{ $width: string }>`
   cursor: pointer;
   outline: none;
   width: ${(props) => props.$width};
+  max-width: 20rem;
 `;
 
 const DescriptionTitle = styled.div`
@@ -370,7 +403,7 @@ const DescriptionArea = styled.textarea`
   margin-top: 0.5rem;
 `;
 
-const DeleteImg = styled.img`
+const DeleteField = styled.div`
   height: 1rem;
   display: block;
   cursor: pointer;
