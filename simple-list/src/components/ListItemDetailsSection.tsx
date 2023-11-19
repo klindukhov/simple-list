@@ -7,6 +7,7 @@ import UncheckedCheckmarkWhite from "../assets/UncheckedCheckmarkWhite.png";
 import { useState } from "react";
 import TrashCanBlack from "../assets/TrashCanBlack.png";
 import TrashCanWhite from "../assets/TrashCanWhite.png";
+import React from "react";
 
 interface ListItemdetailSectionProps {
   list: { [itemId: string]: ListItem };
@@ -17,8 +18,6 @@ interface ListItemdetailSectionProps {
   setListItemSummary: Function;
   setList: Function;
   generateTagsList: Function;
-  removeTagFromTagList: Function;
-  addTagToTagList: Function;
   theme: string;
 }
 
@@ -54,10 +53,6 @@ export default function ListItemDetailSection(
     }
 
     props.setList(tempList);
-    if (!Object.keys(props.generateTagsList(tempList)).includes(currentTag)) {
-      props.removeTagFromTagList(currentTag);
-    }
-    props.addTagToTagList(newTag);
   };
 
   return (
@@ -115,14 +110,12 @@ export default function ListItemDetailSection(
           {areFieldsBeingEdited ? "Save" : "Edit"}
         </EditButton>
       </ListItemDetailsFieldElementCreated>
-      <ListItemFiedls areFieldsBeingEdited={areFieldsBeingEdited}>
+      <ListItemFiedls $areFieldsBeingEdited={areFieldsBeingEdited}>
         {props.list[props.focusedListItemId].tags
           .filter((e) => e[0] === "$" && !e.includes("$Created="))
           .map((tag) => (
-            <>
-              <div key={tag.split("$")[1].split("=")[0]}>
-                {tag.split("$")[1].split("=")[0] + ": "}
-              </div>
+            <React.Fragment key={tag.split("$")[1].split("=")[0]}>
+              <div>{tag.split("$")[1].split("=")[0] + ": "}</div>
               <ListItemDetailsFieldInput
                 value={tag.split("$")[1].split("=")[1]}
                 onChange={(e) =>
@@ -143,7 +136,7 @@ export default function ListItemDetailSection(
                   }
                 />
               )}
-            </>
+            </React.Fragment>
           ))}
         {areFieldsBeingEdited && (
           <>
@@ -186,7 +179,7 @@ export default function ListItemDetailSection(
             ))}
           {props.list[props.focusedListItemId].summary.length > 0 && (
             <AddTagChip
-              width={(newTag.length + 1 < 2 ? 2 : newTag.length + 1) + "ch"}
+              $width={(newTag.length + 1 < 2 ? 2 : newTag.length + 1) + "ch"}
               value={newTag}
               onChange={(e) => setNewTag(e.target.value)}
               placeholder='+'
@@ -280,10 +273,10 @@ const EditButton = styled.span`
   cursor: pointer;
 `;
 
-const ListItemFiedls = styled.div<{ areFieldsBeingEdited: boolean }>`
+const ListItemFiedls = styled.div<{ $areFieldsBeingEdited: boolean }>`
   display: grid;
   grid-template-columns: ${(props) =>
-    props.areFieldsBeingEdited
+    props.$areFieldsBeingEdited
       ? "fit-content(20%) auto 4%"
       : "fit-content(20%) auto"};
   text-align: start;
@@ -296,7 +289,7 @@ const ListItemFiedls = styled.div<{ areFieldsBeingEdited: boolean }>`
 const ListItemDetailsFieldInput = styled.input`
   background-color: ${(props) => props.theme.background};
   color: inherit;
-  border-radius: 0.2rem;
+  border-radius: 0.5rem;
   border-width: 0px;
   margin-right: 0.5rem;
   height: 2rem;
@@ -309,7 +302,7 @@ const ListItemDetailsFieldInput = styled.input`
 const ListItemDetailsTagsList = styled.div`
   background-color: ${(props) => props.theme.background};
   color: inherit;
-  border-radius: 0.2rem;
+  border-radius: 0.5rem;
   border-width: 0px;
   margin-right: 0.5rem;
   min-height: 2.5rem;
@@ -328,7 +321,7 @@ const TagChip = styled.div`
   height: 1.7rem;
   padding: 0.1rem 0.4rem 0 0.4rem;
   background-color: ${(props) => props.theme.panel};
-  border-radius: 0.2rem;
+  border-radius: 0.5rem;
   margin-right: 0.5rem;
   margin-bottom: 0rem;
   font-size: 1rem;
@@ -343,16 +336,16 @@ const DeleteTag = styled.span`
   cursor: pointer;
 `;
 
-const AddTagChip = styled.input<{ width: string }>`
+const AddTagChip = styled.input<{ $width: string }>`
   background-color: ${(props) => props.theme.panel};
   color: inherit;
-  border-radius: 0.2rem;
+  border-radius: 0.5rem;
   border-width: 0px;
   text-align: center;
   height: 1.7rem;
   cursor: pointer;
   outline: none;
-  width: ${(props) => props.width};
+  width: ${(props) => props.$width};
 `;
 
 const DescriptionTitle = styled.div`
@@ -369,7 +362,7 @@ const DescriptionArea = styled.textarea`
   border-width: 0px;
   display: block;
   resize: vertical;
-  border-radius: 0.2rem;
+  border-radius: 0.5rem;
   outline: none;
   box-sizing: border-box;
   padding: 1rem;
@@ -387,7 +380,7 @@ const DeleteImg = styled.img`
 
 const DeleteElementChip = styled.div`
   background-color: ${(props) => props.theme.background};
-  border-radius: 0.2rem;
+  border-radius: 0.5rem;
   height: 2rem;
   cursor: pointer;
   width: 5rem;

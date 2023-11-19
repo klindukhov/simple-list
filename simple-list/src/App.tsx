@@ -29,6 +29,8 @@ export default function App() {
     });
   }, []);
 
+  useEffect(() => setTagsList(generateTagsList(list)), [list]);
+
   const [isFilteringMatchAny, setIsFilteringMatchAny] = useState(true);
   const [isShowingCompleted, setIsShowingCompleted] = useState(false);
 
@@ -93,7 +95,7 @@ export default function App() {
 
     setList(tempList);
     setListApi(tempList);
-    addTagToTagList(tag);
+    setTagsList(generateTagsList(tempList));
   };
 
   const removeTagFromListItem = (id: string, tag: string) => {
@@ -106,27 +108,7 @@ export default function App() {
 
     setList(tempList);
     setListApi(tempList);
-    if (!Object.keys(generateTagsList(tempList)).includes(tag))
-      removeTagFromTagList(tag);
-  };
-
-  const addTagToTagList = (tag: string) => {
-    if (Object.keys(tagsList).includes(tag)) return;
-    let tempTagsList: { [tag: string]: boolean } = {};
-    Object.assign(tempTagsList, tagsList);
-
-    tempTagsList[tag] = false;
-
-    setTagsList(tempTagsList);
-  };
-
-  const removeTagFromTagList = (tag: string) => {
-    let tempTagsList: { [tag: string]: boolean } = {};
-    Object.assign(tempTagsList, tagsList);
-
-    delete tempTagsList[tag];
-
-    setTagsList(tempTagsList);
+    setTagsList(generateTagsList(tempList));
   };
 
   const setListItemSummary = (id: string, summary: string) => {
@@ -147,6 +129,7 @@ export default function App() {
 
     setList(tempList);
     setListApi(tempList);
+    setTagsList(generateTagsList(tempList));
   };
 
   return (
@@ -211,8 +194,6 @@ export default function App() {
               setListApi(itemList);
             }}
             generateTagsList={generateTagsList}
-            removeTagFromTagList={removeTagFromTagList}
-            addTagToTagList={addTagToTagList}
             theme={theme}
           />
         )}

@@ -60,10 +60,10 @@ export default function FilterSection(props: FilterSectionProps) {
 
   const getFiltersList = () => {
     return Array.from(
-      new Set(
-        Object.keys(props.tagsList)
-          .filter((tag) => tag !== "Completed" && !tag.includes(`$Created=`))
-          .map((e) => (e[0] === "$" ? e.split("=")[0] : e))
+      new Set( 
+      Object.keys(props.tagsList)
+        .filter((tag) => tag !== "Completed" && !tag.includes(`$Created=`))
+        .map((e) => (e[0] === "$" ? e.split("=")[0] : e))
       )
     );
   };
@@ -204,7 +204,7 @@ export default function FilterSection(props: FilterSectionProps) {
               }
             >
               <FilteringPanelControlsShowCompleted
-                isShowingCompleted={props.isShowingCompleted}
+                $isShowingCompleted={props.isShowingCompleted}
                 onClick={() =>
                   props.setIsShowingCompleted(!props.isShowingCompleted)
                 }
@@ -221,7 +221,7 @@ export default function FilterSection(props: FilterSectionProps) {
           </FilteringPanelControls80_20>
           <FilteringPanelControls50_50>
             <FilteringMatch
-              isFilteringMatchAny={props.isFilteringMatchAny}
+              $isFilteringMatchAny={props.isFilteringMatchAny}
               onClick={() => props.setIsFilteringMatchAny(false)}
             >
               Match all
@@ -230,7 +230,7 @@ export default function FilterSection(props: FilterSectionProps) {
               />
             </FilteringMatch>
             <FilteringMatch
-              isFilteringMatchAny={props.isFilteringMatchAny}
+              $isFilteringMatchAny={props.isFilteringMatchAny}
               onClick={() => props.setIsFilteringMatchAny(true)}
             >
               Match any
@@ -241,15 +241,16 @@ export default function FilterSection(props: FilterSectionProps) {
           </FilteringPanelControls50_50>
         </span>
         <span>
-          {getFiltersList().map((tag) => (
-            <FilteringPanelFilter
-              key={tag}
-              isHighlighted={getIsTagHighlighted(tag)}
-              onClick={() => highlightTag(tag)}
-            >
-              {tag[0] === "$" ? "Have " + tag.slice(1) : tag}
-            </FilteringPanelFilter>
-          ))}
+          {props.tagsList &&
+            getFiltersList().map((tag) => (
+              <FilteringPanelFilter
+                key={tag}
+                $isHighlighted={getIsTagHighlighted(tag)}
+                onClick={() => highlightTag(tag)}
+              >
+                {tag[0] === "$" ? "Have " + tag.slice(1) : tag}
+              </FilteringPanelFilter>
+            ))}
         </span>
       </FilteringSidePanel>
     </>
@@ -306,10 +307,10 @@ const FilteringPanelControls50_50 = styled(FilteringPanelGroupElement)`
 `;
 
 const FilteringPanelFilter = styled(FilteringPanelGroupElement)<{
-  isHighlighted: boolean;
+  $isHighlighted: boolean;
 }>`
   background-color: ${(props) =>
-    props.isHighlighted ? props.theme.background : "transparent"};
+    props.$isHighlighted ? props.theme.background : "transparent"};
   cursor: pointer;
 `;
 
@@ -405,26 +406,26 @@ const FilteringElementSection = styled.div`
 `;
 
 const FilteringMatch = styled(FilteringElementSection)<{
-  isFilteringMatchAny: boolean;
+  $isFilteringMatchAny: boolean;
 }>`
   &:first-child {
     background-color: ${(props) =>
-      !props.isFilteringMatchAny ? props.theme.background : "transparent"};
+      !props.$isFilteringMatchAny ? props.theme.background : "transparent"};
   }
   &:last-child {
     background-color: ${(props) =>
-      props.isFilteringMatchAny ? props.theme.background : "transparent"};
+      props.$isFilteringMatchAny ? props.theme.background : "transparent"};
   }
 `;
 
 const FilteringPanelControlsShowCompleted = styled(FilteringElementSection)<{
-  isShowingCompleted: boolean;
+  $isShowingCompleted: boolean;
 }>`
   display: grid;
   grid-template-columns: auto;
   justify-items: center;
   width: 4rem;
   background-color: ${(props) =>
-    props.isShowingCompleted ? props.theme.background : "transparent"};
+    props.$isShowingCompleted ? props.theme.background : "transparent"};
   border-left: ${(props) => props.theme.background} solid 2px;
 `;

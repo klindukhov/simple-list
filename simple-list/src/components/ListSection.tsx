@@ -93,19 +93,19 @@ export default function ListSection(props: ListSectionProps) {
       [tag: string]: boolean;
     },
     listParam: { [itemId: string]: ListItem },
-    isFilteringInclusiveParam: boolean
+    isFilteringMatchAnyParam: boolean
   ): { [itemId: string]: ListItem } => {
     if (!Object.values(tempTagsList).some((tagHighlight) => tagHighlight)) {
       return listParam;
     }
 
     let filteredList: { [itemId: string]: ListItem } = {};
-    const activeTags = Object.keys(tempTagsList).filter(
+    const highlightedTags = Object.keys(tempTagsList).filter(
       (tag) => tempTagsList[tag]
     );
 
-    if (isFilteringInclusiveParam) {
-      activeTags.forEach((tag) => {
+    if (isFilteringMatchAnyParam) {
+      highlightedTags.forEach((tag) => {
         Object.keys(listParam).forEach((listItemId) => {
           if (
             listParam[listItemId].tags.includes(tag) &&
@@ -117,10 +117,22 @@ export default function ListSection(props: ListSectionProps) {
       });
     } else {
       Object.assign(filteredList, listParam);
-      activeTags.forEach((tag) => {
+      highlightedTags.forEach((tag) => {
         Object.keys(listParam).forEach((listItemId) => {
           if (!listParam[listItemId].tags.includes(tag)) {
-            delete filteredList[listItemId];
+            if (tag[0] === "$") {
+              const fieldTagKey = tag.split("$")[1].split("=")[0];
+              if (
+                !listParam[listItemId].tags.some(
+                  (t) =>
+                    t[0] === "$" &&
+                    t.split("$")[1].split("=")[0] === fieldTagKey
+                )
+              )
+                delete filteredList[listItemId];
+            } else {
+              delete filteredList[listItemId];
+            }
           }
         });
       });
@@ -182,7 +194,7 @@ export default function ListSection(props: ListSectionProps) {
   return (
     <ListSectionDiv
       onClick={handleListSectionClick}
-      areItemsToDisplay={areItemsToDisplay()}
+      $areItemsToDisplay={areItemsToDisplay()}
     >
       {!areItemsToDisplay() && <div>Click here to add an item</div>}
       {areItemsToDisplay() &&
@@ -230,14 +242,14 @@ export default function ListSection(props: ListSectionProps) {
   );
 }
 
-const ListSectionDiv = styled.div<{ areItemsToDisplay: boolean }>`
+const ListSectionDiv = styled.div<{ $areItemsToDisplay: boolean }>`
   height: 100vh;
   overflow: scroll;
   display: grid;
   justify-items: center;
-  align-content: ${(props) => (props.areItemsToDisplay ? "start" : "center")};
+  align-content: ${(props) => (props.$areItemsToDisplay ? "start" : "center")};
   outline: ${(props) =>
-    props.areItemsToDisplay ? "none" : "medium dashed " + props.theme.text};
+    props.$areItemsToDisplay ? "none" : "medium dashed " + props.theme.text};
   justify-content: center;
   outline-offset: -8px;
 `;
