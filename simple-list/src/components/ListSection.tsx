@@ -2,6 +2,7 @@ import { styled } from "styled-components";
 import { ListItem } from "../App";
 import { v4 as uuidv4 } from "uuid";
 import { CheckCircle, Circle } from "@phosphor-icons/react";
+import { useState } from "react";
 
 interface ListSectionProps {
   list: { [itemId: string]: ListItem };
@@ -22,6 +23,8 @@ interface ListSectionProps {
 }
 
 export default function ListSection(props: ListSectionProps) {
+  const [isLastItemEmpty, setIsLastItemEmpty] = useState(false);
+
   const addListItem = () => {
     let tempList: { [itemId: string]: ListItem } = {};
     Object.assign(tempList, props.list);
@@ -38,15 +41,19 @@ export default function ListSection(props: ListSectionProps) {
     };
 
     props.setList(tempList);
+    setIsLastItemEmpty(true);
   };
 
   const handleListSectionClick = () => {
     if (
-      Object.keys(props.list).length === 0 ||
-      props.list[Object.keys(props.list)[Object.keys(props.list).length - 1]]
-        .summary !== ""
+      (Object.keys(props.list).length === 0 ||
+        props.list[Object.keys(props.list)[Object.keys(props.list).length - 1]]
+          .summary !== "") &&
+      !isLastItemEmpty
     ) {
       addListItem();
+    } else {
+      setIsLastItemEmpty(false);
     }
   };
 
@@ -188,10 +195,23 @@ export default function ListSection(props: ListSectionProps) {
     }
   };
 
+  const handleMouseEnter = () => {
+    if (
+      Object.keys(props.list).length === 0 ||
+      props.list[Object.keys(props.list)[Object.keys(props.list).length - 1]]
+        .summary !== ""
+    ) {
+      setIsLastItemEmpty(false);
+    } else {
+      setIsLastItemEmpty(true);
+    }
+  };
+
   return (
     <ListSectionDiv
       onClick={handleListSectionClick}
       $areItemsToDisplay={areItemsToDisplay()}
+      onMouseEnter={handleMouseEnter}
     >
       {!areItemsToDisplay() && <div>Click here to add an item</div>}
       {areItemsToDisplay() &&
@@ -220,7 +240,10 @@ export default function ListSection(props: ListSectionProps) {
             </CheckMark>
             <ListItemElementInput
               value={props.list[id].summary}
-              onChange={(e) => props.setListItemSummary(id, e.target.value)}
+              onChange={(e) => {
+                props.setListItemSummary(id, e.target.value);
+                setIsLastItemEmpty(e.target.value === "");
+              }}
               onFocus={() => props.setFocusedListItemId(id)}
               onBlur={handleListItemBlur}
               autoFocus={props.list[id].summary === ""}
@@ -267,6 +290,10 @@ const ListItemDiv = styled.div`
   }
   &:last-child {
     margin-bottom: 2rem;
+  }
+  &:hover {
+    background-color: ${(props) => props.theme.background};
+    opacity: 0.7;
   }
 `;
 

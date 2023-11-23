@@ -96,14 +96,16 @@ export default function ListItemDetailSection(
         )}
       </ListItemDetailsSummary>
       <ListItemDetailsFieldElementCreated>
-        Created:{" "}
-        {new Date(
-          +(
-            props.list[props.focusedListItemId].tags
-              .find((e) => e.includes("$Created="))
-              ?.split("=")[1] ?? 0
-          )
-        ).toLocaleDateString("en-GB")}
+        <Txt>
+          Created:{" "}
+          {new Date(
+            +(
+              props.list[props.focusedListItemId].tags
+                .find((e) => e.includes("$Created="))
+                ?.split("=")[1] ?? 0
+            )
+          ).toLocaleDateString("en-GB")}
+        </Txt>
         <EditButton
           onClick={() => setAreFieldsBeingEdited(!areFieldsBeingEdited)}
         >
@@ -126,7 +128,7 @@ export default function ListItemDetailSection(
           .filter((e) => e[0] === "$" && !e.includes("$Created="))
           .map((tag) => (
             <React.Fragment key={tag.split("$")[1].split("=")[0]}>
-              <div>{tag.split("$")[1].split("=")[0] + ": "}</div>
+              <Txt>{tag.split("$")[1].split("=")[0] + ": "}</Txt>
               <ListItemDetailsFieldInput
                 value={tag.split("$")[1].split("=")[1]}
                 onChange={(e) =>
@@ -171,7 +173,7 @@ export default function ListItemDetailSection(
             <div></div>
           </>
         )}
-        Tags:
+        <Txt>Tags:</Txt>
         <ListItemDetailsTagsList>
           {props.list[props.focusedListItemId].tags
             .filter((e) => e[0] != "$")
@@ -222,6 +224,10 @@ export default function ListItemDetailSection(
   );
 }
 
+const Txt = styled.span`
+  cursor: default;
+`;
+
 const ListItemDetailsPanel = styled.div`
   height: 100vh;
   overflow: scroll;
@@ -237,6 +243,9 @@ const SummaryCheckmark = styled.span`
   cursor: pointer;
   justify-self: start;
   align-self: start;
+  &:hover {
+    opacity: 0.7;
+  }
 `;
 
 const UnfocusedSummary = styled.div`
@@ -244,6 +253,9 @@ const UnfocusedSummary = styled.div`
   overflow-wrap: break-word;
   hyphens: auto;
   width: 31rem;
+  &:hover {
+    opacity: 0.7;
+  }
 `;
 
 const DetailsSummaryInput = styled.input`
@@ -260,6 +272,9 @@ const DetailsSummaryInput = styled.input`
   box-sizing: border-box;
   overflow: hidden;
   text-overflow: ellipsis;
+  &:hover {
+    opacity: 0.7;
+  }
 `;
 
 const ListItemDetailsSummary = styled.div`
@@ -287,6 +302,9 @@ const ListItemDetailsFieldElementCreated = styled.div`
 const EditButton = styled.span`
   justify-self: end;
   cursor: pointer;
+  &:hover {
+    opacity: 0.7;
+  }
 `;
 
 const ListItemFiedls = styled.div<{ $areFieldsBeingEdited: boolean }>`
@@ -316,6 +334,10 @@ const ListItemDetailsFieldInput = styled.input`
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  &:hover {
+    background-color: ${(props) => props.theme.background};
+    opacity: 0.7;
+  }
 `;
 
 const ListItemDetailsTagsList = styled.div`
@@ -349,6 +371,10 @@ const TagChip = styled.div`
   align-items: center;
   align-content: center;
   max-width: 20rem;
+  &:hover {
+    background-color: ${(props) => props.theme.panel};
+    opacity: 0.7;
+  }
 `;
 
 const TagChipText = styled.span`
@@ -379,6 +405,10 @@ const AddTagChip = styled.input<{ $width: string }>`
   outline: none;
   width: ${(props) => props.$width};
   max-width: 20rem;
+  &:hover {
+    background-color: ${(props) => props.theme.panel};
+    opacity: 0.7;
+  }
 `;
 
 const DescriptionTitle = styled.div`
@@ -386,6 +416,7 @@ const DescriptionTitle = styled.div`
   text-align: start;
   font-size: 1.2rem;
   margin-top: 2rem;
+  cursor: default;
 `;
 
 const DescriptionArea = styled.textarea`
@@ -401,6 +432,10 @@ const DescriptionArea = styled.textarea`
   padding: 1rem;
   margin-bottom: 1rem;
   margin-top: 0.5rem;
+  &:hover {
+    background-color: ${(props) => props.theme.background};
+    opacity: 0.7;
+  }
 `;
 
 const DeleteField = styled.div`
@@ -409,6 +444,9 @@ const DeleteField = styled.div`
   cursor: pointer;
   justify-self: end;
   align-self: center;
+  &:hover {
+    opacity: 0.7;
+  }
 `;
 
 const DeleteElementChip = styled.div`
@@ -420,4 +458,9 @@ const DeleteElementChip = styled.div`
   display: grid;
   justify-content: center;
   align-content: center;
+  margin-bottom: 2rem;
+  &:hover {
+    background-color: ${(props) => props.theme.background};
+    opacity: 0.7;
+  }
 `;

@@ -152,7 +152,7 @@ export default function FilterSection(props: FilterSectionProps) {
             />
           </FilteringPanelControls15_85>
           <FilteringPanelControls25_60_15>
-            Sort by:
+            <Txt>Sort by:</Txt>
             <SortBySelect
               onChange={(e) => handleSortBySelectChange(e.target.value)}
             >
@@ -169,8 +169,10 @@ export default function FilterSection(props: FilterSectionProps) {
             </SquareButton>
           </FilteringPanelControls25_60_15>
           <FilteringPanelControls80_20>
-            {"Filters Used: "}
-            {getNumberOfFiltersUsed()}
+            <Txt>
+              {"Filters Used: "}
+              {getNumberOfFiltersUsed()}
+            </Txt>
             <Tooltip
               text={
                 props.isShowingCompleted ? "Hide completed" : "Show completed"
@@ -222,6 +224,10 @@ export default function FilterSection(props: FilterSectionProps) {
     </>
   );
 }
+
+const Txt = styled.span`
+  cursor: default;
+`;
 
 const HiddenInput = styled.input`
   position: absolute;
@@ -278,6 +284,10 @@ const FilteringPanelFilter = styled(FilteringPanelGroupElement)<{
   background-color: ${(props) =>
     props.$isHighlighted ? props.theme.background : "transparent"};
   cursor: pointer;
+  &:hover {
+    background-color: ${(props) => props.theme.background};
+    opacity: 0.7;
+  }
 `;
 
 const FilteringPanelFilterText = styled.span`
@@ -313,6 +323,10 @@ const SearchBarInput = styled.input`
   height: 2rem;
   box-sizing: border-box;
   padding: 0.5rem;
+  &:hover {
+    background-color: ${(props) => props.theme.background};
+    opacity: 0.7;
+  }
 `;
 
 const SortBySelect = styled.select`
@@ -325,6 +339,10 @@ const SortBySelect = styled.select`
   height: 2rem;
   box-sizing: border-box;
   padding: 0.5rem;
+  &:hover {
+    background-color: ${(props) => props.theme.background};
+    opacity: 0.7;
+  }
 `;
 
 const SquareButton = styled.button`
@@ -342,6 +360,10 @@ const SquareButton = styled.button`
   justify-content: center;
   align-content: center;
   cursor: pointer;
+  &:hover {
+    background-color: ${(props) => props.theme.background};
+    opacity: 0.7;
+  }
 `;
 
 const ImportExportButton = styled(SquareButton)`
@@ -351,6 +373,10 @@ const ImportExportButton = styled(SquareButton)`
   grid-template-columns: auto auto;
   justify-content: space-around;
   cursor: pointer;
+  &:hover {
+    background-color: ${(props) => props.theme.background};
+    opacity: 0.7;
+  }
 `;
 
 const FilteringElementSection = styled.div`
@@ -378,6 +404,10 @@ const FilteringMatch = styled(FilteringElementSection)<{
     background-color: ${(props) =>
       props.$isFilteringMatchAny ? props.theme.background : "transparent"};
   }
+  &:hover {
+    background-color: ${(props) => props.theme.background};
+    opacity: 0.7;
+  }
 `;
 
 const FilteringPanelControlsShowCompleted = styled(FilteringElementSection)<{
@@ -390,4 +420,8 @@ const FilteringPanelControlsShowCompleted = styled(FilteringElementSection)<{
   background-color: ${(props) =>
     props.$isShowingCompleted ? props.theme.background : "transparent"};
   border-left: ${(props) => props.theme.background} solid 2px;
+  &:hover {
+    background-color: ${(props) => props.theme.background};
+    opacity: 0.7;
+  }
 `;
