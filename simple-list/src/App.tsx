@@ -138,71 +138,83 @@ export default function App() {
     size: "1rem",
   };
 
+  const getFilterSectionProps = () => {
+    return {
+      list: list,
+      setList: (itemList: { [itemId: string]: ListItem }) => {
+        setList(itemList);
+        setListApi(itemList);
+      },
+      setSearchBarValue: setSearchBarValue,
+      sortByList: sortByList,
+      setSortByList: setSortByList,
+      isSortAsc: isSortAsc,
+      setIsSortAcs: setIsSortAcs,
+      tagsList: tagsList,
+      setTagsList: setTagsList,
+      isShowingCompleted: isShowingCompleted,
+      setIsShowingCompleted: setIsShowingCompleted,
+      isFilteringMatchAny: isFilteringMatchAny,
+      setIsFilteringMatchAny: setIsFilteringMatchAny,
+      theme: theme,
+      setTheme: setTheme,
+    };
+  };
+
+  const getListSectionProps = () => {
+    return {
+      list: list,
+      setList: (itemList: { [itemId: string]: ListItem }) => {
+        setList(itemList);
+        setListApi(itemList);
+      },
+      tagsList: tagsList,
+      isFilteringMatchAny: isFilteringMatchAny,
+      searchBarValue: searchBarValue,
+      isShowingCompleted: isShowingCompleted,
+      isSortAsc: isSortAsc,
+      sortByList: sortByList,
+      removeTagFromListItem: removeTagFromListItem,
+      addTagToListItem: addTagToListItem,
+      setListItemSummary: setListItemSummary,
+      focusedListItemId: focusedListItemId,
+      setFocusedListItemId: setFocusedListItemId,
+      removeListItem: removeListItem,
+      theme: theme,
+    };
+  };
+
+  const getListItemSectionProps = () => {
+    return {
+      list: list,
+      setList: (itemList: { [itemId: string]: ListItem }) => {
+        setList(itemList);
+        setListApi(itemList);
+      },
+      theme: theme,
+      removeListItem: removeListItem,
+      focusedListItemId: focusedListItemId,
+      removeTagFromListItem: removeTagFromListItem,
+      addTagToListItem: addTagToListItem,
+      setListItemSummary: setListItemSummary,
+      generateTagsList: generateTagsList,
+    };
+  };
+
   return (
     <ThemeProvider theme={theme === "light" ? lightTheme : darkTheme}>
       <GlobalStyles />
       <IconContext.Provider value={iconStyles}>
         <Page>
-          <FilterSection
-            list={list}
-            setList={(itemList: { [itemId: string]: ListItem }) => {
-              setList(itemList);
-              setListApi(itemList);
-            }}
-            setSearchBarValue={setSearchBarValue}
-            sortByList={sortByList}
-            setSortByList={setSortByList}
-            isSortAsc={isSortAsc}
-            setIsSortAcs={setIsSortAcs}
-            tagsList={tagsList}
-            setTagsList={setTagsList}
-            isShowingCompleted={isShowingCompleted}
-            setIsShowingCompleted={setIsShowingCompleted}
-            isFilteringMatchAny={isFilteringMatchAny}
-            setIsFilteringMatchAny={setIsFilteringMatchAny}
-            theme={theme}
-            setTheme={setTheme}
-          />
-          <ListSection
-            list={list}
-            setList={(itemList: { [itemId: string]: ListItem }) => {
-              setList(itemList);
-              setListApi(itemList);
-            }}
-            tagsList={tagsList}
-            isFilteringMatchAny={isFilteringMatchAny}
-            searchBarValue={searchBarValue}
-            isShowingCompleted={isShowingCompleted}
-            isSortAsc={isSortAsc}
-            sortByList={sortByList}
-            removeTagFromListItem={removeTagFromListItem}
-            addTagToListItem={addTagToListItem}
-            setListItemSummary={setListItemSummary}
-            focusedListItemId={focusedListItemId}
-            setFocusedListItemId={setFocusedListItemId}
-            removeListItem={removeListItem}
-            theme={theme}
-          />
+          <FilterSection {...getFilterSectionProps()} />
+          <ListSection {...getListSectionProps()} />
           {(focusedListItemId === "0" ||
             !list[focusedListItemId] ||
             Object.keys(list).length === 0) && (
             <ListItemDetailsPanelPlaceholder />
           )}
           {focusedListItemId !== "0" && list[focusedListItemId] && (
-            <ListItemDetailSection
-              list={list}
-              removeListItem={removeListItem}
-              focusedListItemId={focusedListItemId}
-              removeTagFromListItem={removeTagFromListItem}
-              addTagToListItem={addTagToListItem}
-              setListItemSummary={setListItemSummary}
-              setList={(itemList: { [itemId: string]: ListItem }) => {
-                setList(itemList);
-                setListApi(itemList);
-              }}
-              generateTagsList={generateTagsList}
-              theme={theme}
-            />
+            <ListItemDetailSection {...getListItemSectionProps()} />
           )}
         </Page>
       </IconContext.Provider>

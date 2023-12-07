@@ -11,6 +11,8 @@ import {
   X,
 } from "@phosphor-icons/react";
 
+import { RemirrorEditor } from "./ui/RemirrorEditor";
+
 interface ListItemdetailSectionProps {
   list: { [itemId: string]: ListItem };
   removeListItem: Function;
@@ -209,16 +211,20 @@ export default function ListItemDetailSection(
         </ListItemDetailsTagsList>
       </ListItemFiedls>
       <DescriptionTitle>Description:</DescriptionTitle>
-      <DescriptionArea
-        value={props.list[props.focusedListItemId].description}
-        onChange={(e) => {
-          setListItemDescription(props.focusedListItemId, e.target.value);
-        }}
-      />
+      <ListItemDetailDescription>
+        <RemirrorEditor
+          key={props.focusedListItemId}
+          state={props.list[props.focusedListItemId].description}
+          setState={(state: string) => {
+            setListItemDescription(props.focusedListItemId, state);
+          }}
+        />
+      </ListItemDetailDescription>
       <DeleteElementChip
         onClick={() => props.removeListItem(props.focusedListItemId)}
       >
         <Trash size={"1.3rem"} />
+        <Txt>Delete Item</Txt>
       </DeleteElementChip>
     </ListItemDetailsPanel>
   );
@@ -226,6 +232,7 @@ export default function ListItemDetailSection(
 
 const Txt = styled.span`
   cursor: default;
+  padding-top: 0.3rem;
 `;
 
 const ListItemDetailsPanel = styled.div`
@@ -396,11 +403,14 @@ const DeleteTag = styled.span`
 
 const AddTagChip = styled.input<{ $width: string }>`
   background-color: ${(props) => props.theme.panel};
+  box-sizing: border-box;
   color: inherit;
+  padding-bottom: 0.2rem;
   border-radius: 0.5rem;
   border-width: 0px;
   text-align: center;
-  height: 1.7rem;
+  height: 1.8rem;
+  font-size: 1rem;
   cursor: pointer;
   outline: none;
   width: ${(props) => props.$width};
@@ -419,7 +429,7 @@ const DescriptionTitle = styled.div`
   cursor: default;
 `;
 
-const DescriptionArea = styled.textarea`
+const ListItemDetailDescription = styled.div`
   width: 33rem;
   height: 35rem;
   background-color: ${(props) => props.theme.background};
@@ -429,13 +439,8 @@ const DescriptionArea = styled.textarea`
   border-radius: 0.5rem;
   outline: none;
   box-sizing: border-box;
-  padding: 1rem;
   margin-bottom: 1rem;
   margin-top: 0.5rem;
-  &:hover {
-    background-color: ${(props) => props.theme.background};
-    opacity: 0.7;
-  }
 `;
 
 const DeleteField = styled.div`
@@ -454,10 +459,13 @@ const DeleteElementChip = styled.div`
   border-radius: 0.5rem;
   height: 2rem;
   cursor: pointer;
-  width: 5rem;
+  text-align: center;
+  width: 8rem;
   display: grid;
-  justify-content: center;
+  grid-template-columns: auto auto;
+  justify-content: space-around;
   align-content: center;
+  align-items: center;
   margin-bottom: 2rem;
   &:hover {
     background-color: ${(props) => props.theme.background};
