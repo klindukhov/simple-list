@@ -1,5 +1,7 @@
 import "remirror/styles/all.css";
 
+import { AllStyledComponent } from "@remirror/styles/styled-components";
+
 import {
   BoldExtension,
   BulletListExtension,
@@ -18,6 +20,7 @@ import {
 import {
   EditorComponent,
   Remirror,
+  ThemeProvider,
   useHelpers,
   useRemirror,
 } from "@remirror/react";
@@ -67,7 +70,6 @@ export const Menu = (props: MenuProps) => {
   const { getMarkdown } = useHelpers();
 
   useEffect(() => {
-    console.log(getMarkdown());
     props.setState(getMarkdown());
   }, [getMarkdown()]);
 
@@ -237,20 +239,41 @@ export const RemirrorEditor = (props: RemirrorEditorProps) => {
   });
 
   return (
-    <div className='remirror-theme'>
-      <Remirror
-        manager={manager}
-        state={state}
-        onChange={(e) => {
-          setState(e.state);
-        }}
-      >
-        <Menu setState={props.setState} />
-        <EditorComponent />
-      </Remirror>
-    </div>
+    <AllStyledComponent>
+      <ThemeProvider>
+        <Remirror
+          manager={manager}
+          state={state}
+          onChange={(e) => {
+            setState(e.state);
+          }}
+        >
+          <Menu setState={props.setState} />
+          <EditorComponentWrapper>
+            <EditorComponent />
+          </EditorComponentWrapper>
+        </Remirror>
+      </ThemeProvider>
+    </AllStyledComponent>
   );
 };
+
+const EditorComponentWrapper = styled.div`
+  background-color: ${(props) => props.theme.background};
+  border-bottom-left-radius: 0.5rem;
+  border-bottom-right-radius: 0.5rem;
+  & > div.remirror-editor-wrapper {
+    padding-top: 0px;
+  }
+  & > div.remirror-editor-wrapper > div {
+    box-shadow: none !important;
+    & > h1,
+    h2,
+    h3 {
+      color: ${(props) => props.theme.text};
+    }
+  }
+`;
 
 const MenuDiv = styled.div`
   border-top-left-radius: 0.5rem;
@@ -268,6 +291,7 @@ const MenuDiv = styled.div`
   align-items: center;
   overflow-x: scroll;
   overflow-y: hidden;
+  margin-bottom: 0.1rem;
 `;
 
 const MenuButton = styled.button<{ $active?: boolean }>`

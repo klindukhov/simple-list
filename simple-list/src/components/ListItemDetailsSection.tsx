@@ -431,8 +431,6 @@ const DescriptionTitle = styled.div`
 
 const ListItemDetailDescription = styled.div`
   width: 33rem;
-  height: 35rem;
-  background-color: ${(props) => props.theme.background};
   border-width: 0px;
   display: block;
   resize: vertical;
