@@ -21,6 +21,7 @@ import {
   EditorComponent,
   Remirror,
   ThemeProvider,
+  useEditorEvent,
   useHelpers,
   useRemirror,
 } from "@remirror/react";
@@ -32,7 +33,6 @@ import {
   ArrowUUpRight,
   CheckSquare,
   Code,
-  GridFour,
   ListBullets,
   ListNumbers,
   TextB,
@@ -44,7 +44,7 @@ import {
   TextUnderline,
 } from "@phosphor-icons/react";
 import { EditorState } from "@remirror/pm/state";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 interface MenuProps {
   setState: Function;
@@ -62,153 +62,155 @@ export const Menu = (props: MenuProps) => {
     toggleBulletList,
     toggleTaskList,
     toggleOrderedList,
-    createTable,
     toggleHeading,
     createCodeBlock,
   } = useCommands();
   const active = useActive();
   const { getMarkdown } = useHelpers();
 
+  const [isEditorFocused, setIsEditorFocused] = useState(false);
+  const [isMenuHovered, setIsMenuHovered] = useState(false);
+
   useEffect(() => {
     props.setState(getMarkdown());
   }, [getMarkdown()]);
 
+  useEditorEvent("focus", () => setIsEditorFocused(true));
+  useEditorEvent("blur", () => setIsEditorFocused(false));
+
   return (
-    <MenuDiv>
-      <ButtonGroup>
-        <MenuButton
-          onClick={() => {
-            undo();
-            focus();
-          }}
-        >
-          <ArrowUUpLeft />
-        </MenuButton>
-        <MenuButton
-          onClick={() => {
-            redo();
-            focus();
-          }}
-        >
-          <ArrowUUpRight />
-        </MenuButton>
-      </ButtonGroup>
-      <ButtonGroup>
-        <MenuButton
-          onClick={() => {
-            toggleHeading({ level: 1 });
-            focus();
-          }}
-          $active={active.heading({ level: 1 })}
-        >
-          <TextHOne />
-        </MenuButton>
-        <MenuButton
-          onClick={() => {
-            toggleHeading({ level: 2 });
-            focus();
-          }}
-          $active={active.heading({ level: 2 })}
-        >
-          <TextHTwo />
-        </MenuButton>
-        <MenuButton
-          onClick={() => {
-            toggleHeading({ level: 3 });
-            focus();
-          }}
-          $active={active.heading({ level: 3 })}
-        >
-          <TextHThree />
-        </MenuButton>
-      </ButtonGroup>
-      <ButtonGroup>
-        <MenuButton
-          onClick={() => {
-            toggleBold();
-            focus();
-          }}
-          $active={active.bold()}
-        >
-          <TextB />
-        </MenuButton>
-        <MenuButton
-          onClick={() => {
-            toggleItalic();
-            focus();
-          }}
-          $active={active.italic()}
-        >
-          <TextItalic />
-        </MenuButton>
-        <MenuButton
-          onClick={() => {
-            toggleUnderline();
-            focus();
-          }}
-          $active={active.underline()}
-        >
-          <TextUnderline />
-        </MenuButton>
-        <MenuButton
-          onClick={() => {
-            toggleStrike();
-            focus();
-          }}
-          $active={active.strike()}
-        >
-          <TextStrikethrough />
-        </MenuButton>
-      </ButtonGroup>
-      <ButtonGroup>
-        <MenuButton
-          onClick={() => {
-            toggleBulletList();
-            focus();
-          }}
-          $active={active.bulletList()}
-        >
-          <ListBullets />
-        </MenuButton>
-        <MenuButton
-          onClick={() => {
-            toggleOrderedList();
-            focus();
-          }}
-          $active={active.orderedList()}
-        >
-          <ListNumbers />
-        </MenuButton>
-        <MenuButton
-          onClick={() => {
-            toggleTaskList();
-            focus();
-          }}
-          $active={active.taskList()}
-        >
-          <CheckSquare />
-        </MenuButton>
-        <MenuButton
-          onClick={() => {
-            createTable();
-            focus();
-          }}
-        >
-          <GridFour />
-        </MenuButton>
-      </ButtonGroup>
-      <ButtonGroup>
-        <MenuButton
-          onClick={() => {
-            createCodeBlock({ language: "js" });
-            focus();
-          }}
-          $active={active.codeBlock()}
-        >
-          <Code />
-        </MenuButton>
-      </ButtonGroup>
-    </MenuDiv>
+    (isEditorFocused || (!isEditorFocused && isMenuHovered)) && (
+      <MenuDiv
+        onMouseEnter={() => setIsMenuHovered(true)}
+        onMouseLeave={() => setIsMenuHovered(false)}
+      >
+        <ButtonGroup>
+          <MenuButton
+            onClick={() => {
+              undo();
+              focus();
+            }}
+          >
+            <ArrowUUpLeft />
+          </MenuButton>
+          <MenuButton
+            onClick={() => {
+              redo();
+              focus();
+            }}
+          >
+            <ArrowUUpRight />
+          </MenuButton>
+        </ButtonGroup>
+        <ButtonGroup>
+          <MenuButton
+            onClick={() => {
+              toggleHeading({ level: 1 });
+              focus();
+            }}
+            $active={active.heading({ level: 1 })}
+          >
+            <TextHOne />
+          </MenuButton>
+          <MenuButton
+            onClick={() => {
+              toggleHeading({ level: 2 });
+              focus();
+            }}
+            $active={active.heading({ level: 2 })}
+          >
+            <TextHTwo />
+          </MenuButton>
+          <MenuButton
+            onClick={() => {
+              toggleHeading({ level: 3 });
+              focus();
+            }}
+            $active={active.heading({ level: 3 })}
+          >
+            <TextHThree />
+          </MenuButton>
+        </ButtonGroup>
+        <ButtonGroup>
+          <MenuButton
+            onClick={() => {
+              toggleBold();
+              focus();
+            }}
+            $active={active.bold()}
+          >
+            <TextB />
+          </MenuButton>
+          <MenuButton
+            onClick={() => {
+              toggleItalic();
+              focus();
+            }}
+            $active={active.italic()}
+          >
+            <TextItalic />
+          </MenuButton>
+          <MenuButton
+            onClick={() => {
+              toggleUnderline();
+              focus();
+            }}
+            $active={active.underline()}
+          >
+            <TextUnderline />
+          </MenuButton>
+          <MenuButton
+            onClick={() => {
+              toggleStrike();
+              focus();
+            }}
+            $active={active.strike()}
+          >
+            <TextStrikethrough />
+          </MenuButton>
+        </ButtonGroup>
+        <ButtonGroup>
+          <MenuButton
+            onClick={() => {
+              toggleBulletList();
+              focus();
+            }}
+            $active={active.bulletList()}
+          >
+            <ListBullets />
+          </MenuButton>
+          <MenuButton
+            onClick={() => {
+              toggleOrderedList();
+              focus();
+            }}
+            $active={active.orderedList()}
+          >
+            <ListNumbers />
+          </MenuButton>
+          <MenuButton
+            onClick={() => {
+              toggleTaskList();
+              focus();
+            }}
+            $active={active.taskList()}
+          >
+            <CheckSquare />
+          </MenuButton>
+        </ButtonGroup>
+        <ButtonGroup>
+          <MenuButton
+            onClick={() => {
+              createCodeBlock({ language: "js" });
+              focus();
+            }}
+            $active={active.codeBlock()}
+          >
+            <Code />
+          </MenuButton>
+        </ButtonGroup>
+      </MenuDiv>
+    )
   );
 };
 
@@ -272,6 +274,20 @@ const EditorComponentWrapper = styled.div`
     h3 {
       color: ${(props) => props.theme.text};
     }
+    & > ul,
+    ol {
+      margin-left: 1rem !important;
+    }
+    & > ul > li > label > input {
+      margin-left: 1rem;
+    }
+  }
+  & > div.remirror-editor-wrapper > div:focus & {
+    border-radius: 0.5rem;
+  }
+  &:first-child {
+    border-top-left-radius: 0.5rem;
+    border-top-right-radius: 0.5rem;
   }
 `;
 
@@ -291,7 +307,6 @@ const MenuDiv = styled.div`
   align-items: center;
   overflow-x: scroll;
   overflow-y: hidden;
-  margin-bottom: 0.1rem;
 `;
 
 const MenuButton = styled.button<{ $active?: boolean }>`

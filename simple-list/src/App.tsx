@@ -134,7 +134,7 @@ export default function App() {
   };
 
   const iconStyles = {
-    color: theme === "dark" ? "white" : "black",
+    color: theme === "dark" ? "#edeef2" : "black",
     size: "1rem",
   };
 

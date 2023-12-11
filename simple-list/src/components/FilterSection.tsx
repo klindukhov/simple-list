@@ -399,10 +399,12 @@ const FilteringMatch = styled(FilteringElementSection)<{
   &:first-child {
     background-color: ${(props) =>
       !props.$isFilteringMatchAny ? props.theme.background : "transparent"};
+    border-bottom-left-radius: 0.2rem;
   }
   &:last-child {
     background-color: ${(props) =>
       props.$isFilteringMatchAny ? props.theme.background : "transparent"};
+    border-bottom-right-radius: 0.2rem;
   }
   &:hover {
     background-color: ${(props) => props.theme.background};

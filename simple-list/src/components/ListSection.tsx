@@ -1,7 +1,7 @@
 import { styled } from "styled-components";
 import { ListItem } from "../App";
 import { v4 as uuidv4 } from "uuid";
-import { CheckCircle, Circle } from "@phosphor-icons/react";
+import { CheckCircle, Circle, CursorClick } from "@phosphor-icons/react";
 import { useState } from "react";
 
 interface ListSectionProps {
@@ -213,7 +213,12 @@ export default function ListSection(props: ListSectionProps) {
       $areItemsToDisplay={areItemsToDisplay()}
       onMouseEnter={handleMouseEnter}
     >
-      {!areItemsToDisplay() && <div>Click here to add an item</div>}
+      {!areItemsToDisplay() && (
+        <EmptyListPlaceholder>
+          <CursorClick size={32} />
+          Click here to add an item
+        </EmptyListPlaceholder>
+      )}
       {areItemsToDisplay() &&
         getListItems().map((id) => (
           <ListItemDiv
@@ -259,6 +264,13 @@ export default function ListSection(props: ListSectionProps) {
     </ListSectionDiv>
   );
 }
+
+const EmptyListPlaceholder = styled.div`
+  display: grid;
+  align-items: center;
+  justify-items: center;
+  grid-row-gap: 1rem;
+`;
 
 const ListSectionDiv = styled.div<{ $areItemsToDisplay: boolean }>`
   height: 100vh;

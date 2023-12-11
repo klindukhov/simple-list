@@ -7,9 +7,9 @@ export const lightTheme = {
 };
 
 export const darkTheme = {
-  background: "#4f4f4f",
-  panel: "#363636",
-  text: "aliceblue",
+  background: "#33373d",
+  panel: "#1c1e20",
+  text: "#edeef2",
 };
 
 export const GlobalStyles = createGlobalStyle`

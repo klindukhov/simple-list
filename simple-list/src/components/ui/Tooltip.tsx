@@ -34,8 +34,8 @@ const TooltipWrapper = styled.div`
   display: inline-block;
 `;
 const TooltipText = styled.div`
-  background-color: #4f4f4fb5;
-  color: #fff;
+  background-color: ${(props) => props.theme.background};
+  color: ${(props) => props.theme.text};
   opacity: 0.5;
   text-align: center;
   border-radius: 6px;
