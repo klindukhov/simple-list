@@ -2,9 +2,9 @@ import { styled } from "styled-components";
 import Tooltip from "./ui/Tooltip";
 import { ListItem } from "../App";
 import {
-  CheckCircle,
-  Circle,
   DownloadSimple,
+  Eye,
+  EyeSlash,
   Intersect,
   MagnifyingGlass,
   Moon,
@@ -179,13 +179,12 @@ export default function FilterSection(props: FilterSectionProps) {
               }
             >
               <FilteringPanelControlsShowCompleted
-                $isShowingCompleted={props.isShowingCompleted}
                 onClick={() =>
                   props.setIsShowingCompleted(!props.isShowingCompleted)
                 }
               >
-                {!props.isShowingCompleted && <CheckCircle size={"2rem"} />}
-                {props.isShowingCompleted && <Circle size={"2rem"} />}
+                {!props.isShowingCompleted && <EyeSlash size={"2rem"} />}
+                {props.isShowingCompleted && <Eye size={"2rem"} />}
               </FilteringPanelControlsShowCompleted>
             </Tooltip>
           </FilteringPanelControls80_20>
@@ -412,15 +411,12 @@ const FilteringMatch = styled(FilteringElementSection)<{
   }
 `;
 
-const FilteringPanelControlsShowCompleted = styled(FilteringElementSection)<{
-  $isShowingCompleted: boolean;
-}>`
+const FilteringPanelControlsShowCompleted = styled(FilteringElementSection)`
   display: grid;
   grid-template-columns: auto;
   justify-items: center;
   width: 4rem;
-  background-color: ${(props) =>
-    props.$isShowingCompleted ? props.theme.background : "transparent"};
+  background-color: transparent;
   border-left: ${(props) => props.theme.background} solid 2px;
   &:hover {
     background-color: ${(props) => props.theme.background};

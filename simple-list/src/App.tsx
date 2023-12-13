@@ -210,12 +210,15 @@ export default function App() {
           <ListSection {...getListSectionProps()} />
           {(focusedListItemId === "0" ||
             !list[focusedListItemId] ||
-            Object.keys(list).length === 0) && (
+            Object.keys(list).length === 0 ||
+            list[focusedListItemId].summary === "") && (
             <ListItemDetailsPanelPlaceholder />
           )}
-          {focusedListItemId !== "0" && list[focusedListItemId] && (
-            <ListItemDetailSection {...getListItemSectionProps()} />
-          )}
+          {focusedListItemId !== "0" &&
+            list[focusedListItemId] &&
+            list[focusedListItemId].summary !== "" && (
+              <ListItemDetailSection {...getListItemSectionProps()} />
+            )}
         </Page>
       </IconContext.Provider>
     </ThemeProvider>

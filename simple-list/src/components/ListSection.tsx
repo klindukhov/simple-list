@@ -2,7 +2,7 @@ import { styled } from "styled-components";
 import { ListItem } from "../App";
 import { v4 as uuidv4 } from "uuid";
 import { CheckCircle, Circle, CursorClick } from "@phosphor-icons/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface ListSectionProps {
   list: { [itemId: string]: ListItem };
@@ -145,6 +145,39 @@ export default function ListSection(props: ListSectionProps) {
     return filteredList;
   };
 
+  const [isCompletedList, setIsCompletedList] = useState<{
+    [itemId: string]: boolean;
+  }>();
+  useEffect(() => {
+    let tempList: { [itemId: string]: boolean } = {};
+    Object.keys(props.list).forEach((id) => {
+      tempList[id] = props.list[id].tags.includes("Completed");
+    });
+    setIsCompletedList(tempList);
+  }, [props.list]);
+
+  const toggleItemCompleted = (id: string) => {
+    if (getIsItemCompleted(id)) {
+      props.removeTagFromListItem(id, "Completed");
+    } else {
+      const sleepNow = (delay: number) =>
+        new Promise((resolve) => setTimeout(resolve, delay));
+      let tempIsCompletedList: { [itemId: string]: boolean } = {};
+      Object.assign(tempIsCompletedList, isCompletedList);
+      tempIsCompletedList[id] = true;
+      setIsCompletedList(tempIsCompletedList);
+      sleepNow(2000).then(() => props.addTagToListItem(id, "Completed"));
+    }
+  };
+
+  const getIsItemCompleted = (id: string) => {
+    return props.list[id].tags.includes("Completed");
+  };
+
+  const getIsItemAppearingCompleted = (id: string) => {
+    return isCompletedList && isCompletedList[id];
+  };
+
   const getListItems = () => {
     return Object.keys(
       getSearchResult(
@@ -154,9 +187,8 @@ export default function ListSection(props: ListSectionProps) {
     )
       .filter(
         (id) =>
-          !props.list[id].tags.includes("Completed") ||
-          (props.list[id].tags.includes("Completed") &&
-            props.isShowingCompleted)
+          !getIsItemCompleted(id) ||
+          (getIsItemCompleted(id) && props.isShowingCompleted)
       )
       .sort((a, b) =>
         (props.list[props.isSortAsc ? b : a].tags
@@ -227,21 +259,11 @@ export default function ListSection(props: ListSectionProps) {
               e.stopPropagation();
             }}
           >
-            <CheckMark
-              onClick={() => {
-                if (props.list[id].tags.includes("Completed")) {
-                  props.removeTagFromListItem(id, "Completed");
-                } else {
-                  props.addTagToListItem(id, "Completed");
-                }
-              }}
-            >
-              {props.list[id].tags.includes("Completed") && (
+            <CheckMark onClick={() => toggleItemCompleted(id)}>
+              {getIsItemAppearingCompleted(id) && (
                 <CheckCircle size={"1.2rem"} />
               )}
-              {!props.list[id].tags.includes("Completed") && (
-                <Circle size={"1.2rem"} />
-              )}
+              {!getIsItemAppearingCompleted(id) && <Circle size={"1.2rem"} />}
             </CheckMark>
             <ListItemElementInput
               value={props.list[id].summary}
@@ -258,6 +280,7 @@ export default function ListSection(props: ListSectionProps) {
                   e.currentTarget.blur();
                 }
               }}
+              $isCompleted={getIsItemAppearingCompleted(id) ?? false}
             />
           </ListItemDiv>
         ))}
@@ -309,10 +332,11 @@ const ListItemDiv = styled.div`
   }
 `;
 
-const ListItemElementInput = styled.input`
+const ListItemElementInput = styled.input<{ $isCompleted: boolean }>`
   background-color: transparent;
   border-width: 0px 0px 1px 0px;
   color: inherit;
   outline: none;
   width: 47rem;
+  text-decoration: ${(props) => (props.$isCompleted ? "line-through" : "none")};
 `;
