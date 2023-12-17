@@ -263,7 +263,14 @@ export default function ListSection(props: ListSectionProps) {
               {getIsItemAppearingCompleted(id) && (
                 <CheckCircle size={"1.2rem"} />
               )}
-              {!getIsItemAppearingCompleted(id) && <Circle size={"1.2rem"} />}
+              {!getIsItemAppearingCompleted(id) && (
+                <PreviewCheckMark>
+                  <PreviewCheckMarkChecked>
+                    <CheckCircle size={"1.2rem"} />
+                  </PreviewCheckMarkChecked>
+                  <Circle size={"1.2rem"} />
+                </PreviewCheckMark>
+              )}
             </CheckMark>
             <ListItemElementInput
               value={props.list[id].summary}
@@ -299,6 +306,7 @@ const ListSectionDiv = styled.div<{ $areItemsToDisplay: boolean }>`
   height: 100vh;
   overflow: scroll;
   display: grid;
+  grid-row-gap: 0px;
   justify-items: center;
   align-content: ${(props) => (props.$areItemsToDisplay ? "start" : "center")};
   outline: ${(props) =>
@@ -306,11 +314,28 @@ const ListSectionDiv = styled.div<{ $areItemsToDisplay: boolean }>`
   justify-content: center;
   outline-offset: -8px;
 `;
+
 const CheckMark = styled.span`
   cursor: pointer;
 `;
+
+const PreviewCheckMark = styled(CheckMark)`
+  &:hover {
+    opacity: 0.7;
+  }
+`;
+
+const PreviewCheckMarkChecked = styled(PreviewCheckMark)`
+  position: absolute;
+  top: inherit;
+  z-index: -1;
+  left: inherit;
+  &:hover {
+    display: inline;
+  }
+`;
+
 const ListItemDiv = styled.div`
-  margin: 0.1rem;
   height: 1rem;
   width: 50rem;
   background-color: transparent;
@@ -319,24 +344,37 @@ const ListItemDiv = styled.div`
   grid-template-columns: auto auto;
   justify-items: start;
   align-items: center;
+  border-width: 1px 0px 0px 0px;
+  border-color: ${(props) => props.theme.panel};
+  border-style: solid;
   &:first-child {
     margin-top: 1rem;
-    border-radius: 1rem 1rem 0rem 0rem;
+    border: none;
   }
   &:last-child {
     margin-bottom: 2rem;
+    border-width: 1px 0px 1px 0px;
   }
   &:hover {
-    background-color: ${(props) => props.theme.background};
+    background-color: ${(props) => props.theme.panel};
     opacity: 0.7;
+    border-color: transparent;
+    border-radius: 0.3rem;
+  }
+  & > span:hover ~ input {
+    text-decoration: line-through;
+  }
+  &:hover + div {
+    border-top-color: transparent;
   }
 `;
 
 const ListItemElementInput = styled.input<{ $isCompleted: boolean }>`
   background-color: transparent;
-  border-width: 0px 0px 1px 0px;
+  border-width: 0px 0px 0px 0px;
   color: inherit;
   outline: none;
   width: 47rem;
-  text-decoration: ${(props) => (props.$isCompleted ? "line-through" : "none")};
+  text-decoration: ${(props) =>
+    props.$isCompleted ? "line-through" : "inherit"};
 `;

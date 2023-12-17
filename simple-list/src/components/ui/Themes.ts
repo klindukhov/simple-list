@@ -1,8 +1,8 @@
 import { createGlobalStyle } from "styled-components";
 
 export const lightTheme = {
-  background: "lightgrey",
-  panel: "aliceblue",
+  background: "#edeef2",
+  panel: "lightgrey",
   text: "black",
 };
 

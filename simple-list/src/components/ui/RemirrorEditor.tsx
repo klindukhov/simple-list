@@ -314,10 +314,8 @@ const MenuButton = styled.button<{ $active?: boolean }>`
   box-sizing: border-box;
   width: 2rem;
   background-color: ${(props) =>
-    props.$active ? props.theme.background : props.theme.panel};
-  border-width: 1px;
-  border-style: solid;
-  border-color: ${(props) => props.theme.panel};
+    props.$active ? props.theme.panel : "transparent"};
+  border: none;
   outline: none;
   margin-right: 2px;
   &:hover {
@@ -337,7 +335,7 @@ const MenuButton = styled.button<{ $active?: boolean }>`
 const ButtonGroup = styled.span`
   padding-right: 0.5rem;
   margin-left: 0.5rem;
-  border-right: solid 2px ${(props) => props.theme.panel};
+  border-right: solid 1px ${(props) => props.theme.panel};
   &:first-child {
     margin-left: 0rem;
   }
