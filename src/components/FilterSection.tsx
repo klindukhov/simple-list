@@ -106,13 +106,13 @@ export default function FilterSection(props: FilterSectionProps) {
   };
 
   const getIsTagHighlighted = (tag: string) => {
-    return (tag[0] === "$" &&
-      Object.keys(props.tagsList)
-        .filter((e) => e.includes(tag))
-        .some((e) => props.tagsList[e])) ||
+    return (
+      (tag[0] === "$" &&
+        Object.keys(props.tagsList)
+          .filter((e) => e.includes(tag))
+          .some((e) => props.tagsList[e])) ||
       props.tagsList[tag]
-      ? true
-      : false;
+    );
   };
 
   return (
