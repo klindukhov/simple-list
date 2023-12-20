@@ -148,6 +148,7 @@ export default function App() {
         setList(itemList);
         setListApi(itemList);
       },
+      searchBarValue: searchBarValue,
       setSearchBarValue: setSearchBarValue,
       sortByList: sortByList,
       setSortByList: setSortByList,
@@ -232,7 +233,8 @@ const Page = styled.div`
   height: 100vh;
   background-color: ${(props) => props.theme.background};
   display: grid;
-  grid-template-columns: 20% 50% 30%;
+  grid-template-columns: 15% 50% 35%;
+  overflow-x: hidden;
 `;
 
 const ListItemDetailsPanelPlaceholder = styled.div`

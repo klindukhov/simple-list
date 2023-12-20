@@ -18,6 +18,7 @@ import {
 interface FilterSectionProps {
   list: { [itemId: string]: ListItem };
   setList: Function;
+  searchBarValue: string;
   setSearchBarValue: Function;
   sortByList: { [tag: string]: boolean };
   setSortByList: Function;
@@ -144,68 +145,75 @@ export default function FilterSection(props: FilterSectionProps) {
             <DownloadSimple />
           </ImportExportButton>
         </ExportImportPanel>
-        <span>
-          <FilteringPanelControls15_85>
-            <MagnifyingGlass size={"1.5rem"} />
-            <SearchBarInput
-              onChange={(e) => props.setSearchBarValue(e.target.value)}
-            />
-          </FilteringPanelControls15_85>
-          <FilteringPanelControls25_60_15>
-            <Txt>Sort by:</Txt>
-            <SortBySelect
-              onChange={(e) => handleSortBySelectChange(e.target.value)}
+        <SearchBarElement>
+          <SearchBarInput
+            onChange={(e) => props.setSearchBarValue(e.target.value)}
+            id='searhBarInput'
+          />
+          {props.searchBarValue === "" && (
+            <MagnifyingGlassWrapper
+              onClick={() => document.getElementById("searhBarInput")?.focus()}
             >
-              {props.sortByList &&
-                Object.keys(props.sortByList).map((e) => (
-                  <option key={e} value={e}>
-                    {e}
-                  </option>
-                ))}
-            </SortBySelect>
-            <SquareButton onClick={() => props.setIsSortAcs(!props.isSortAsc)}>
-              {props.isSortAsc && <SortAscending />}
-              {!props.isSortAsc && <SortDescending />}
-            </SquareButton>
-          </FilteringPanelControls25_60_15>
-          <FilteringPanelControls80_20>
-            <Txt>
-              {"Filters Used: "}
-              {getNumberOfFiltersUsed()}
-            </Txt>
+              <MagnifyingGlass size={"1.5rem"} />
+            </MagnifyingGlassWrapper>
+          )}
+        </SearchBarElement>
+        <SortByElement>
+          <Txt>Sort by:</Txt>
+          <SortBySelect
+            onChange={(e) => handleSortBySelectChange(e.target.value)}
+          >
+            {props.sortByList &&
+              Object.keys(props.sortByList).map((e) => (
+                <option key={e} value={e}>
+                  {e}
+                </option>
+              ))}
+          </SortBySelect>
+          <SquareButtonEnd onClick={() => props.setIsSortAcs(!props.isSortAsc)}>
+            {props.isSortAsc && <SortAscending size={"1.5rem"} />}
+            {!props.isSortAsc && <SortDescending size={"1.5rem"} />}
+          </SquareButtonEnd>
+        </SortByElement>
+        <FiltersUsedElement>
+          <Txt>
+            {"Filters Used: "}
+            {getNumberOfFiltersUsed()}
+          </Txt>
+          <SquareButtonEnd
+            onClick={() =>
+              props.setIsShowingCompleted(!props.isShowingCompleted)
+            }
+          >
             <Tooltip
               text={
                 props.isShowingCompleted ? "Hide completed" : "Show completed"
               }
             >
-              <FilteringPanelControlsShowCompleted
-                onClick={() =>
-                  props.setIsShowingCompleted(!props.isShowingCompleted)
-                }
-              >
-                {!props.isShowingCompleted && <EyeSlash size={"2rem"} />}
-                {props.isShowingCompleted && <Eye size={"2rem"} />}
-              </FilteringPanelControlsShowCompleted>
+              <>
+                {!props.isShowingCompleted && <EyeSlash size={"1.5rem"} />}
+                {props.isShowingCompleted && <Eye size={"1.5rem"} />}
+              </>
             </Tooltip>
-          </FilteringPanelControls80_20>
-          <FilteringPanelControls50_50>
-            <FilteringMatch
-              $isFilteringMatchAny={props.isFilteringMatchAny}
-              onClick={() => props.setIsFilteringMatchAny(false)}
-            >
-              Match all
-              <Intersect size={"1.5rem"} />
-            </FilteringMatch>
-            <FilteringMatch
-              $isFilteringMatchAny={props.isFilteringMatchAny}
-              onClick={() => props.setIsFilteringMatchAny(true)}
-            >
-              Match any
-              <Unite size={"1.5rem"} />
-            </FilteringMatch>
-          </FilteringPanelControls50_50>
-        </span>
-        <span>
+          </SquareButtonEnd>
+        </FiltersUsedElement>
+        <MatchAnyAllElement>
+          <FilteringMatch
+            $isFilteringMatchAny={props.isFilteringMatchAny}
+            onClick={() => props.setIsFilteringMatchAny(false)}
+          >
+            Match all
+            <Intersect size={"1.5rem"} />
+          </FilteringMatch>
+          <FilteringMatch
+            $isFilteringMatchAny={props.isFilteringMatchAny}
+            onClick={() => props.setIsFilteringMatchAny(true)}
+          >
+            Match any
+            <Unite size={"1.5rem"} />
+          </FilteringMatch>
+        </MatchAnyAllElement>
+        <FilterElementsWrapper>
           {props.tagsList &&
             getFiltersList().map((tag) => (
               <FilteringPanelFilter
@@ -218,155 +226,68 @@ export default function FilterSection(props: FilterSectionProps) {
                 </FilteringPanelFilterText>
               </FilteringPanelFilter>
             ))}
-        </span>
+        </FilterElementsWrapper>
       </FilteringSidePanel>
     </>
   );
 }
 
-const Txt = styled.span`
-  cursor: default;
-`;
-
 const HiddenInput = styled.input`
-  position: absolute;
-  z-index: -200;
-  visibility: hidden;
-`;
-
-const FilteringPanelElement = styled.div`
-  border-width: 0px 2px 2px 2px;
-  border-style: solid;
-  border-color: ${(props) => props.theme.background};
-  height: 3rem;
-  width: 20rem;
-  display: grid;
-  align-items: center;
-  justify-items: center;
-`;
-
-const FilteringPanelGroupElement = styled(FilteringPanelElement)`
-  &:first-child {
-    border-width: 2px 2px 2px 2px;
-    border-radius: 0.5rem 0.5rem 0rem 0rem;
-    margin-top: 1rem;
-  }
-  &:last-child {
-    border-radius: 0rem 0rem 0.5rem 0.5rem;
-    margin-bottom: 2rem;
-    &:first-child {
-      border-radius: 0.5rem 0.5rem 0.5rem 0.5rem;
-      margin-top: 1rem;
-    }
-  }
-`;
-
-const FilteringPanelControls15_85 = styled(FilteringPanelGroupElement)`
-  grid-template-columns: 15% 85%;
-`;
-
-const FilteringPanelControls25_60_15 = styled(FilteringPanelGroupElement)`
-  grid-template-columns: 25% 60% 15%;
-`;
-
-const FilteringPanelControls80_20 = styled(FilteringPanelGroupElement)`
-  grid-template-columns: 80% 20%;
-`;
-
-const FilteringPanelControls50_50 = styled(FilteringPanelGroupElement)`
-  grid-template-columns: 50% 50%;
-`;
-
-const FilteringPanelFilter = styled(FilteringPanelGroupElement)<{
-  $isHighlighted: boolean;
-}>`
-  background-color: ${(props) =>
-    props.$isHighlighted ? props.theme.background : "transparent"};
-  cursor: pointer;
-  &:hover {
-    background-color: ${(props) => props.theme.background};
-    opacity: 0.7;
-  }
-`;
-
-const FilteringPanelFilterText = styled.span`
-  display: inline-flex;
-  max-width: 15rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-`;
-
-const ExportImportPanel = styled(FilteringPanelElement)`
-  grid-template-columns: auto auto auto;
-  border-radius: 0rem 0rem 0.5rem 0.5rem;
-  margin-bottom: 2rem;
+  display: none;
 `;
 
 const FilteringSidePanel = styled.div`
   height: 100vh;
-  overflow: scroll;
+  overflow-y: scroll;
+  overflow-x: scroll;
   background-color: ${(props) => props.theme.panel};
   display: grid;
   justify-items: center;
   align-content: start;
 `;
 
-const SearchBarInput = styled.input`
-  color: inherit;
-  background-color: ${(props) => props.theme.background};
-  outline: none;
-  border-radius: 0.5rem;
-  border-width: 0px;
-  width: 16rem;
-  height: 2rem;
+const Txt = styled.span`
   box-sizing: border-box;
-  padding: 0.5rem;
-  &:hover {
-    background-color: ${(props) => props.theme.background};
-    opacity: 0.7;
-  }
+  padding-top: 0.1rem;
+  cursor: default;
 `;
 
-const SortBySelect = styled.select`
-  background-color: ${(props) => props.theme.background};
-  color: inherit;
-  outline: none;
-  border-radius: 0.5rem;
-  border-width: 0px;
-  width: 12rem;
-  height: 2rem;
+const FilteringPanelElement = styled.div`
   box-sizing: border-box;
-  padding: 0.5rem;
-  &:hover {
-    background-color: ${(props) => props.theme.background};
-    opacity: 0.7;
-  }
+  /* border: 1px solid grey; */
+  height: 2rem;
+  width: 95%;
+  display: grid;
+  align-items: center;
+`;
+
+const ExportImportPanel = styled(FilteringPanelElement)`
+  grid-template-columns: auto auto auto;
+  margin-top: 0.5rem;
+  margin-bottom: 1.5rem;
 `;
 
 const SquareButton = styled.button`
-  background-color: ${(props) => props.theme.background};
+  background-color: transparent;
   color: inherit;
   outline: none;
   border-radius: 0.5rem;
-  border-width: 0px;
+  border: none;
   width: 2rem;
   height: 2rem;
   box-sizing: border-box;
-  margin: 0.5rem;
-  justify-self: center;
   display: grid;
   justify-content: center;
   align-content: center;
   cursor: pointer;
   &:hover {
     background-color: ${(props) => props.theme.background};
-    opacity: 0.7;
   }
 `;
 
 const ImportExportButton = styled(SquareButton)`
-  width: 6rem;
+  height: 2rem;
+  width: auto;
   display: grid;
   align-items: center;
   grid-template-columns: auto auto;
@@ -378,32 +299,110 @@ const ImportExportButton = styled(SquareButton)`
   }
 `;
 
-const FilteringElementSection = styled.div`
+const FilteringPanelGroupElement = styled(FilteringPanelElement)`
+  border-radius: 0px;
+  &:first-child {
+    margin-top: 1rem;
+    border-radius: 0.5rem 0.5rem 0px 0px;
+  }
+  &:last-child {
+    margin-bottom: 2rem;
+    border-radius: 0px 0px 0.5rem 0.5rem;
+    &:first-child {
+      margin-top: 1rem;
+    }
+  }
+`;
+
+const SearchBarElement = styled(FilteringPanelGroupElement)`
+  grid-template-columns: 100%;
+  justify-items: center;
+  margin-bottom: 0.1rem;
+  &:hover {
+    opacity: 0.7;
+  }
+`;
+
+const SearchBarInput = styled.input`
+  color: inherit;
+  background-color: ${(props) => props.theme.background};
+  outline: none;
+  border-radius: 0.5rem;
+  border-width: 0px;
+  width: 100%;
+  height: 2rem;
+  box-sizing: border-box;
+  padding: 0.5rem;
+`;
+
+const MagnifyingGlassWrapper = styled.div`
+  position: relative;
+  top: -2rem;
+  margin-bottom: -2rem;
+  z-index: 2;
+  width: auto;
+  margin-left: 80%;
+  cursor: text;
+`;
+
+const SortByElement = styled(FilteringPanelGroupElement)`
+  grid-template-columns: 25% 60% 15%;
+`;
+
+const SquareButtonEnd = styled(SquareButton)`
+  justify-self: end;
+`;
+
+const SortBySelect = styled.select`
+  background-color: ${(props) => props.theme.background};
+  color: inherit;
+  outline: none;
+  border-radius: 0.5rem;
+  border-width: 0px;
+  width: 100%;
+  height: 2rem;
+  box-sizing: border-box;
+  padding: 0.5rem;
+  &:hover {
+    background-color: ${(props) => props.theme.background};
+    opacity: 0.7;
+  }
+`;
+
+const FiltersUsedElement = styled(FilteringPanelGroupElement)`
+  margin-top: 1rem;
+  grid-template-columns: 85% 15%;
+`;
+
+const MatchAnyAllElement = styled(FilteringPanelGroupElement)`
+  grid-template-columns: 50% 50%;
+  margin-top: 0.1rem;
+`;
+
+const FilteringMatch = styled.div<{
+  $isFilteringMatchAny: boolean;
+}>`
   border: none;
-  height: 3rem;
+  height: 100%;
   display: grid;
   align-items: center;
   justify-content: center;
-  width: 10rem;
-  margin: 0rem;
+  width: 100%;
   cursor: pointer;
   background-color: ${(props) => props.theme.background};
   grid-template-columns: auto auto;
   column-gap: 1rem;
-`;
-
-const FilteringMatch = styled(FilteringElementSection)<{
-  $isFilteringMatchAny: boolean;
-}>`
   &:first-child {
-    background-color: ${(props) =>
-      !props.$isFilteringMatchAny ? props.theme.background : "transparent"};
-    border-bottom-left-radius: 0.2rem;
+    background-color: ${(props) => props.theme.background};
+    opacity: ${(props) => (!props.$isFilteringMatchAny ? "1" : "0.5")};
+    border-bottom-left-radius: 0.5rem;
+    border-top-left-radius: 0.5rem;
   }
   &:last-child {
-    background-color: ${(props) =>
-      props.$isFilteringMatchAny ? props.theme.background : "transparent"};
-    border-bottom-right-radius: 0.2rem;
+    background-color: ${(props) => props.theme.background};
+    opacity: ${(props) => (props.$isFilteringMatchAny ? "1" : "0.5")};
+    border-bottom-right-radius: 0.5rem;
+    border-top-right-radius: 0.5rem;
   }
   &:hover {
     background-color: ${(props) => props.theme.background};
@@ -411,15 +410,33 @@ const FilteringMatch = styled(FilteringElementSection)<{
   }
 `;
 
-const FilteringPanelControlsShowCompleted = styled(FilteringElementSection)`
-  display: grid;
-  grid-template-columns: auto;
+const FilterElementsWrapper = styled.span`
+  width: 100%;
   justify-items: center;
-  width: 4rem;
-  background-color: transparent;
-  border-left: ${(props) => props.theme.background} solid 2px;
+  display: grid;
+`;
+
+const FilteringPanelFilter = styled(FilteringPanelGroupElement)<{
+  $isHighlighted: boolean;
+}>`
+  background-color: ${(props) => props.theme.background};
+  opacity: ${(props) => (props.$isHighlighted ? "1" : "0.5")};
+  cursor: pointer;
   &:hover {
     background-color: ${(props) => props.theme.background};
     opacity: 0.7;
   }
+  border-bottom: 2px solid ${(props) => props.theme.panel};
+  box-sizing: border-box;
+`;
+
+const FilteringPanelFilterText = styled.span`
+  box-sizing: border-box;
+  padding-top: 0.1rem;
+  display: inline-flex;
+  max-width: 15rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  justify-self: center;
 `;
