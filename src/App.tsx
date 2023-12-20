@@ -30,7 +30,10 @@ export default function App() {
     });
   }, []);
 
-  useEffect(() => setTagsList(generateTagsList(list)), [list]);
+  useEffect(() => {
+    setTagsList(generateTagsList(list));
+    setSortByList(generateSortByList(list));
+  }, [list]);
 
   const [isFilteringMatchAny, setIsFilteringMatchAny] = useState(true);
   const [isShowingCompleted, setIsShowingCompleted] = useState(false);

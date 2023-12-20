@@ -326,13 +326,10 @@ const PreviewCheckMark = styled(CheckMark)`
 `;
 
 const PreviewCheckMarkChecked = styled(PreviewCheckMark)`
-  position: absolute;
-  top: inherit;
+  position: relative;
   z-index: -1;
-  left: inherit;
-  &:hover {
-    display: inline;
-  }
+  left: 1.2rem;
+  margin-left: -1.2rem;
 `;
 
 const ListItemDiv = styled.div`
