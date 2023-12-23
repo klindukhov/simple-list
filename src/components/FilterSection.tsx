@@ -239,11 +239,14 @@ const HiddenInput = styled.input`
 const FilteringSidePanel = styled.div`
   height: 100vh;
   overflow-y: scroll;
-  overflow-x: scroll;
+  overflow-x: hidden;
   background-color: ${(props) => props.theme.panel};
   display: grid;
   justify-items: center;
   align-content: start;
+  &::-webkit-scrollbar {
+    display: none;
+  }
 `;
 
 const Txt = styled.span`
@@ -291,7 +294,7 @@ const ImportExportButton = styled(SquareButton)`
   display: grid;
   align-items: center;
   grid-template-columns: auto auto;
-  justify-content: space-around;
+  justify-content: center;
   cursor: pointer;
   &:hover {
     background-color: ${(props) => props.theme.background};
@@ -317,7 +320,7 @@ const FilteringPanelGroupElement = styled(FilteringPanelElement)`
 const SearchBarElement = styled(FilteringPanelGroupElement)`
   grid-template-columns: 100%;
   justify-items: center;
-  margin-bottom: 0.1rem;
+  margin-bottom: 2px;
   &:hover {
     opacity: 0.7;
   }
@@ -372,6 +375,7 @@ const SortBySelect = styled.select`
 const FiltersUsedElement = styled(FilteringPanelGroupElement)`
   margin-top: 1rem;
   grid-template-columns: 85% 15%;
+  font-size: 0.8rem;
 `;
 
 const MatchAnyAllElement = styled(FilteringPanelGroupElement)`

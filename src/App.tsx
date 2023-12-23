@@ -212,17 +212,7 @@ export default function App() {
         <Page>
           <FilterSection {...getFilterSectionProps()} />
           <ListSection {...getListSectionProps()} />
-          {(focusedListItemId === "0" ||
-            !list[focusedListItemId] ||
-            Object.keys(list).length === 0 ||
-            list[focusedListItemId].summary === "") && (
-            <ListItemDetailsPanelPlaceholder />
-          )}
-          {focusedListItemId !== "0" &&
-            list[focusedListItemId] &&
-            list[focusedListItemId].summary !== "" && (
-              <ListItemDetailSection {...getListItemSectionProps()} />
-            )}
+          <ListItemDetailSection {...getListItemSectionProps()} />
         </Page>
       </IconContext.Provider>
     </ThemeProvider>
@@ -233,10 +223,6 @@ const Page = styled.div`
   height: 100vh;
   background-color: ${(props) => props.theme.background};
   display: grid;
-  grid-template-columns: 15% 50% 35%;
+  grid-template-columns: 15% 42.5% 42.5%;
   overflow-x: hidden;
-`;
-
-const ListItemDetailsPanelPlaceholder = styled.div`
-  background-color: ${(props) => props.theme.panel};
 `;

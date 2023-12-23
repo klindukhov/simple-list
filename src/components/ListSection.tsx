@@ -306,6 +306,7 @@ const ListSectionDiv = styled.div<{ $areItemsToDisplay: boolean }>`
   height: 100vh;
   overflow: scroll;
   display: grid;
+  grid-template-columns: 100%;
   grid-row-gap: 0px;
   justify-items: center;
   align-content: ${(props) => (props.$areItemsToDisplay ? "start" : "center")};
@@ -313,6 +314,11 @@ const ListSectionDiv = styled.div<{ $areItemsToDisplay: boolean }>`
     props.$areItemsToDisplay ? "none" : "medium dashed " + props.theme.text};
   justify-content: center;
   outline-offset: -8px;
+  width: 100%;
+  overflow-x: hidden;
+  &::-webkit-scrollbar {
+    display: none;
+  }
 `;
 
 const CheckMark = styled.span`
@@ -334,12 +340,13 @@ const PreviewCheckMarkChecked = styled(PreviewCheckMark)`
 
 const ListItemDiv = styled.div`
   height: 1rem;
-  width: 50rem;
+  width: 85%;
   background-color: transparent;
   padding: 0.5rem;
   display: grid;
-  grid-template-columns: auto auto;
-  justify-items: start;
+  grid-template-columns: 1.2rem 1fr;
+  justify-content: start;
+  grid-column-gap: 1rem;
   align-items: center;
   border-width: 1px 0px 0px 0px;
   border-color: ${(props) => props.theme.panel};
@@ -368,10 +375,12 @@ const ListItemDiv = styled.div`
 
 const ListItemElementInput = styled.input<{ $isCompleted: boolean }>`
   background-color: transparent;
+  justify-self: stretch;
   border-width: 0px 0px 0px 0px;
   color: inherit;
   outline: none;
-  width: 47rem;
+  width: 100%;
+  height: 100%;
   text-decoration: ${(props) =>
     props.$isCompleted ? "line-through" : "inherit"};
 `;

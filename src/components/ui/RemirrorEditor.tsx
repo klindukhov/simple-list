@@ -48,6 +48,7 @@ import { useEffect, useState } from "react";
 
 interface MenuProps {
   setState: Function;
+  setEditorIsFocused: Function;
 }
 
 export const Menu = (props: MenuProps) => {
@@ -75,8 +76,14 @@ export const Menu = (props: MenuProps) => {
     props.setState(getMarkdown());
   }, [getMarkdown()]);
 
-  useEditorEvent("focus", () => setIsEditorFocused(true));
-  useEditorEvent("blur", () => setIsEditorFocused(false));
+  useEditorEvent("focus", () => {
+    setIsEditorFocused(true);
+    props.setEditorIsFocused(true);
+  });
+  useEditorEvent("blur", () => {
+    setIsEditorFocused(false);
+    props.setEditorIsFocused(false);
+  });
 
   return (
     (isEditorFocused || (!isEditorFocused && isMenuHovered)) && (
@@ -240,6 +247,8 @@ export const RemirrorEditor = (props: RemirrorEditorProps) => {
     stringHandler: "markdown",
   });
 
+  const [editorIsFocused, setEditorIsFocused] = useState(false);
+
   return (
     <AllStyledComponent>
       <ThemeProvider>
@@ -250,8 +259,11 @@ export const RemirrorEditor = (props: RemirrorEditorProps) => {
             setState(e.state);
           }}
         >
-          <Menu setState={props.setState} />
-          <EditorComponentWrapper>
+          <Menu
+            setState={props.setState}
+            setEditorIsFocused={setEditorIsFocused}
+          />
+          <EditorComponentWrapper $editorIsFocused={editorIsFocused}>
             <EditorComponent />
           </EditorComponentWrapper>
         </Remirror>
@@ -260,10 +272,14 @@ export const RemirrorEditor = (props: RemirrorEditorProps) => {
   );
 };
 
-const EditorComponentWrapper = styled.div`
+const EditorComponentWrapper = styled.div<{ $editorIsFocused: boolean }>`
   background-color: ${(props) => props.theme.background};
   border-bottom-left-radius: 0.5rem;
   border-bottom-right-radius: 0.5rem;
+  &:hover {
+    opacity: ${(props) => (props.$editorIsFocused ? "1" : "0.7")};
+  }
+
   & > div.remirror-editor-wrapper {
     padding-top: 0px;
   }
@@ -280,6 +296,10 @@ const EditorComponentWrapper = styled.div`
     }
     & > ul > li > label > input {
       margin-left: 1rem;
+    }
+
+    &::-webkit-scrollbar {
+      display: none;
     }
   }
   & > div.remirror-editor-wrapper > div:focus & {
@@ -307,6 +327,9 @@ const MenuDiv = styled.div`
   align-items: center;
   overflow-x: scroll;
   overflow-y: hidden;
+  &::-webkit-scrollbar {
+    display: none;
+  }
 `;
 
 const MenuButton = styled.button<{ $active?: boolean }>`
