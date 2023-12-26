@@ -1,84 +1,63 @@
 import { styled } from "styled-components";
 import Tooltip from "./ui/Tooltip";
-import { ListItem } from "../App";
+import { Filter, ListItem } from "../App";
 import {
   DownloadSimple,
   Eye,
   EyeSlash,
+  Funnel,
+  Gear,
   Intersect,
   MagnifyingGlass,
   Moon,
   SortAscending,
   SortDescending,
   Sun,
+  Trash,
   Unite,
   UploadSimple,
 } from "@phosphor-icons/react";
+import { useEffect, useState } from "react";
+import React from "react";
 
 interface FilterSectionProps {
   list: { [itemId: string]: ListItem };
   setList: Function;
   searchBarValue: string;
   setSearchBarValue: Function;
-  sortByList: { [tag: string]: boolean };
+  fieldsList: { [tag: string]: boolean };
   setSortByList: Function;
   isSortAsc: boolean;
   setIsSortAcs: Function;
-  tagsList: { [tag: string]: boolean };
-  setTagsList: Function;
+  tagsList: string[];
   isShowingCompleted: boolean;
   setIsShowingCompleted: Function;
   isFilteringMatchAny: boolean;
   setIsFilteringMatchAny: Function;
   theme: string;
   setTheme: Function;
+  filterSet: { [filterId: string]: Filter };
+  addFilterToFilterSet: Function;
+  removeFilterFromFilterSet: Function;
+  editFilter: Function;
 }
 
+export const FILTER_OPERATORS = {
+  Contains: (actualValue: string, expectedValue: string) => {
+    return actualValue.includes(expectedValue);
+  },
+  "Bigger then": (actualValue: string, expectedValue: string) => {
+    return actualValue > expectedValue;
+  },
+  "Smaller then": (actualValue: string, expectedValue: string) => {
+    return actualValue < expectedValue;
+  },
+  Equals: (actualValue: string, expectedValue: string) => {
+    return actualValue === expectedValue;
+  },
+};
+
 export default function FilterSection(props: FilterSectionProps) {
-  const handleSortBySelectChange = (selectedTag: string) => {
-    let tempSortByList: { [tag: string]: boolean } = {};
-    Object.assign(tempSortByList, props.sortByList);
-    for (const tag in tempSortByList) {
-      tempSortByList[tag as keyof typeof tempSortByList] = tag === selectedTag;
-    }
-    props.setSortByList(tempSortByList);
-  };
-
-  const getNumberOfFiltersUsed = () => {
-    return Array.from(
-      new Set(
-        Object.keys(props.tagsList)
-          .filter((tag) => props.tagsList[tag])
-          .map((e) => (e[0] === "$" ? e.split("=")[0] : e))
-      )
-    ).length;
-  };
-
-  const getFiltersList = () => {
-    return Array.from(
-      new Set(
-        Object.keys(props.tagsList)
-          .filter((tag) => tag !== "Completed" && !tag.includes(`$Created=`))
-          .map((e) => (e[0] === "$" ? e.split("=")[0] : e))
-      )
-    );
-  };
-
-  const highlightTag = (tag: string) => {
-    let tempTagsList: { [tag: string]: boolean } = {};
-    Object.assign(tempTagsList, props.tagsList);
-
-    if (tag[0] === "$") {
-      for (let t in tempTagsList) {
-        tempTagsList[t] = t.includes(tag) ? !tempTagsList[t] : tempTagsList[t];
-      }
-    } else {
-      tempTagsList[tag] = !tempTagsList[tag];
-    }
-
-    props.setTagsList(tempTagsList);
-  };
-
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const fileReader = new FileReader();
     if (!e.target.files) return;
@@ -87,8 +66,7 @@ export default function FilterSection(props: FilterSectionProps) {
       let imported: { [itemId: string]: ListItem } = JSON.parse(
         "" + e.target?.result
       );
-      let tempList: { [itemId: string]: ListItem } = {};
-      Object.assign(tempList, props.list);
+      let tempList: { [itemId: string]: ListItem } = { ...props.list };
       Object.keys(imported).forEach((key) => {
         tempList[key as keyof typeof tempList] = imported[key];
       });
@@ -106,14 +84,93 @@ export default function FilterSection(props: FilterSectionProps) {
     link.click();
   };
 
-  const getIsTagHighlighted = (tag: string) => {
-    return (
-      (tag[0] === "$" &&
-        Object.keys(props.tagsList)
-          .filter((e) => e.includes(tag))
-          .some((e) => props.tagsList[e])) ||
-      props.tagsList[tag]
+  const handleSortChange = (selectedTag: string) => {
+    let tempFieldsList: { [tag: string]: boolean } = { ...props.fieldsList };
+    for (const tag in tempFieldsList) {
+      tempFieldsList[tag as keyof typeof tempFieldsList] = tag === selectedTag;
+    }
+    props.setSortByList(tempFieldsList);
+  };
+
+  const emptyFilter = {
+    id: "new",
+    fieldToFilter: "",
+    operator: "",
+    expectedValue: "",
+  };
+  const [newFilter, setNewFilter] = useState<Filter>(emptyFilter);
+  const [isFilterBeingEdited, setIsFilterBeingEdited] = useState<{
+    [filterId: string]: boolean;
+  }>();
+  useEffect(() => {
+    let tempIsFilterBeingEdited: { [filterId: string]: boolean } = {};
+    Object.keys(props.filterSet).forEach((filterId) => {
+      tempIsFilterBeingEdited[filterId] = false;
+    });
+    tempIsFilterBeingEdited["new"] = false;
+    setIsFilterBeingEdited(tempIsFilterBeingEdited);
+  }, [props.filterSet]);
+
+  const handleNewFilterFieldChange = (selectedField: string) => {
+    let tempFilter: Filter = { ...newFilter };
+
+    tempFilter.fieldToFilter = selectedField;
+    if (selectedField === "Tags") {
+      tempFilter.operator = "Include";
+    }
+
+    setNewFilter(tempFilter);
+  };
+
+  const handleNewFilterOperatorChange = (selectedOperator: string) => {
+    let tempFilter: Filter = { ...newFilter };
+
+    tempFilter.operator = selectedOperator;
+
+    setNewFilter(tempFilter);
+  };
+
+  const handleExpectedValueChange = (fieldValue: string) => {
+    let tempFilter: Filter = { ...newFilter };
+
+    tempFilter.expectedValue = fieldValue;
+
+    setNewFilter(tempFilter);
+  };
+
+  const handleSaveFilter = (id?: string) => {
+    if (!id || id === "" || id === "new") {
+      if (
+        !newFilter.expectedValue ||
+        !newFilter.operator ||
+        !newFilter.fieldToFilter
+      )
+        return;
+      props.addFilterToFilterSet(newFilter);
+      setNewFilter(emptyFilter);
+    } else {
+      props.editFilter(newFilter);
+      setNewFilter(emptyFilter);
+    }
+  };
+
+  const toggleIsFilterBeingEdited = (id: string) => {
+    setNewFilter(id === "new" ? emptyFilter : props.filterSet[id]);
+    const tempIsFilterBeingEdited = { ...isFilterBeingEdited };
+    Object.keys(tempIsFilterBeingEdited).forEach(
+      (filterId) => (tempIsFilterBeingEdited[filterId] = false)
     );
+    tempIsFilterBeingEdited[id] = true;
+    setIsFilterBeingEdited(tempIsFilterBeingEdited);
+  };
+
+  const handleCancelFilter = (id?: string) => {
+    if (id) {
+      let tempIsFilterBeingEdited = { ...isFilterBeingEdited };
+      tempIsFilterBeingEdited[id] = false;
+      setIsFilterBeingEdited(tempIsFilterBeingEdited);
+    }
+    setNewFilter(emptyFilter);
   };
 
   return (
@@ -134,16 +191,19 @@ export default function FilterSection(props: FilterSectionProps) {
             {props.theme === "dark" && <Sun />}
             {props.theme === "light" && <Moon />}
           </SquareButton>
-          <ImportExportButton onClick={exportList}>
+          <WideButton onClick={exportList}>
             {"Export  "}
             <UploadSimple />
-          </ImportExportButton>
-          <ImportExportButton
+          </WideButton>
+          <WideButton
             onClick={() => document.getElementById("importFileInput")?.click()}
           >
             Import
             <DownloadSimple />
-          </ImportExportButton>
+          </WideButton>
+          <SquareButtonJustifyEnd>
+            <Gear />{" "}
+          </SquareButtonJustifyEnd>
         </ExportImportPanel>
         <SearchBarElement>
           <SearchBarInput
@@ -160,27 +220,24 @@ export default function FilterSection(props: FilterSectionProps) {
         </SearchBarElement>
         <SortByElement>
           <Txt>Sort by:</Txt>
-          <SortBySelect
-            onChange={(e) => handleSortBySelectChange(e.target.value)}
-          >
-            {props.sortByList &&
-              Object.keys(props.sortByList).map((e) => (
+          <SelectInput onChange={(e) => handleSortChange(e.target.value)}>
+            {props.fieldsList &&
+              Object.keys(props.fieldsList).map((e) => (
                 <option key={e} value={e}>
                   {e}
                 </option>
               ))}
-          </SortBySelect>
-          <SquareButtonEnd onClick={() => props.setIsSortAcs(!props.isSortAsc)}>
+          </SelectInput>
+          <SquareButtonJustifyEnd
+            onClick={() => props.setIsSortAcs(!props.isSortAsc)}
+          >
             {props.isSortAsc && <SortAscending size={"1.5rem"} />}
             {!props.isSortAsc && <SortDescending size={"1.5rem"} />}
-          </SquareButtonEnd>
+          </SquareButtonJustifyEnd>
         </SortByElement>
         <FiltersUsedElement>
-          <Txt>
-            {"Filters Used: "}
-            {getNumberOfFiltersUsed()}
-          </Txt>
-          <SquareButtonEnd
+          <Txt>Filters</Txt>
+          <SquareButtonJustifyEnd
             onClick={() =>
               props.setIsShowingCompleted(!props.isShowingCompleted)
             }
@@ -195,7 +252,7 @@ export default function FilterSection(props: FilterSectionProps) {
                 {props.isShowingCompleted && <Eye size={"1.5rem"} />}
               </>
             </Tooltip>
-          </SquareButtonEnd>
+          </SquareButtonJustifyEnd>
         </FiltersUsedElement>
         <MatchAnyAllElement>
           <FilteringMatch
@@ -213,20 +270,132 @@ export default function FilterSection(props: FilterSectionProps) {
             <Unite size={"1.5rem"} />
           </FilteringMatch>
         </MatchAnyAllElement>
-        <FilterElementsWrapper>
-          {props.tagsList &&
-            getFiltersList().map((tag) => (
-              <FilteringPanelFilter
-                key={tag}
-                $isHighlighted={getIsTagHighlighted(tag)}
-                onClick={() => highlightTag(tag)}
-              >
-                <FilteringPanelFilterText>
-                  {tag[0] === "$" ? "Have " + tag.slice(1) : tag}
-                </FilteringPanelFilterText>
-              </FilteringPanelFilter>
-            ))}
-        </FilterElementsWrapper>
+        {[...Object.values(props.filterSet), emptyFilter].map(
+          (filter: Filter) => (
+            <React.Fragment key={filter.id}>
+              {isFilterBeingEdited &&
+                filter.id === "new" &&
+                !isFilterBeingEdited["new"] && (
+                  <WideButton onClick={() => toggleIsFilterBeingEdited("new")}>
+                    Add filter <Funnel />
+                  </WideButton>
+                )}
+              {isFilterBeingEdited &&
+                ((filter.id !== "new" && !isFilterBeingEdited[filter.id]) ||
+                  isFilterBeingEdited[filter.id]) && (
+                  <FilterElement
+                    onClick={() =>
+                      !isFilterBeingEdited[filter.id] &&
+                      toggleIsFilterBeingEdited(filter.id)
+                    }
+                  >
+                    {isFilterBeingEdited && !isFilterBeingEdited[filter.id] && (
+                      <FilterDiv>
+                        <FilterFieldDiv>
+                          <Txt>
+                            {filter.fieldToFilter +
+                              ": " +
+                              filter.operator +
+                              " "}
+                          </Txt>
+                        </FilterFieldDiv>
+                        <ExpectedValueDiv>
+                          <Txt>{filter.expectedValue}</Txt>
+                        </ExpectedValueDiv>
+                        <SquareButtonJustifyEnd
+                          onClick={() =>
+                            props.removeFilterFromFilterSet(filter.id)
+                          }
+                        >
+                          <Trash />
+                        </SquareButtonJustifyEnd>
+                      </FilterDiv>
+                    )}
+                    {isFilterBeingEdited && isFilterBeingEdited[filter.id] && (
+                      <>
+                        <SelectInput
+                          onChange={(e) =>
+                            handleNewFilterFieldChange(e.target.value)
+                          }
+                          value={newFilter.fieldToFilter}
+                        >
+                          <option disabled hidden value={""}>
+                            {"Select field"}
+                          </option>
+                          {props.fieldsList &&
+                            [...Object.keys(props.fieldsList), "Tags"].map(
+                              (e) => (
+                                <option key={e} value={e}>
+                                  {e}
+                                </option>
+                              )
+                            )}
+                        </SelectInput>
+                        <SelectInput
+                          onChange={(e) =>
+                            handleNewFilterOperatorChange(e.target.value)
+                          }
+                          disabled={newFilter.fieldToFilter === "Tags"}
+                          value={newFilter.operator}
+                        >
+                          <option disabled hidden value={""}>
+                            {"Select operator"}
+                          </option>
+                          {(newFilter.fieldToFilter === "Tags"
+                            ? ["Include"]
+                            : Object.keys(FILTER_OPERATORS)
+                          ).map((operator) => (
+                            <option key={operator} value={operator}>
+                              {operator}
+                            </option>
+                          ))}
+                        </SelectInput>
+                        {newFilter.fieldToFilter !== "Tags" && (
+                          <SearchBarInput
+                            onChange={(e) =>
+                              handleExpectedValueChange(e.target.value)
+                            }
+                            placeholder='Expected value'
+                          />
+                        )}
+                        {newFilter.fieldToFilter === "Tags" && (
+                          <SelectInput
+                            onChange={(e) =>
+                              handleExpectedValueChange(e.target.value)
+                            }
+                            value={newFilter.expectedValue}
+                          >
+                            <option disabled hidden value={""}>
+                              {"Select tag"}
+                            </option>
+                            {props.tagsList
+                              .filter((tag) => tag[0] !== "$")
+                              .map((tag) => (
+                                <option key={tag} value={tag}>
+                                  {tag}
+                                </option>
+                              ))}
+                          </SelectInput>
+                        )}
+                        <FilterCreationSaveCancel>
+                          <WideButton
+                            onClick={() => handleSaveFilter(filter.id)}
+                          >
+                            Save
+                          </WideButton>
+                          <WideButton
+                            onClick={() => handleCancelFilter(filter.id)}
+                          >
+                            <small>Cancel</small>
+                          </WideButton>
+                        </FilterCreationSaveCancel>
+                      </>
+                    )}
+                  </FilterElement>
+                )}
+            </React.Fragment>
+          )
+        )}
       </FilteringSidePanel>
     </>
   );
@@ -265,7 +434,7 @@ const FilteringPanelElement = styled.div`
 `;
 
 const ExportImportPanel = styled(FilteringPanelElement)`
-  grid-template-columns: auto auto auto;
+  grid-template-columns: auto auto auto auto;
   margin-top: 0.5rem;
   margin-bottom: 1.5rem;
 `;
@@ -284,11 +453,14 @@ const SquareButton = styled.button`
   align-content: center;
   cursor: pointer;
   &:hover {
-    background-color: ${(props) => props.theme.background};
+    background-color: ${(props) => props.theme.background07};
+  }
+  &:active {
+    opacity: 0.7;
   }
 `;
 
-const ImportExportButton = styled(SquareButton)`
+const WideButton = styled(SquareButton)`
   height: 2rem;
   width: auto;
   display: grid;
@@ -297,7 +469,9 @@ const ImportExportButton = styled(SquareButton)`
   justify-content: center;
   cursor: pointer;
   &:hover {
-    background-color: ${(props) => props.theme.background};
+    background-color: ${(props) => props.theme.background07};
+  }
+  &:active {
     opacity: 0.7;
   }
 `;
@@ -322,6 +496,11 @@ const SearchBarElement = styled(FilteringPanelGroupElement)`
   justify-items: center;
   margin-bottom: 2px;
   &:hover {
+    & > input {
+      background-color: ${(props) => props.theme.background07};
+    }
+  }
+  &:active {
     opacity: 0.7;
   }
 `;
@@ -352,11 +531,11 @@ const SortByElement = styled(FilteringPanelGroupElement)`
   grid-template-columns: 25% 60% 15%;
 `;
 
-const SquareButtonEnd = styled(SquareButton)`
+const SquareButtonJustifyEnd = styled(SquareButton)`
   justify-self: end;
 `;
 
-const SortBySelect = styled.select`
+const SelectInput = styled.select`
   background-color: ${(props) => props.theme.background};
   color: inherit;
   outline: none;
@@ -367,7 +546,9 @@ const SortBySelect = styled.select`
   box-sizing: border-box;
   padding: 0.5rem;
   &:hover {
-    background-color: ${(props) => props.theme.background};
+    background-color: ${(props) => props.theme.background07};
+  }
+  &:active {
     opacity: 0.7;
   }
 `;
@@ -375,12 +556,12 @@ const SortBySelect = styled.select`
 const FiltersUsedElement = styled(FilteringPanelGroupElement)`
   margin-top: 1rem;
   grid-template-columns: 85% 15%;
-  font-size: 0.8rem;
 `;
 
 const MatchAnyAllElement = styled(FilteringPanelGroupElement)`
   grid-template-columns: 50% 50%;
   margin-top: 0.1rem;
+  margin-bottom: 0.5rem;
 `;
 
 const FilteringMatch = styled.div<{
@@ -397,50 +578,85 @@ const FilteringMatch = styled.div<{
   grid-template-columns: auto auto;
   column-gap: 1rem;
   &:first-child {
-    background-color: ${(props) => props.theme.background};
-    opacity: ${(props) => (!props.$isFilteringMatchAny ? "1" : "0.5")};
+    background-color: ${(props) =>
+      !props.$isFilteringMatchAny
+        ? props.theme.background
+        : props.theme.background05};
     border-bottom-left-radius: 0.5rem;
     border-top-left-radius: 0.5rem;
   }
   &:last-child {
-    background-color: ${(props) => props.theme.background};
-    opacity: ${(props) => (props.$isFilteringMatchAny ? "1" : "0.5")};
+    background-color: ${(props) =>
+      props.$isFilteringMatchAny
+        ? props.theme.background
+        : props.theme.background05};
     border-bottom-right-radius: 0.5rem;
     border-top-right-radius: 0.5rem;
   }
   &:hover {
-    background-color: ${(props) => props.theme.background};
+    background-color: ${(props) => props.theme.background07};
+  }
+  &:active {
     opacity: 0.7;
   }
 `;
 
-const FilterElementsWrapper = styled.span`
-  width: 100%;
-  justify-items: center;
+const FilterElement = styled.div`
+  width: 95%;
+  background-color: ${(props) => props.theme.background07};
+  grid-row-gap: 0.3rem;
   display: grid;
-`;
-
-const FilteringPanelFilter = styled(FilteringPanelGroupElement)<{
-  $isHighlighted: boolean;
-}>`
-  background-color: ${(props) => props.theme.background};
-  opacity: ${(props) => (props.$isHighlighted ? "1" : "0.5")};
-  cursor: pointer;
-  &:hover {
-    background-color: ${(props) => props.theme.background};
-    opacity: 0.7;
+  grid-template-columns: 95%;
+  justify-content: center;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  margin-bottom: 0.5rem;
+  border-radius: 0.5rem;
+  & > select,
+  button,
+  input {
+    &:hover {
+      background-color: ${(props) => props.theme.panel07};
+    }
+    &:active {
+      opacity: 0.7;
+    }
   }
-  border-bottom: 2px solid ${(props) => props.theme.panel};
-  box-sizing: border-box;
+  & > select,
+  input {
+    background-color: ${(props) => props.theme.panel};
+  }
 `;
 
-const FilteringPanelFilterText = styled.span`
+const FilterCreationSaveCancel = styled.div`
+  width: 100%;
+  display: grid;
+  grid-template-columns: auto auto;
+`;
+
+const FilterDiv = styled.div`
+  display: grid;
+  grid-template-columns: auto auto auto;
+`;
+
+const ExpectedValueDiv = styled.div`
+  height: 2rem;
+  border-radius: 0.5rem;
+  background-color: ${(props) => props.theme.panel};
+  display: grid;
+  align-items: center;
+  justify-content: center;
   box-sizing: border-box;
   padding-top: 0.1rem;
-  display: inline-flex;
-  max-width: 15rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  justify-self: center;
+`;
+
+const FilterFieldDiv = styled.div`
+  height: 2rem;
+  border-radius: 0.5rem;
+  display: grid;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  padding-top: 0.1rem;
+  justify-self: start;
 `;

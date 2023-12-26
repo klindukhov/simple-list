@@ -42,17 +42,19 @@ const TooltipText = styled.div`
   padding: 5px;
   position: absolute;
   z-index: 1;
-  bottom: 90%;
-  left: 50%;
+  bottom: -8%;
+  right: 140%;
   margin-left: -60px;
   &::after {
+    opacity: 0.5;
     content: "";
     position: absolute;
-    top: 100%;
-    left: 50%;
+    top: 40%;
+    left: 106%;
     margin-left: -5px;
     border-width: 5px;
     border-style: solid;
     border-color: #4f4f4fb5 transparent transparent transparent;
+    transform: rotate(-90deg);
   }
 `;

@@ -21,7 +21,6 @@ interface ListItemdetailSectionProps {
   addTagToListItem: Function;
   setListItemSummary: Function;
   setList: Function;
-  generateTagsList: Function;
   theme: string;
 }
 
@@ -36,8 +35,7 @@ export default function ListItemDetailSection(
   const [areFieldsBeingEdited, setAreFieldsBeingEdited] = useState(false);
 
   const setListItemDescription = (id: string, description: string) => {
-    let tempList: { [itemId: string]: ListItem } = {};
-    Object.assign(tempList, props.list);
+    let tempList: { [itemId: string]: ListItem } = { ...props.list };
 
     tempList[id].description = description;
 
@@ -49,8 +47,7 @@ export default function ListItemDetailSection(
     currentTag: string,
     newTag: string
   ) => {
-    let tempList: { [itemId: string]: ListItem } = {};
-    Object.assign(tempList, props.list);
+    let tempList: { [itemId: string]: ListItem } = { ...props.list };
 
     if (tempList[id].tags.includes(currentTag)) {
       tempList[id].tags[tempList[id].tags.indexOf(currentTag)] = newTag;

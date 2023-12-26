@@ -4,6 +4,7 @@ import { getList as getListApi, setList as setListApi } from "./api";
 import ListSection from "./components/ListSection";
 import FilterSection from "./components/FilterSection";
 import ListItemDetailSection from "./components/ListItemDetailsSection";
+import { v4 as uuidv4 } from "uuid";
 
 import { ThemeProvider } from "styled-components";
 import { lightTheme, darkTheme, GlobalStyles } from "./components/ui/Themes.ts";
@@ -16,54 +17,52 @@ export interface ListItem {
   tags: string[];
 }
 
+export interface Filter {
+  id: string;
+  fieldToFilter: string;
+  operator: string;
+  expectedValue: string;
+}
+
 export default function App() {
-  const [list, setList] = useState<{ [itemId: string]: ListItem }>({});
-  const [tagsList, setTagsList] = useState<{ [tag: string]: boolean }>({});
+  const [filterSet, setFilterSet] = useState<{ [filterId: string]: Filter }>(
+    {}
+  );
 
   const [theme, setTheme] = useState("dark");
 
+  const [list, setList] = useState<{ [itemId: string]: ListItem }>({});
   useEffect(() => {
     getListApi().then((list) => {
       setList(list);
-      setTagsList(generateTagsList(list));
-      setSortByList(generateSortByList(list));
     });
   }, []);
 
+  const [fieldsList, setFieldsList] = useState<{ [tag: string]: boolean }>({});
   useEffect(() => {
-    setTagsList(generateTagsList(list));
-    setSortByList(generateSortByList(list));
+    setFieldsList(generateFieldsList(list));
   }, [list]);
 
   const [isFilteringMatchAny, setIsFilteringMatchAny] = useState(true);
   const [isShowingCompleted, setIsShowingCompleted] = useState(false);
 
   const [isSortAsc, setIsSortAcs] = useState(false);
-  const [sortByList, setSortByList] = useState<{ [tag: string]: boolean }>({});
 
   const [focusedListItemId, setFocusedListItemId] = useState<string>("0");
 
   const [searchBarValue, setSearchBarValue] = useState("");
 
-  const generateTagsList = (itemList: {
-    [itemId: string]: ListItem;
-  }): { [tag: string]: boolean } => {
-    if (Object.keys(itemList).length === 0) return {};
+  const getTagsList = (itemList: { [itemId: string]: ListItem }): string[] => {
+    if (Object.keys(itemList).length === 0) return [];
 
     const allTags = Object.keys(itemList)
       .map((id) => itemList[id].tags)
       .reduce((allTags, tags) => [...allTags, ...tags]);
 
-    const uniqueTags = Array.from(new Set(allTags));
-
-    const tagsHighlightMap: { [tag: string]: boolean } = {};
-    uniqueTags.forEach((tag) => {
-      tagsHighlightMap[tag] = false;
-    });
-    return tagsHighlightMap;
+    return Array.from(new Set(allTags));
   };
 
-  const generateSortByList = (itemList: {
+  const generateFieldsList = (itemList: {
     [itemId: string]: ListItem;
   }): { [tag: string]: boolean } => {
     if (Object.keys(itemList).length === 0) return {};
@@ -88,9 +87,7 @@ export default function App() {
   };
 
   const addTagToListItem = (id: string, tag: string) => {
-    let tempList: { [itemId: string]: ListItem } = {};
-    Object.assign(tempList, list);
-
+    let tempList: { [itemId: string]: ListItem } = { ...list };
     if (tempList[id].tags.includes(tag)) {
       return;
     } else {
@@ -99,12 +96,10 @@ export default function App() {
 
     setList(tempList);
     setListApi(tempList);
-    setTagsList(generateTagsList(tempList));
   };
 
   const removeTagFromListItem = (id: string, tag: string) => {
-    let tempList: { [itemId: string]: ListItem } = {};
-    Object.assign(tempList, list);
+    let tempList: { [itemId: string]: ListItem } = { ...list };
 
     if (tempList[id].tags.includes(tag)) {
       tempList[id].tags.splice(tempList[id].tags.indexOf(tag), 1);
@@ -112,12 +107,10 @@ export default function App() {
 
     setList(tempList);
     setListApi(tempList);
-    setTagsList(generateTagsList(tempList));
   };
 
   const setListItemSummary = (id: string, summary: string) => {
-    let tempList: { [itemId: string]: ListItem } = {};
-    Object.assign(tempList, list);
+    let tempList: { [itemId: string]: ListItem } = { ...list };
 
     tempList[id].summary = summary;
 
@@ -126,19 +119,40 @@ export default function App() {
   };
 
   const removeListItem = (id: string) => {
-    let tempList: { [itemId: string]: ListItem } = {};
-    Object.assign(tempList, list);
+    let tempList: { [itemId: string]: ListItem } = { ...list };
 
     delete tempList[id];
 
     setList(tempList);
     setListApi(tempList);
-    setTagsList(generateTagsList(tempList));
   };
 
   const iconStyles = {
     color: theme === "dark" ? "#edeef2" : "black",
     size: "1rem",
+  };
+
+  const addFilterToFilterSet = (filterToAdd: Filter) => {
+    const newFilterId = uuidv4();
+    filterToAdd.id = newFilterId;
+
+    let tempFilterSet: { [filterId: string]: Filter } = { ...filterSet };
+
+    tempFilterSet[newFilterId] = filterToAdd;
+
+    setFilterSet(tempFilterSet);
+  };
+
+  const editFilter = (filter: Filter) => {
+    const tempFilterSet = { ...filterSet };
+    tempFilterSet[filter.id] = filter;
+    setFilterSet(tempFilterSet);
+  };
+
+  const removeFilterFromFilterSet = (filterIdToRemove: string) => {
+    const tempFilterSet: { [filterId: string]: Filter } = { ...filterSet };
+    delete tempFilterSet[filterIdToRemove];
+    setFilterSet(tempFilterSet);
   };
 
   const getFilterSectionProps = () => {
@@ -150,18 +164,21 @@ export default function App() {
       },
       searchBarValue: searchBarValue,
       setSearchBarValue: setSearchBarValue,
-      sortByList: sortByList,
-      setSortByList: setSortByList,
+      fieldsList: fieldsList,
+      setSortByList: setFieldsList,
       isSortAsc: isSortAsc,
       setIsSortAcs: setIsSortAcs,
-      tagsList: tagsList,
-      setTagsList: setTagsList,
+      tagsList: getTagsList(list),
       isShowingCompleted: isShowingCompleted,
       setIsShowingCompleted: setIsShowingCompleted,
       isFilteringMatchAny: isFilteringMatchAny,
       setIsFilteringMatchAny: setIsFilteringMatchAny,
       theme: theme,
       setTheme: setTheme,
+      filterSet: filterSet,
+      addFilterToFilterSet: addFilterToFilterSet,
+      removeFilterFromFilterSet: removeFilterFromFilterSet,
+      editFilter: editFilter,
     };
   };
 
@@ -172,12 +189,12 @@ export default function App() {
         setList(itemList);
         setListApi(itemList);
       },
-      tagsList: tagsList,
+      tagsList: getTagsList(list),
       isFilteringMatchAny: isFilteringMatchAny,
       searchBarValue: searchBarValue,
       isShowingCompleted: isShowingCompleted,
       isSortAsc: isSortAsc,
-      sortByList: sortByList,
+      fieldsList: fieldsList,
       removeTagFromListItem: removeTagFromListItem,
       addTagToListItem: addTagToListItem,
       setListItemSummary: setListItemSummary,
@@ -185,6 +202,8 @@ export default function App() {
       setFocusedListItemId: setFocusedListItemId,
       removeListItem: removeListItem,
       theme: theme,
+      filterSet: filterSet,
+      setFilterSet: setFilterSet,
     };
   };
 
@@ -201,7 +220,6 @@ export default function App() {
       removeTagFromListItem: removeTagFromListItem,
       addTagToListItem: addTagToListItem,
       setListItemSummary: setListItemSummary,
-      generateTagsList: generateTagsList,
     };
   };
 
