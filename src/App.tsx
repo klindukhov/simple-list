@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
 import styled from "styled-components";
-import { getList as getListApi, setList as setListApi } from "./api";
+import {
+  getList as getListApi,
+  getSavedFilters,
+  setSavedFilters as setSavedFiltersApi,
+  setList as setListApi,
+} from "./api";
 import ListSection from "./components/ListSection";
 import FilterSection from "./components/FilterSection";
 import ListItemDetailSection from "./components/ListItemDetailsSection";
@@ -25,9 +30,98 @@ export interface Filter {
 }
 
 export default function App() {
-  const [filterSet, setFilterSet] = useState<{ [filterId: string]: Filter }>(
-    {}
-  );
+  const [savedFilters, setSavedFiltersState] = useState<{
+    [filterSetName: string]: { [filterId: string]: Filter };
+  }>({});
+
+  const setSavedFilters = (savedFiltersParam: {
+    [filterSetName: string]: { [filterId: string]: Filter };
+  }) => {
+    setSavedFiltersState(savedFiltersParam);
+    setSavedFiltersApi(savedFiltersParam);
+  };
+
+  const addSavedFilter = (
+    filterSetName: string,
+    filterSet: { [filterId: string]: Filter }
+  ): void => {
+    const tempSavedFilters = { ...savedFilters };
+
+    let filterSetNameNonDuplicated = filterSetName;
+    while (Object.keys(savedFilters).includes(filterSetNameNonDuplicated)) {
+      filterSetNameNonDuplicated += "1";
+    }
+
+    tempSavedFilters[filterSetNameNonDuplicated] = filterSet;
+    setSavedFilters(tempSavedFilters);
+  };
+
+  const removeSavedFilter = (
+    filterSetName: string
+  ): void => {
+    const tempSavedFilters = { ...savedFilters };
+
+    delete tempSavedFilters[filterSetName];
+
+    setSavedFilters(tempSavedFilters);
+  };
+
+  useEffect(() => {
+    getSavedFilters().then((filters) => {
+      setSavedFiltersState(filters);
+    });
+  }, []);
+
+  const getTempFilterSet = (): { [filterId: string]: Filter } => {
+    if (savedFilters["tempFilterSet"]) {
+      return savedFilters["tempFilterSet"];
+    } else {
+      const tempSavedFilters = { ...savedFilters };
+      tempSavedFilters["tempFilterSet"] = {
+        default: {
+          id: "default",
+          fieldToFilter: "Tags",
+          operator: "Include",
+          expectedValue: "Untagged",
+        },
+      };
+      setSavedFiltersState(tempSavedFilters);
+      return tempSavedFilters["tempFilterSet"];
+    }
+  };
+
+  const setTempFilterSet = (filterSet: { [filterId: string]: Filter }) => {
+    const tempSavedFilters = { ...savedFilters };
+    tempSavedFilters["tempFilterSet"] = filterSet;
+    setSavedFilters(tempSavedFilters);
+  };
+
+  const addFilterToTempFilterSet = (filterToAdd: Filter) => {
+    const newFilterId = uuidv4();
+    filterToAdd.id = newFilterId;
+
+    let tempFilterSet: { [filterId: string]: Filter } = {
+      ...getTempFilterSet(),
+    };
+
+    tempFilterSet[newFilterId] = filterToAdd;
+
+    setTempFilterSet(tempFilterSet);
+  };
+
+  const editFilter = (filter: Filter) => {
+    const tempFilterSet = { ...getTempFilterSet() };
+    tempFilterSet[filter.id] = filter;
+    setTempFilterSet(tempFilterSet);
+  };
+
+  const removeFilterFromFilterSet = (filterIdToRemove: string) => {
+    const tempFilterSet: { [filterId: string]: Filter } = {
+      ...getTempFilterSet(),
+    };
+    delete tempFilterSet[filterIdToRemove];
+    setTempFilterSet(tempFilterSet);
+  };
 
   const [theme, setTheme] = useState("dark");
 
@@ -132,29 +226,6 @@ export default function App() {
     size: "1rem",
   };
 
-  const addFilterToFilterSet = (filterToAdd: Filter) => {
-    const newFilterId = uuidv4();
-    filterToAdd.id = newFilterId;
-
-    let tempFilterSet: { [filterId: string]: Filter } = { ...filterSet };
-
-    tempFilterSet[newFilterId] = filterToAdd;
-
-    setFilterSet(tempFilterSet);
-  };
-
-  const editFilter = (filter: Filter) => {
-    const tempFilterSet = { ...filterSet };
-    tempFilterSet[filter.id] = filter;
-    setFilterSet(tempFilterSet);
-  };
-
-  const removeFilterFromFilterSet = (filterIdToRemove: string) => {
-    const tempFilterSet: { [filterId: string]: Filter } = { ...filterSet };
-    delete tempFilterSet[filterIdToRemove];
-    setFilterSet(tempFilterSet);
-  };
-
   const getFilterSectionProps = () => {
     return {
       list: list,
@@ -175,10 +246,14 @@ export default function App() {
       setIsFilteringMatchAny: setIsFilteringMatchAny,
       theme: theme,
       setTheme: setTheme,
-      filterSet: filterSet,
-      addFilterToFilterSet: addFilterToFilterSet,
+      tempFilterSet: getTempFilterSet(),
+      setTempFilterSet: setTempFilterSet,
+      addFilterToFilterSet: addFilterToTempFilterSet,
       removeFilterFromFilterSet: removeFilterFromFilterSet,
       editFilter: editFilter,
+      savedFilters: savedFilters,
+      addSavedFilter: addSavedFilter,
+      removeSavedFilter: removeSavedFilter,
     };
   };
 
@@ -202,8 +277,7 @@ export default function App() {
       setFocusedListItemId: setFocusedListItemId,
       removeListItem: removeListItem,
       theme: theme,
-      filterSet: filterSet,
-      setFilterSet: setFilterSet,
+      tempFilterSet: getTempFilterSet(),
     };
   };
 

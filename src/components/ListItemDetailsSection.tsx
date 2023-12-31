@@ -203,7 +203,9 @@ export default function ListItemDetailSection(
                 </>
               )}
               <Txt>Tags:</Txt>
-              <ListItemDetailsTagsList>
+              <ListItemDetailsTagsList
+                onClick={() => document.getElementById("addTagChip")?.focus()}
+              >
                 {props.list[props.focusedListItemId].tags
                   .filter((e) => e[0] != "$")
                   .map((tag) => (
@@ -225,21 +227,25 @@ export default function ListItemDetailSection(
                   ))}
                 {props.list[props.focusedListItemId].summary.length > 0 && (
                   <AddTagChip
+                    id='addTagChip'
                     $width={
-                      (newTag.length + 1 < 2 ? 2 : newTag.length + 1) + "ch"
+                      (newTag.length + 1 < 4 ? 4 : newTag.length + 1) + "ch"
                     }
                     value={newTag}
                     onChange={(e) => setNewTag(e.target.value)}
                     placeholder='+'
                     onBlur={() => {
-                      if (newTag !== "+" && newTag !== "") {
+                      if (newTag !== "+" && newTag !== "" && newTag !== " ") {
                         props.addTagToListItem(props.focusedListItemId, newTag);
                       }
                       setNewTag("");
                     }}
-                    onKeyDown={(e) =>
-                      e.key === "Enter" && e.currentTarget.blur()
-                    }
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.currentTarget.blur();
+                        document.getElementById("addTagChip")?.focus();
+                      }
+                    }}
                   />
                 )}
               </ListItemDetailsTagsList>
@@ -417,6 +423,7 @@ const ListItemDetailsTagsList = styled.div`
   row-gap: 0.5rem;
   align-items: center;
   box-sizing: border-box;
+  cursor: text;
 `;
 
 const TagChip = styled.div`

@@ -21,8 +21,7 @@ interface ListSectionProps {
   setFocusedListItemId: Function;
   removeListItem: Function;
   theme: string;
-  filterSet: { [filterId: string]: Filter };
-  setFilterSet: Function;
+  tempFilterSet: { [filterId: string]: Filter };
 }
 
 export default function ListSection(props: ListSectionProps) {
@@ -63,7 +62,7 @@ export default function ListSection(props: ListSectionProps) {
     return !(
       Object.keys(
         getSearchResult(
-          getFilteredList(props.list, props.filterSet),
+          getFilteredList(props.list, props.tempFilterSet),
           props.searchBarValue
         )
       ).length === 0
@@ -94,6 +93,16 @@ export default function ListSection(props: ListSectionProps) {
     listParam: { [itemId: string]: ListItem },
     tag: string
   ) => {
+    if (tag === "Untagged") {
+      return Object.fromEntries(
+        Object.entries(listParam).filter(
+          (item) =>
+            item[1].tags.filter(
+              (tag) => !tag.includes("Created") && !tag.includes("Completed")
+            ).length === 0
+        )
+      );
+    }
     let filteredList: { [itemId: string]: ListItem } = {};
     Object.keys(listParam).forEach((itemKey) => {
       if (listParam[itemKey].tags.includes(tag))
@@ -212,7 +221,7 @@ export default function ListSection(props: ListSectionProps) {
   const getListItems = () => {
     return Object.keys(
       getSearchResult(
-        getFilteredList(props.list, props.filterSet),
+        getFilteredList(props.list, props.tempFilterSet),
         props.searchBarValue
       )
     )
@@ -314,8 +323,10 @@ export default function ListSection(props: ListSectionProps) {
               autoFocus={props.list[id].summary === ""}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
-                  handleListSectionClick();
-                  e.currentTarget.blur();
+                  if ((e.target as HTMLInputElement).value !== "") {
+                    handleListSectionClick();
+                    e.currentTarget.blur();
+                  }
                 }
               }}
               $isCompleted={getIsItemAppearingCompleted(id) ?? false}
