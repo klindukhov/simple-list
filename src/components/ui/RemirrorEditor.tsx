@@ -47,8 +47,8 @@ import { EditorState } from "@remirror/pm/state";
 import { useEffect, useState } from "react";
 
 interface MenuProps {
-  setState: Function;
-  setEditorIsFocused: Function;
+  setState: (state : string) => void;
+  setEditorIsFocused: (value: boolean) => void;
 }
 
 export const Menu = (props: MenuProps) => {
@@ -223,7 +223,7 @@ export const Menu = (props: MenuProps) => {
 
 interface RemirrorEditorProps {
   state: EditorState | string;
-  setState: Function;
+  setState: (state : string) => void;
 }
 
 export const RemirrorEditor = (props: RemirrorEditorProps) => {

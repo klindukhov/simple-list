@@ -7,19 +7,19 @@ import { FILTER_OPERATORS } from "./FilterSection";
 
 interface ListSectionProps {
   list: { [itemId: string]: ListItem };
-  setList: Function;
+  setList: (list: { [itemId: string]: ListItem }) => void;
   tagsList: string[];
   isFilteringMatchAny: boolean;
   searchBarValue: string;
   isShowingCompleted: boolean;
   isSortAsc: boolean;
   fieldsList: { [tag: string]: boolean };
-  removeTagFromListItem: Function;
-  addTagToListItem: Function;
-  setListItemSummary: Function;
+  removeTagFromListItem: (id: string, tag: string) => void;
+  addTagToListItem: (id: string, tag: string) => void;
+  setListItemSummary: (id: string, summary: string) => void;
   focusedListItemId: string;
-  setFocusedListItemId: Function;
-  removeListItem: Function;
+  setFocusedListItemId: (id: string) => void;
+  removeListItem: (id: string) => void;
   theme: string;
   tempFilterSet: { [filterId: string]: Filter };
 }
@@ -28,17 +28,24 @@ export default function ListSection(props: ListSectionProps) {
   const [isLastItemEmpty, setIsLastItemEmpty] = useState(false);
 
   const addListItem = () => {
-    let tempList: { [itemId: string]: ListItem } = { ...props.list };
+    const tempList: { [itemId: string]: ListItem } = { ...props.list };
 
     const newId = uuidv4();
-    // let newTags: string[] = Object.keys(props.tagsList).filter(
-    //   (tag) => props.tagsList[tag] && tag !== "Created"
-    // );
+    const newTags: string[] = Object.values(props.tempFilterSet)
+      .filter(
+        (filter) =>
+          filter.fieldToFilter === "Tags" || filter.operator === "Equals"
+      )
+      .map((filter) =>
+        filter.operator === "Equals"
+          ? `$${filter.fieldToFilter}=${filter.expectedValue}`
+          : filter.expectedValue
+      );
     tempList[newId] = {
       id: newId,
       summary: "",
       description: "",
-      tags: ["$Created=" + Date.now()],
+      tags: ["$Created=" + Date.now(), ...newTags],
     };
 
     props.setList(tempList);
@@ -103,7 +110,7 @@ export default function ListSection(props: ListSectionProps) {
         )
       );
     }
-    let filteredList: { [itemId: string]: ListItem } = {};
+    const filteredList: { [itemId: string]: ListItem } = {};
     Object.keys(listParam).forEach((itemKey) => {
       if (listParam[itemKey].tags.includes(tag))
         filteredList[itemKey] = listParam[itemKey];
@@ -169,13 +176,16 @@ export default function ListSection(props: ListSectionProps) {
           {}
         );
       }
-      const intersectObjects = (o1: Object, o2: Object) => {
+      const intersectLists = (
+        o1: { [id: string]: ListItem },
+        o2: { [id: string]: ListItem }
+      ) => {
         return Object.fromEntries(
           Object.entries(o1).filter((entry) => entry[0] in o2)
         );
       };
       return listArr.reduce((result, currentList) => {
-        return intersectObjects(result, currentList);
+        return intersectLists(result, currentList);
       }, listArr[0]);
     };
 
@@ -188,7 +198,7 @@ export default function ListSection(props: ListSectionProps) {
     [itemId: string]: boolean;
   }>();
   useEffect(() => {
-    let tempList: { [itemId: string]: boolean } = {};
+    const tempList: { [itemId: string]: boolean } = {};
     Object.keys(props.list).forEach((id) => {
       tempList[id] = props.list[id].tags.includes("Completed");
     });
@@ -201,7 +211,7 @@ export default function ListSection(props: ListSectionProps) {
     } else {
       const sleepNow = (delay: number) =>
         new Promise((resolve) => setTimeout(resolve, delay));
-      let tempIsCompletedList: { [itemId: string]: boolean } = {
+      const tempIsCompletedList: { [itemId: string]: boolean } = {
         ...isAppearingCompletedList,
       };
       tempIsCompletedList[id] = true;
@@ -234,7 +244,7 @@ export default function ListSection(props: ListSectionProps) {
         (props.list[props.isSortAsc ? b : a].tags
           .find((e) =>
             e.includes(
-              `\$${Object.keys(props.fieldsList).reduce(
+              `$${Object.keys(props.fieldsList).reduce(
                 (a, b) =>
                   props.fieldsList[b as keyof typeof props.fieldsList] ? b : a,
                 "Created"
@@ -245,7 +255,7 @@ export default function ListSection(props: ListSectionProps) {
         (props.list[props.isSortAsc ? a : b].tags
           .find((e) =>
             e.includes(
-              `\$${Object.keys(props.fieldsList).reduce(
+              `$${Object.keys(props.fieldsList).reduce(
                 (a, b) =>
                   props.fieldsList[b as keyof typeof props.fieldsList] ? b : a,
                 "Created"
@@ -261,9 +271,19 @@ export default function ListSection(props: ListSectionProps) {
   const handleListItemBlur = () => {
     if (
       Object.keys(props.list).length > 0 &&
-      props.list[props.focusedListItemId].summary === ""
+      props.list[props.focusedListItemId].summary === "" &&
+      props.list[props.focusedListItemId].tags.length === 1 &&
+      props.list[props.focusedListItemId].description === ""
     ) {
+      console.log(props.list[props.focusedListItemId].description);
       props.removeListItem(props.focusedListItemId);
+    } else {
+      if (props.list[props.focusedListItemId].summary === "") {
+        props.setListItemSummary(
+          props.focusedListItemId,
+          "Untitled (clear all fields to delete)"
+        );
+      }
     }
   };
 

@@ -23,25 +23,25 @@ import React from "react";
 
 interface FilterSectionProps {
   list: { [itemId: string]: ListItem };
-  setList: Function;
+  setList: (list: { [itemId: string]: ListItem }) => void;
   searchBarValue: string;
-  setSearchBarValue: Function;
+  setSearchBarValue: (value: string) => void;
   fieldsList: { [tag: string]: boolean };
-  setSortByList: Function;
+  setSortByList: (value: { [tag: string]: boolean }) => void;
   isSortAsc: boolean;
-  setIsSortAcs: Function;
+  setIsSortAcs: (value: boolean) => void;
   tagsList: string[];
   isShowingCompleted: boolean;
-  setIsShowingCompleted: Function;
+  setIsShowingCompleted: (value: boolean) => void;
   isFilteringMatchAny: boolean;
-  setIsFilteringMatchAny: Function;
+  setIsFilteringMatchAny: (value: boolean) => void;
   theme: string;
-  setTheme: Function;
+  setTheme: (theme: string) => void;
   tempFilterSet: { [filterId: string]: Filter };
   setTempFilterSet: (filterset: { [filterId: string]: Filter }) => void;
   addFilterToFilterSet: (filter: Filter) => void;
-  removeFilterFromFilterSet: Function;
-  editFilter: Function;
+  removeFilterFromFilterSet: (filterId: string) => void;
+  editFilter: (filter: Filter) => void;
   savedFilters: { [filtersetName: string]: { [filterId: string]: Filter } };
   addSavedFilter: (
     filtersetName: string,
@@ -78,10 +78,10 @@ export default function FilterSection(props: FilterSectionProps) {
     if (!e.target.files) return;
     fileReader.readAsText(e.target.files[0], "UTF-8");
     fileReader.onload = (e) => {
-      let imported: { [itemId: string]: ListItem } = JSON.parse(
+      const imported: { [itemId: string]: ListItem } = JSON.parse(
         "" + e.target?.result
       );
-      let tempList: { [itemId: string]: ListItem } = { ...props.list };
+      const tempList: { [itemId: string]: ListItem } = { ...props.list };
       Object.keys(imported).forEach((key) => {
         tempList[key as keyof typeof tempList] = imported[key];
       });
@@ -100,7 +100,7 @@ export default function FilterSection(props: FilterSectionProps) {
   };
 
   const handleSortChange = (selectedTag: string) => {
-    let tempFieldsList: { [tag: string]: boolean } = { ...props.fieldsList };
+    const tempFieldsList: { [tag: string]: boolean } = { ...props.fieldsList };
     for (const tag in tempFieldsList) {
       tempFieldsList[tag as keyof typeof tempFieldsList] = tag === selectedTag;
     }
@@ -182,7 +182,7 @@ export default function FilterSection(props: FilterSectionProps) {
 
   const handleCancelFilter = (id?: string) => {
     if (id) {
-      let tempIsFilterBeingEdited = { ...isFilterBeingEdited };
+      const tempIsFilterBeingEdited = { ...isFilterBeingEdited };
       tempIsFilterBeingEdited[id] = false;
       setIsFilterBeingEdited(tempIsFilterBeingEdited);
     }
@@ -343,7 +343,7 @@ export default function FilterSection(props: FilterSectionProps) {
             <Unite size={"1.5rem"} />
           </FilteringMatch>
         </MatchAnyAllElement>
-        {Object.keys(props.tempFilterSet).length > 0 && (
+        {props.tempFilterSet && Object.keys(props.tempFilterSet).length > 0 && (
           <SaveFilterSetDiv>
             {!isFiltersetBeingSaved && (
               <WideButtonStart onClick={() => setIsFiltersetBeingSaved(true)}>
@@ -366,136 +366,139 @@ export default function FilterSection(props: FilterSectionProps) {
           </SaveFilterSetDiv>
         )}
         <FiltersContainer>
-          {[...Object.values(props.tempFilterSet), EMPTY_FILTER_TEMPLATE].map(
-            (filter: Filter) => (
-              <React.Fragment key={filter.id}>
-                {isFilterBeingEdited &&
-                  filter.id === "new" &&
-                  !isFilterBeingEdited["new"] && (
-                    <WideButton
-                      onClick={() => toggleIsFilterBeingEdited("new")}
-                    >
-                      Add filter <Funnel />
-                    </WideButton>
-                  )}
-                {isFilterBeingEdited &&
-                  ((filter.id !== "new" && !isFilterBeingEdited[filter.id]) ||
-                    isFilterBeingEdited[filter.id]) && (
-                    <FilterElement
-                      onClick={() =>
-                        !isFilterBeingEdited[filter.id] &&
-                        toggleIsFilterBeingEdited(filter.id)
-                      }
-                    >
-                      {isFilterBeingEdited &&
-                        !isFilterBeingEdited[filter.id] && (
-                          <FilterDiv>
-                            <FilterFieldDiv>
-                              <Txt>
-                                {filter.fieldToFilter +
-                                  ": " +
-                                  filter.operator +
-                                  " "}
-                              </Txt>
-                            </FilterFieldDiv>
-                            <ExpectedValueDiv>
-                              <Txt>{filter.expectedValue}</Txt>
-                            </ExpectedValueDiv>
-                            <SquareButtonJustifyEnd
-                              onClick={() =>
-                                props.removeFilterFromFilterSet(filter.id)
-                              }
-                            >
-                              <Trash />
-                            </SquareButtonJustifyEnd>
-                          </FilterDiv>
-                        )}
-                      {isFilterBeingEdited &&
-                        isFilterBeingEdited[filter.id] && (
-                          <>
-                            <SelectInput
-                              onChange={(e) =>
-                                handleNewFilterFieldChange(e.target.value)
-                              }
-                              value={newFilter.fieldToFilter}
-                            >
-                              <option disabled hidden value={""}>
-                                {"Select field"}
-                              </option>
-                              {props.fieldsList &&
-                                [...Object.keys(props.fieldsList), "Tags"].map(
-                                  (e) => (
+          {props.tempFilterSet &&
+            [...Object.values(props.tempFilterSet), EMPTY_FILTER_TEMPLATE].map(
+              (filter: Filter) => (
+                <React.Fragment key={filter.id}>
+                  {isFilterBeingEdited &&
+                    filter.id === "new" &&
+                    !isFilterBeingEdited["new"] && (
+                      <WideButton
+                        onClick={() => toggleIsFilterBeingEdited("new")}
+                      >
+                        <Txt>Add filter</Txt>
+                        <Funnel />
+                      </WideButton>
+                    )}
+                  {isFilterBeingEdited &&
+                    ((filter.id !== "new" && !isFilterBeingEdited[filter.id]) ||
+                      isFilterBeingEdited[filter.id]) && (
+                      <FilterElement
+                        onClick={() =>
+                          !isFilterBeingEdited[filter.id] &&
+                          toggleIsFilterBeingEdited(filter.id)
+                        }
+                      >
+                        {isFilterBeingEdited &&
+                          !isFilterBeingEdited[filter.id] && (
+                            <FilterDiv>
+                              <FilterFieldDiv>
+                                <Txt>
+                                  {filter.fieldToFilter +
+                                    ": " +
+                                    filter.operator +
+                                    " "}
+                                </Txt>
+                              </FilterFieldDiv>
+                              <ExpectedValueDiv>
+                                <Txt>{filter.expectedValue}</Txt>
+                              </ExpectedValueDiv>
+                              <SquareButtonJustifyEnd
+                                onClick={() =>
+                                  props.removeFilterFromFilterSet(filter.id)
+                                }
+                              >
+                                <Trash />
+                              </SquareButtonJustifyEnd>
+                            </FilterDiv>
+                          )}
+                        {isFilterBeingEdited &&
+                          isFilterBeingEdited[filter.id] && (
+                            <>
+                              <SelectInput
+                                onChange={(e) =>
+                                  handleNewFilterFieldChange(e.target.value)
+                                }
+                                value={newFilter.fieldToFilter}
+                              >
+                                <option disabled hidden value={""}>
+                                  {"Select field"}
+                                </option>
+                                {props.fieldsList &&
+                                  [
+                                    ...Object.keys(props.fieldsList),
+                                    "Tags",
+                                  ].map((e) => (
                                     <option key={e} value={e}>
                                       {e}
                                     </option>
-                                  )
-                                )}
-                            </SelectInput>
-                            <SelectInput
-                              onChange={(e) =>
-                                handleNewFilterOperatorChange(e.target.value)
-                              }
-                              disabled={newFilter.fieldToFilter === "Tags"}
-                              value={newFilter.operator}
-                            >
-                              <option disabled hidden value={""}>
-                                {"Select operator"}
-                              </option>
-                              {(newFilter.fieldToFilter === "Tags"
-                                ? ["Include"]
-                                : Object.keys(FILTER_OPERATORS)
-                              ).map((operator) => (
-                                <option key={operator} value={operator}>
-                                  {operator}
-                                </option>
-                              ))}
-                            </SelectInput>
-                            {newFilter.fieldToFilter !== "Tags" && (
-                              <InputField
-                                onChange={(e) =>
-                                  handleExpectedValueChange(e.target.value)
-                                }
-                                placeholder='Expected value'
-                              />
-                            )}
-                            {newFilter.fieldToFilter === "Tags" && (
-                              <SelectInput
-                                onChange={(e) =>
-                                  handleExpectedValueChange(e.target.value)
-                                }
-                                value={newFilter.expectedValue}
-                              >
-                                <option disabled hidden value={""}>
-                                  {"Select tag"}
-                                </option>
-                                {["Untagged", ...props.tagsList]
-                                  .filter((tag) => tag[0] !== "$")
-                                  .map((tag) => (
-                                    <option key={tag} value={tag}>
-                                      {tag}
-                                    </option>
                                   ))}
                               </SelectInput>
-                            )}
-                            <FilterCreationSaveCancel>
-                              <WideButton
-                                onClick={() => handleSubmitFilter(filter.id)}
+                              <SelectInput
+                                onChange={(e) =>
+                                  handleNewFilterOperatorChange(e.target.value)
+                                }
+                                disabled={newFilter.fieldToFilter === "Tags"}
+                                value={newFilter.operator}
                               >
-                                Save
-                              </WideButton>
-                              <WideButton
-                                onClick={() => handleCancelFilter(filter.id)}
-                              >
-                                Cancel
-                              </WideButton>
-                            </FilterCreationSaveCancel>
-                          </>
-                        )}
-                    </FilterElement>
-                  )}
-              </React.Fragment>
-            )
-          )}
+                                <option disabled hidden value={""}>
+                                  {"Select operator"}
+                                </option>
+                                {(newFilter.fieldToFilter === "Tags"
+                                  ? ["Include"]
+                                  : Object.keys(FILTER_OPERATORS)
+                                ).map((operator) => (
+                                  <option key={operator} value={operator}>
+                                    {operator}
+                                  </option>
+                                ))}
+                              </SelectInput>
+                              {newFilter.fieldToFilter !== "Tags" && (
+                                <InputField
+                                  onChange={(e) =>
+                                    handleExpectedValueChange(e.target.value)
+                                  }
+                                  placeholder='Expected value'
+                                />
+                              )}
+                              {newFilter.fieldToFilter === "Tags" && (
+                                <SelectInput
+                                  onChange={(e) =>
+                                    handleExpectedValueChange(e.target.value)
+                                  }
+                                  value={newFilter.expectedValue}
+                                >
+                                  <option disabled hidden value={""}>
+                                    {"Select tag"}
+                                  </option>
+                                  {["Untagged", ...props.tagsList]
+                                    .filter((tag) => tag[0] !== "$")
+                                    .map((tag) => (
+                                      <option key={tag} value={tag}>
+                                        {tag}
+                                      </option>
+                                    ))}
+                                </SelectInput>
+                              )}
+                              <FilterCreationSaveCancel>
+                                <WideButton
+                                  onClick={() => handleSubmitFilter(filter.id)}
+                                >
+                                  Save
+                                </WideButton>
+                                <WideButton
+                                  onClick={() => handleCancelFilter(filter.id)}
+                                >
+                                  Cancel
+                                </WideButton>
+                              </FilterCreationSaveCancel>
+                            </>
+                          )}
+                      </FilterElement>
+                    )}
+                </React.Fragment>
+              )
+            )}
         </FiltersContainer>
       </FilteringSidePanel>
     </>
@@ -567,13 +570,14 @@ const WideButton = styled(SquareButton)`
   display: grid;
   align-items: center;
   grid-template-columns: auto auto;
-  justify-content: center;
+  grid-column-gap: 0.5rem;
+  justify-items: center;
   cursor: pointer;
   &:hover {
     background-color: ${(props) => props.theme.background07};
   }
   &:active {
-    opacity: 0.7;
+    opacity: 0.5;
   }
 `;
 
@@ -683,8 +687,13 @@ const SavedFilterDiv = styled.div`
   justify-self: start;
   margin-top: 0.25rem;
   margin-bottom: 0.25rem;
-  & > button:hover {
-    opacity: 0.5;
+  & > button {
+    &:hover {
+      opacity: 0.7;
+    }
+    &:active {
+      opacity: 0.5;
+    }
   }
   &:first-child {
     border-top-right-radius: 0.5rem;
@@ -792,6 +801,9 @@ const FilterElement = styled.div`
   &:nth-last-child(2) {
     border-bottom-right-radius: 0.5rem;
     border-bottom-left-radius: 0.5rem;
+  }
+  &:last-child {
+    border-radius: 0.5rem;
   }
 `;
 

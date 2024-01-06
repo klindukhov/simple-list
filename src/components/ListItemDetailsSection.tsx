@@ -15,12 +15,12 @@ import { RemirrorEditor } from "./ui/RemirrorEditor";
 
 interface ListItemdetailSectionProps {
   list: { [itemId: string]: ListItem };
-  removeListItem: Function;
+  removeListItem: (id: string) => void;
   focusedListItemId: string;
-  removeTagFromListItem: Function;
-  addTagToListItem: Function;
-  setListItemSummary: Function;
-  setList: Function;
+  removeTagFromListItem: (id: string, tag: string) => void;
+  addTagToListItem: (id: string, tag: string) => void;
+  setListItemSummary: (id: string, summary: string) => void;
+  setList: (list: { [itemId: string]: ListItem }) => void;
   theme: string;
 }
 
@@ -35,7 +35,7 @@ export default function ListItemDetailSection(
   const [areFieldsBeingEdited, setAreFieldsBeingEdited] = useState(false);
 
   const setListItemDescription = (id: string, description: string) => {
-    let tempList: { [itemId: string]: ListItem } = { ...props.list };
+    const tempList: { [itemId: string]: ListItem } = { ...props.list };
 
     tempList[id].description = description;
 
@@ -47,7 +47,7 @@ export default function ListItemDetailSection(
     currentTag: string,
     newTag: string
   ) => {
-    let tempList: { [itemId: string]: ListItem } = { ...props.list };
+    const tempList: { [itemId: string]: ListItem } = { ...props.list };
 
     if (tempList[id].tags.includes(currentTag)) {
       tempList[id].tags[tempList[id].tags.indexOf(currentTag)] = newTag;
@@ -131,14 +131,14 @@ export default function ListItemDetailSection(
               >
                 {areFieldsBeingEdited && (
                   <>
+                    <Txt>Save</Txt>
                     <Check />
-                    Save
                   </>
                 )}
                 {!areFieldsBeingEdited && (
                   <>
+                    <Txt>Edit</Txt>
                     <PencilSimple />
-                    Edit
                   </>
                 )}
               </EditButton>
@@ -155,7 +155,7 @@ export default function ListItemDetailSection(
                         editTagInListItem(
                           props.focusedListItemId,
                           tag,
-                          `\$${tag.split("$")[1].split("=")[0]}=${
+                          `$${tag.split("$")[1].split("=")[0]}=${
                             e.target.value
                           }`
                         )
@@ -228,12 +228,8 @@ export default function ListItemDetailSection(
                 {props.list[props.focusedListItemId].summary.length > 0 && (
                   <AddTagChip
                     id='addTagChip'
-                    $width={
-                      (newTag.length + 1 < 4 ? 4 : newTag.length + 1) + "ch"
-                    }
                     value={newTag}
                     onChange={(e) => setNewTag(e.target.value)}
-                    placeholder='+'
                     onBlur={() => {
                       if (newTag !== "+" && newTag !== "" && newTag !== " ") {
                         props.addTagToListItem(props.focusedListItemId, newTag);
@@ -260,12 +256,14 @@ export default function ListItemDetailSection(
                 }}
               />
             </ListItemDetailDescription>
-            <DeleteElementChip
-              onClick={() => props.removeListItem(props.focusedListItemId)}
-            >
-              <Trash size={"1.3rem"} />
-              <Txt>Delete Item</Txt>
-            </DeleteElementChip>
+            <DeleteDiv>
+              <DeleteElementChip
+                onClick={() => props.removeListItem(props.focusedListItemId)}
+              >
+                <Trash size={"1.3rem"} />
+                <Txt>Delete Item</Txt>
+              </DeleteElementChip>
+            </DeleteDiv>
           </ListItemDetailsPanel>
         )}
     </>
@@ -283,6 +281,7 @@ const ListItemDetailsPanel = styled.div`
   background-color: ${(props) => props.theme.panel};
   width: 100%;
   grid-template-columns: 100%;
+  grid-template-rows: auto auto auto auto 1fr;
   display: grid;
   justify-items: center;
   align-content: start;
@@ -363,8 +362,12 @@ const ListItemDetailsFieldElementCreated = styled.div`
   opacity: 0.7;
 `;
 
-const EditButton = styled.span`
+const EditButton = styled.div`
+  width: 3rem;
   justify-self: end;
+  display: grid;
+  grid-template-columns: auto auto;
+  justify-content: space-between;
   cursor: pointer;
   padding: 0.3rem;
   margin-bottom: -0.3rem;
@@ -427,7 +430,7 @@ const ListItemDetailsTagsList = styled.div`
 `;
 
 const TagChip = styled.div`
-  height: 1.7rem;
+  height: 1.8rem;
   padding: 0.1rem 0.4rem 0 0.4rem;
   background-color: ${(props) => props.theme.panel};
   border-radius: 0.5rem;
@@ -464,19 +467,18 @@ const DeleteTag = styled.span`
   }
 `;
 
-const AddTagChip = styled.input<{ $width: string }>`
-  background-color: ${(props) => props.theme.panel};
+const AddTagChip = styled.input`
+  background-color: transparent;
   box-sizing: border-box;
   color: inherit;
   padding-bottom: 0.2rem;
   border-radius: 0.5rem;
   border-width: 0px;
-  text-align: center;
+  text-align: start;
   height: 1.8rem;
   font-size: 1rem;
   cursor: pointer;
   outline: none;
-  width: ${(props) => props.$width};
   max-width: 20rem;
   &:hover {
     opacity: 0.7;
@@ -512,6 +514,12 @@ const DeleteField = styled.div`
   &:hover {
     opacity: 0.7;
   }
+`;
+
+const DeleteDiv = styled.div`
+  height: 1fr;
+  display: grid;
+  align-content: end;
 `;
 
 const DeleteElementChip = styled.div`

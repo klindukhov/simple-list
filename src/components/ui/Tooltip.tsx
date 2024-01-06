@@ -4,7 +4,7 @@ import { styled } from "styled-components";
 interface TooltipProps {
   children: JSX.Element;
   text: string;
-  style?: Object;
+  style?: { [propertyName: string]: string };
 }
 
 export default function Tooltip(props: TooltipProps) {

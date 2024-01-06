@@ -30,7 +30,7 @@ export interface Filter {
 }
 
 export default function App() {
-  const [savedFilters, setSavedFiltersState] = useState<{
+  const [savedFiltersState, setSavedFiltersState] = useState<{
     [filterSetName: string]: { [filterId: string]: Filter };
   }>({});
 
@@ -45,10 +45,12 @@ export default function App() {
     filterSetName: string,
     filterSet: { [filterId: string]: Filter }
   ): void => {
-    const tempSavedFilters = { ...savedFilters };
+    const tempSavedFilters = { ...savedFiltersState };
 
     let filterSetNameNonDuplicated = filterSetName;
-    while (Object.keys(savedFilters).includes(filterSetNameNonDuplicated)) {
+    while (
+      Object.keys(savedFiltersState).includes(filterSetNameNonDuplicated)
+    ) {
       filterSetNameNonDuplicated += "1";
     }
 
@@ -56,10 +58,8 @@ export default function App() {
     setSavedFilters(tempSavedFilters);
   };
 
-  const removeSavedFilter = (
-    filterSetName: string
-  ): void => {
-    const tempSavedFilters = { ...savedFilters };
+  const removeSavedFilter = (filterSetName: string): void => {
+    const tempSavedFilters = { ...savedFiltersState };
 
     delete tempSavedFilters[filterSetName];
 
@@ -68,30 +68,32 @@ export default function App() {
 
   useEffect(() => {
     getSavedFilters().then((filters) => {
-      setSavedFiltersState(filters);
+      if (
+        filters["tempFilterSet"] &&
+        Object.keys(filters["tempFilterSet"]).length > 0
+      ) {
+        setSavedFiltersState(filters);
+      } else {
+        const tempSavedFilters = { ...filters };
+        tempSavedFilters["tempFilterSet"] = {
+          default: {
+            id: "default",
+            fieldToFilter: "Tags",
+            operator: "Include",
+            expectedValue: "Untagged",
+          },
+        };
+        setSavedFiltersState(tempSavedFilters);
+      }
     });
   }, []);
 
   const getTempFilterSet = (): { [filterId: string]: Filter } => {
-    if (savedFilters["tempFilterSet"]) {
-      return savedFilters["tempFilterSet"];
-    } else {
-      const tempSavedFilters = { ...savedFilters };
-      tempSavedFilters["tempFilterSet"] = {
-        default: {
-          id: "default",
-          fieldToFilter: "Tags",
-          operator: "Include",
-          expectedValue: "Untagged",
-        },
-      };
-      setSavedFiltersState(tempSavedFilters);
-      return tempSavedFilters["tempFilterSet"];
-    }
+    return savedFiltersState["tempFilterSet"] ?? {};
   };
 
   const setTempFilterSet = (filterSet: { [filterId: string]: Filter }) => {
-    const tempSavedFilters = { ...savedFilters };
+    const tempSavedFilters = { ...savedFiltersState };
     tempSavedFilters["tempFilterSet"] = filterSet;
     setSavedFilters(tempSavedFilters);
   };
@@ -100,7 +102,7 @@ export default function App() {
     const newFilterId = uuidv4();
     filterToAdd.id = newFilterId;
 
-    let tempFilterSet: { [filterId: string]: Filter } = {
+    const tempFilterSet: { [filterId: string]: Filter } = {
       ...getTempFilterSet(),
     };
 
@@ -181,7 +183,7 @@ export default function App() {
   };
 
   const addTagToListItem = (id: string, tag: string) => {
-    let tempList: { [itemId: string]: ListItem } = { ...list };
+    const tempList: { [itemId: string]: ListItem } = { ...list };
     if (tempList[id].tags.includes(tag)) {
       return;
     } else {
@@ -193,7 +195,7 @@ export default function App() {
   };
 
   const removeTagFromListItem = (id: string, tag: string) => {
-    let tempList: { [itemId: string]: ListItem } = { ...list };
+    const tempList: { [itemId: string]: ListItem } = { ...list };
 
     if (tempList[id].tags.includes(tag)) {
       tempList[id].tags.splice(tempList[id].tags.indexOf(tag), 1);
@@ -204,7 +206,7 @@ export default function App() {
   };
 
   const setListItemSummary = (id: string, summary: string) => {
-    let tempList: { [itemId: string]: ListItem } = { ...list };
+    const tempList: { [itemId: string]: ListItem } = { ...list };
 
     tempList[id].summary = summary;
 
@@ -213,7 +215,7 @@ export default function App() {
   };
 
   const removeListItem = (id: string) => {
-    let tempList: { [itemId: string]: ListItem } = { ...list };
+    const tempList: { [itemId: string]: ListItem } = { ...list };
 
     delete tempList[id];
 
@@ -251,7 +253,7 @@ export default function App() {
       addFilterToFilterSet: addFilterToTempFilterSet,
       removeFilterFromFilterSet: removeFilterFromFilterSet,
       editFilter: editFilter,
-      savedFilters: savedFilters,
+      savedFilters: savedFiltersState,
       addSavedFilter: addSavedFilter,
       removeSavedFilter: removeSavedFilter,
     };
