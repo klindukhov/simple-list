@@ -34,7 +34,9 @@ export default function ListSection(props: ListSectionProps) {
     const newTags: string[] = Object.values(props.tempFilterSet)
       .filter(
         (filter) =>
-          filter.fieldToFilter === "Tags" || filter.operator === "Equals"
+          (filter.fieldToFilter === "Tags" &&
+            filter.expectedValue !== "Untagged") ||
+          filter.operator === "Equals"
       )
       .map((filter) =>
         filter.operator === "Equals"
