@@ -1,9 +1,10 @@
 import { styled } from "styled-components";
 import { Filter, ListItem } from "../App";
 import { v4 as uuidv4 } from "uuid";
-import { CheckCircle, Circle, CursorClick } from "@phosphor-icons/react";
+import { CursorClick } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
 import { FILTER_OPERATORS } from "./FilterSection";
+import PreviewCheckmark from "./ui/PreviewCheckMark";
 
 interface ListSectionProps {
   list: { [itemId: string]: ListItem };
@@ -218,7 +219,11 @@ export default function ListSection(props: ListSectionProps) {
       };
       tempIsCompletedList[id] = true;
       setIsAppearingCompletedList(tempIsCompletedList);
-      sleepNow(2000).then(() => props.addTagToListItem(id, "Completed"));
+      if (props.isShowingCompleted) {
+        props.addTagToListItem(id, "Completed");
+      } else {
+        sleepNow(2000).then(() => props.addTagToListItem(id, "Completed"));
+      }
     }
   };
 
@@ -321,19 +326,11 @@ export default function ListSection(props: ListSectionProps) {
               e.stopPropagation();
             }}
           >
-            <CheckMark onClick={() => toggleItemCompleted(id)}>
-              {getIsItemAppearingCompleted(id) && (
-                <CheckCircle size={"1.2rem"} />
-              )}
-              {!getIsItemAppearingCompleted(id) && (
-                <PreviewCheckMark>
-                  <PreviewCheckMarkChecked>
-                    <CheckCircle size={"1.2rem"} />
-                  </PreviewCheckMarkChecked>
-                  <Circle size={"1.2rem"} />
-                </PreviewCheckMark>
-              )}
-            </CheckMark>
+            <PreviewCheckmark
+              onClick={() => toggleItemCompleted(id)}
+              height='1.2rem'
+              checked={!!getIsItemAppearingCompleted(id)}
+            />
             <ListItemElementInput
               value={props.list[id].summary}
               onChange={(e) => {
@@ -375,7 +372,8 @@ const ListSectionDiv = styled.div<{ $areItemsToDisplay: boolean }>`
   justify-items: center;
   align-content: ${(props) => (props.$areItemsToDisplay ? "start" : "center")};
   outline: ${(props) =>
-    props.$areItemsToDisplay ? "none" : "medium dashed " + props.theme.text};
+    props.$areItemsToDisplay ? "none" : "thin dashed " + props.theme.text};
+  border-radius: 0.5rem;
   justify-content: center;
   outline-offset: -8px;
   width: 100%;
@@ -383,23 +381,6 @@ const ListSectionDiv = styled.div<{ $areItemsToDisplay: boolean }>`
   &::-webkit-scrollbar {
     display: none;
   }
-`;
-
-const CheckMark = styled.span`
-  cursor: pointer;
-`;
-
-const PreviewCheckMark = styled(CheckMark)`
-  &:hover {
-    opacity: 0.7;
-  }
-`;
-
-const PreviewCheckMarkChecked = styled(PreviewCheckMark)`
-  position: relative;
-  z-index: -1;
-  left: 1.2rem;
-  margin-left: -1.2rem;
 `;
 
 const ListItemDiv = styled.div`
@@ -427,9 +408,6 @@ const ListItemDiv = styled.div`
     background-color: ${(props) => props.theme.panel07};
     border-color: transparent;
     border-radius: 0.3rem;
-  }
-  & > span:hover ~ input {
-    text-decoration: line-through;
   }
   &:hover + div {
     border-top-color: transparent;

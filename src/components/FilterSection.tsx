@@ -48,6 +48,7 @@ interface FilterSectionProps {
     filterset: { [filterId: string]: Filter }
   ) => void;
   removeSavedFilter: (filteName: string) => void;
+  toggleViewMode: () => void;
 }
 
 export const FILTER_OPERATORS = {
@@ -235,7 +236,7 @@ export default function FilterSection(props: FilterSectionProps) {
             Import
             <DownloadSimple />
           </WideButton>
-          <SquareButtonJustifyEnd>
+          <SquareButtonJustifyEnd onClick={props.toggleViewMode}>
             <Gear />{" "}
           </SquareButtonJustifyEnd>
         </ExportImportPanel>
@@ -393,12 +394,8 @@ export default function FilterSection(props: FilterSectionProps) {
                           !isFilterBeingEdited[filter.id] && (
                             <FilterDiv>
                               <FilterFieldDiv>
-                                <Txt>
-                                  {filter.fieldToFilter +
-                                    ": " +
-                                    filter.operator +
-                                    " "}
-                                </Txt>
+                                <Txt>{filter.fieldToFilter + ": "}</Txt>
+                                <Txt>{filter.operator}</Txt>
                               </FilterFieldDiv>
                               <ExpectedValueDiv>
                                 <Txt>{filter.expectedValue}</Txt>
@@ -459,6 +456,7 @@ export default function FilterSection(props: FilterSectionProps) {
                                     handleExpectedValueChange(e.target.value)
                                   }
                                   placeholder='Expected value'
+                                  value={newFilter.expectedValue}
                                 />
                               )}
                               {newFilter.fieldToFilter === "Tags" && (
@@ -543,7 +541,7 @@ const ExportImportPanel = styled(FilteringPanelElement)`
   margin-bottom: 1.5rem;
 `;
 
-const SquareButton = styled.button`
+export const SquareButton = styled.button`
   background-color: transparent;
   color: inherit;
   outline: none;
@@ -705,7 +703,7 @@ const SavedFilterDiv = styled.div`
   }
 `;
 
-const CaretLeftRotaiton = styled(CaretLeft)<{ $isRotated: boolean }>`
+export const CaretLeftRotaiton = styled(CaretLeft)<{ $isRotated: boolean }>`
   transform: rotate(${(props) => (props.$isRotated ? "-90deg" : "0deg")});
   transition-duration: 100ms;
 `;
@@ -815,7 +813,8 @@ const FilterCreationSaveCancel = styled.div`
 
 const FilterDiv = styled.div`
   display: grid;
-  grid-template-columns: auto auto auto;
+  grid-template-columns: fit-content(50%) auto fit-content(20%);
+  grid-column-gap: 0.5rem;
 `;
 
 const ExpectedValueDiv = styled.div`
@@ -827,6 +826,7 @@ const ExpectedValueDiv = styled.div`
   justify-content: center;
   box-sizing: border-box;
   padding-top: 0.1rem;
+  width: 100%;
 `;
 
 const FilterFieldDiv = styled.div`
@@ -838,4 +838,5 @@ const FilterFieldDiv = styled.div`
   box-sizing: border-box;
   padding-top: 0.1rem;
   justify-self: start;
+  font-size: 0.8rem;
 `;

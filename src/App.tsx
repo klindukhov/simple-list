@@ -30,6 +30,12 @@ export interface Filter {
 }
 
 export default function App() {
+  const [viewMode, setViewMode] = useState("Task");
+
+  const toggleViewMode = () => {
+    setViewMode(viewMode === "Task" ? "Note" : "Task");
+  };
+
   const [savedFiltersState, setSavedFiltersState] = useState<{
     [filterSetName: string]: { [filterId: string]: Filter };
   }>({});
@@ -256,6 +262,7 @@ export default function App() {
       savedFilters: savedFiltersState,
       addSavedFilter: addSavedFilter,
       removeSavedFilter: removeSavedFilter,
+      toggleViewMode: toggleViewMode,
     };
   };
 
@@ -296,6 +303,7 @@ export default function App() {
       removeTagFromListItem: removeTagFromListItem,
       addTagToListItem: addTagToListItem,
       setListItemSummary: setListItemSummary,
+      viewMode: viewMode,
     };
   };
 
@@ -303,7 +311,7 @@ export default function App() {
     <ThemeProvider theme={theme === "light" ? lightTheme : darkTheme}>
       <GlobalStyles />
       <IconContext.Provider value={iconStyles}>
-        <Page>
+        <Page $mode={viewMode}>
           <FilterSection {...getFilterSectionProps()} />
           <ListSection {...getListSectionProps()} />
           <ListItemDetailSection {...getListItemSectionProps()} />
@@ -313,10 +321,11 @@ export default function App() {
   );
 }
 
-const Page = styled.div`
+const Page = styled.div<{ $mode: string }>`
   height: 100vh;
+  width: 100%;
   background-color: ${(props) => props.theme.background};
   display: grid;
-  grid-template-columns: 15% 42.5% 42.5%;
+  grid-template-columns: ${props => props.$mode === 'Task' ? "15% 40% 45%" : "15% 15% 70%"};
   overflow-x: hidden;
 `;

@@ -21,7 +21,6 @@ import {
   EditorComponent,
   Remirror,
   ThemeProvider,
-  useEditorEvent,
   useHelpers,
   useRemirror,
 } from "@remirror/react";
@@ -44,11 +43,12 @@ import {
   TextUnderline,
 } from "@phosphor-icons/react";
 import { EditorState } from "@remirror/pm/state";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 interface MenuProps {
-  setState: (state : string) => void;
-  setEditorIsFocused: (value: boolean) => void;
+  setState: (state: string) => void;
+  showMenu: boolean;
+  viewMode: string;
 }
 
 export const Menu = (props: MenuProps) => {
@@ -69,28 +69,13 @@ export const Menu = (props: MenuProps) => {
   const active = useActive();
   const { getMarkdown } = useHelpers();
 
-  const [isEditorFocused, setIsEditorFocused] = useState(false);
-  const [isMenuHovered, setIsMenuHovered] = useState(false);
-
   useEffect(() => {
     props.setState(getMarkdown());
   }, [getMarkdown()]);
 
-  useEditorEvent("focus", () => {
-    setIsEditorFocused(true);
-    props.setEditorIsFocused(true);
-  });
-  useEditorEvent("blur", () => {
-    setIsEditorFocused(false);
-    props.setEditorIsFocused(false);
-  });
-
   return (
-    (isEditorFocused || (!isEditorFocused && isMenuHovered)) && (
-      <MenuDiv
-        onMouseEnter={() => setIsMenuHovered(true)}
-        onMouseLeave={() => setIsMenuHovered(false)}
-      >
+    props.showMenu && (
+      <MenuDiv $mode={props.viewMode}>
         <ButtonGroup>
           <MenuButton
             onClick={() => {
@@ -223,7 +208,9 @@ export const Menu = (props: MenuProps) => {
 
 interface RemirrorEditorProps {
   state: EditorState | string;
-  setState: (state : string) => void;
+  setState: (state: string) => void;
+  showMenu: boolean;
+  viewMode: string;
 }
 
 export const RemirrorEditor = (props: RemirrorEditorProps) => {
@@ -247,10 +234,8 @@ export const RemirrorEditor = (props: RemirrorEditorProps) => {
     stringHandler: "markdown",
   });
 
-  const [editorIsFocused, setEditorIsFocused] = useState(false);
-
   return (
-    <AllStyledComponent>
+    <AllStyledComponentHeight $showMenu={props.showMenu}>
       <ThemeProvider>
         <Remirror
           manager={manager}
@@ -261,41 +246,47 @@ export const RemirrorEditor = (props: RemirrorEditorProps) => {
         >
           <Menu
             setState={props.setState}
-            setEditorIsFocused={setEditorIsFocused}
+            showMenu={props.showMenu}
+            viewMode={props.viewMode}
           />
-          <EditorComponentWrapper $editorIsFocused={editorIsFocused}>
+          <EditorComponentWrapper $mode={props.viewMode}>
             <EditorComponent />
           </EditorComponentWrapper>
         </Remirror>
       </ThemeProvider>
-    </AllStyledComponent>
+    </AllStyledComponentHeight>
   );
 };
 
-const EditorComponentWrapper = styled.div<{ $editorIsFocused: boolean }>`
-  background-color: ${(props) => props.theme.background};
+const AllStyledComponentHeight = styled(AllStyledComponent)<{
+  $showMenu: boolean;
+}>`
+  height: ${(props) => (props.$showMenu ? "calc(100% - 3rem)" : "100%")};
+  display: grid;
+  grid-template-rows: 100%;
+`;
+
+const EditorComponentWrapper = styled.div<{ $mode: string }>`
+  min-height: 100%;
+  display: grid;
+  grid-template-rows: 100%;
+  background-color: ${(props) =>
+    props.$mode === "Task" ? props.theme.background : props.theme.panel};
   border-bottom-left-radius: 0.5rem;
   border-bottom-right-radius: 0.5rem;
-  &:hover {
-    opacity: ${(props) => (props.$editorIsFocused ? "1" : "0.7")};
-  }
-
   & > div.remirror-editor-wrapper {
     padding-top: 0px;
+    min-height: 100%;
+    display: grid;
+    grid-template-rows: 100%;
   }
   & > div.remirror-editor-wrapper > div {
+    min-height: 100% !important;
     box-shadow: none !important;
     & > h1,
     h2,
     h3 {
       color: ${(props) => props.theme.text};
-    }
-    & > ul,
-    ol {
-      margin-left: 1rem !important;
-    }
-    & > ul > li > label > input {
-      margin-left: 1rem;
     }
 
     &::-webkit-scrollbar {
@@ -311,15 +302,17 @@ const EditorComponentWrapper = styled.div<{ $editorIsFocused: boolean }>`
   }
 `;
 
-const MenuDiv = styled.div`
+const MenuDiv = styled.div<{ $mode: string }>`
   border-top-left-radius: 0.5rem;
   border-top-right-radius: 0.5rem;
   box-sizing: border-box;
   padding: 0rem 0.5rem 0rem 0.5rem;
-  background-color: ${(props) => props.theme.background};
+  background-color: ${(props) =>
+    props.$mode === "Task" ? props.theme.background : props.theme.panel};
   border-bottom-width: 3px;
   border-bottom-style: solid;
-  border-bottom-color: ${(props) => props.theme.panel};
+  border-bottom-color: ${(props) =>
+    props.$mode === "Task" ? props.theme.panel : props.theme.background};
   width: 100%;
   height: 3rem;
   display: flex;

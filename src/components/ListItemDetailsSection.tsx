@@ -2,16 +2,11 @@ import { styled } from "styled-components";
 import { ListItem } from "../App";
 import { useState } from "react";
 import React from "react";
-import {
-  Check,
-  CheckCircle,
-  Circle,
-  PencilSimple,
-  Trash,
-  X,
-} from "@phosphor-icons/react";
+import { Check, PencilSimple, Trash, X } from "@phosphor-icons/react";
 
 import { RemirrorEditor } from "./ui/RemirrorEditor";
+import PreviewCheckmark from "./ui/PreviewCheckMark";
+import { CaretLeftRotaiton, SquareButton } from "./FilterSection";
 
 interface ListItemdetailSectionProps {
   list: { [itemId: string]: ListItem };
@@ -22,6 +17,7 @@ interface ListItemdetailSectionProps {
   setListItemSummary: (id: string, summary: string) => void;
   setList: (list: { [itemId: string]: ListItem }) => void;
   theme: string;
+  viewMode: string;
 }
 
 export default function ListItemDetailSection(
@@ -41,6 +37,8 @@ export default function ListItemDetailSection(
 
     props.setList(tempList);
   };
+
+  const [isRemirrorMenuOpen, setIsRemirrorMenuOpen] = useState(false);
 
   const editTagInListItem = (
     id: string,
@@ -64,6 +62,17 @@ export default function ListItemDetailSection(
     }
   };
 
+  const handleSummaryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    props.setListItemSummary(
+      props.focusedListItemId,
+      e.target.value === ""
+        ? " "
+        : e.target.value.length > 2 && e.target.value[0] === " "
+        ? e.target.value.substring(1)
+        : e.target.value
+    );
+  };
+
   return (
     <>
       {(props.focusedListItemId === "0" ||
@@ -72,29 +81,26 @@ export default function ListItemDetailSection(
         props.list[props.focusedListItemId].summary === "") && (
         <ListItemDetailsPanelPlaceholder>
           <PlaceholderDiv />
-          <RemirrorEditor state='' setState={() => {}} />
+          <RemirrorEditor
+            state=''
+            setState={() => {}}
+            showMenu={false}
+            viewMode='Task'
+          />
         </ListItemDetailsPanelPlaceholder>
       )}
       {props.focusedListItemId !== "0" &&
         props.list[props.focusedListItemId] &&
         props.list[props.focusedListItemId].summary !== "" && (
-          <ListItemDetailsPanel>
-            <ListItemDetailsSummary>
-              <SummaryCheckmark onClick={() => toggleCompleted()}>
-                {props.list[props.focusedListItemId].tags.includes(
+          <ListItemDetailsPanel $mode={props.viewMode}>
+            <ListItemDetailsSummary $mode={props.viewMode}>
+              <PreviewCheckmark
+                onClick={() => toggleCompleted()}
+                height='2rem'
+                checked={props.list[props.focusedListItemId].tags.includes(
                   "Completed"
-                ) && <CheckCircle size={"1em"} />}
-                {!props.list[props.focusedListItemId].tags.includes(
-                  "Completed"
-                ) && (
-                  <>
-                    <Circle size={"1em"} />
-                    <CheckmarkWrapper>
-                      <CheckCircle size={"1em"} />
-                    </CheckmarkWrapper>
-                  </>
                 )}
-              </SummaryCheckmark>
+              />
               {!isSummaryFocused && (
                 <UnfocusedSummary onClick={() => setIsSummaryFocused(true)}>
                   {props.list[props.focusedListItemId].summary}
@@ -103,82 +109,84 @@ export default function ListItemDetailSection(
               {isSummaryFocused && (
                 <DetailsSummaryInput
                   value={props.list[props.focusedListItemId].summary}
-                  onChange={(e) =>
-                    props.setListItemSummary(
-                      props.focusedListItemId,
-                      e.target.value
-                    )
-                  }
+                  onChange={handleSummaryChange}
                   onBlur={() => setIsSummaryFocused(false)}
                   autoFocus={true}
                   onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
+                  $mode={props.viewMode}
                 />
               )}
             </ListItemDetailsSummary>
-            <ListItemDetailsFieldElementCreated>
-              <Txt>
-                Created:{" "}
-                {new Date(
-                  +(
-                    props.list[props.focusedListItemId].tags
-                      .find((e) => e.includes("$Created="))
-                      ?.split("=")[1] ?? 0
-                  )
-                ).toLocaleDateString("en-GB")}
-              </Txt>
-              <EditButton
-                onClick={() => setAreFieldsBeingEdited(!areFieldsBeingEdited)}
-              >
-                {areFieldsBeingEdited && (
-                  <>
-                    <Txt>Save</Txt>
-                    <Check />
-                  </>
-                )}
-                {!areFieldsBeingEdited && (
-                  <>
-                    <Txt>Edit</Txt>
-                    <PencilSimple />
-                  </>
-                )}
-              </EditButton>
-            </ListItemDetailsFieldElementCreated>
-            <ListItemFiedls $areFieldsBeingEdited={areFieldsBeingEdited}>
-              {props.list[props.focusedListItemId].tags
-                .filter((e) => e[0] === "$" && !e.includes("$Created="))
-                .map((tag) => (
-                  <React.Fragment key={tag.split("$")[1].split("=")[0]}>
-                    <Txt>{tag.split("$")[1].split("=")[0] + ": "}</Txt>
-                    <ListItemDetailsFieldInput
-                      value={tag.split("$")[1].split("=")[1]}
-                      onChange={(e) =>
-                        editTagInListItem(
-                          props.focusedListItemId,
-                          tag,
-                          `$${tag.split("$")[1].split("=")[0]}=${
-                            e.target.value
-                          }`
-                        )
-                      }
-                      onKeyDown={(e) =>
-                        e.key === "Enter" && e.currentTarget.blur()
-                      }
-                      placeholder='value'
-                    />
-                    {areFieldsBeingEdited && (
-                      <DeleteField
-                        onClick={() =>
-                          props.removeTagFromListItem(
+            {props.viewMode === "Task" && (
+              <ListItemDetailsFieldElementCreated $mode={props.viewMode}>
+                <Txt>
+                  Created:{" "}
+                  {new Date(
+                    +(
+                      props.list[props.focusedListItemId].tags
+                        .find((e) => e.includes("$Created="))
+                        ?.split("=")[1] ?? 0
+                    )
+                  ).toLocaleDateString("en-GB")}
+                </Txt>
+                <EditButton
+                  onClick={() => setAreFieldsBeingEdited(!areFieldsBeingEdited)}
+                >
+                  {areFieldsBeingEdited && (
+                    <>
+                      <Txt>Save</Txt>
+                      <Check />
+                    </>
+                  )}
+                  {!areFieldsBeingEdited && (
+                    <>
+                      <Txt>Edit</Txt>
+                      <PencilSimple />
+                    </>
+                  )}
+                </EditButton>
+              </ListItemDetailsFieldElementCreated>
+            )}
+            <ListItemFiedls
+              $areFieldsBeingEdited={areFieldsBeingEdited}
+              $mode={props.viewMode}
+            >
+              {props.viewMode === "Task" &&
+                props.list[props.focusedListItemId].tags
+                  .filter((e) => e[0] === "$" && !e.includes("$Created="))
+                  .map((tag) => (
+                    <React.Fragment key={tag.split("$")[1].split("=")[0]}>
+                      <Txt>{tag.split("$")[1].split("=")[0] + ": "}</Txt>
+                      <ListItemDetailsFieldInput
+                        value={tag.split("$")[1].split("=")[1]}
+                        onChange={(e) =>
+                          editTagInListItem(
                             props.focusedListItemId,
-                            tag
+                            tag,
+                            `$${tag.split("$")[1].split("=")[0]}=${
+                              e.target.value
+                            }`
                           )
                         }
-                      >
-                        <Trash />
-                      </DeleteField>
-                    )}
-                  </React.Fragment>
-                ))}
+                        onKeyDown={(e) =>
+                          e.key === "Enter" && e.currentTarget.blur()
+                        }
+                        placeholder='value'
+                      />
+                      {areFieldsBeingEdited && (
+                        <DeleteField
+                          onClick={() =>
+                            props.removeTagFromListItem(
+                              props.focusedListItemId,
+                              tag
+                            )
+                          }
+                        >
+                          <Trash />
+                        </DeleteField>
+                      )}
+                    </React.Fragment>
+                  ))}
               {areFieldsBeingEdited && (
                 <>
                   <ListItemDetailsFieldInput
@@ -205,6 +213,7 @@ export default function ListItemDetailSection(
               <Txt>Tags:</Txt>
               <ListItemDetailsTagsList
                 onClick={() => document.getElementById("addTagChip")?.focus()}
+                $mode={props.viewMode}
               >
                 {props.list[props.focusedListItemId].tags
                   .filter((e) => e[0] != "$")
@@ -227,6 +236,9 @@ export default function ListItemDetailSection(
                   ))}
                 {props.list[props.focusedListItemId].summary.length > 0 && (
                   <AddTagChip
+                    $width={
+                      (newTag.length + 1 < 2 ? 2 : newTag.length + 1) + "ch"
+                    }
                     id='addTagChip'
                     value={newTag}
                     onChange={(e) => setNewTag(e.target.value)}
@@ -246,24 +258,41 @@ export default function ListItemDetailSection(
                 )}
               </ListItemDetailsTagsList>
             </ListItemFiedls>
-            <DescriptionTitle>Description:</DescriptionTitle>
-            <ListItemDetailDescription>
+            {props.viewMode === "Task" && (
+              <DescriptionTitle>
+                <Txt>Description:</Txt>
+                <SquareButton
+                  onClick={() => setIsRemirrorMenuOpen(!isRemirrorMenuOpen)}
+                >
+                  <CaretLeftRotaiton $isRotated={isRemirrorMenuOpen} />
+                </SquareButton>
+              </DescriptionTitle>
+            )}
+
+            <ListItemDetailDescription $mode={props.viewMode}>
               <RemirrorEditor
                 key={props.focusedListItemId}
                 state={props.list[props.focusedListItemId].description}
                 setState={(state: string) => {
                   setListItemDescription(props.focusedListItemId, state);
                 }}
+                showMenu={
+                  isRemirrorMenuOpen ||
+                  (!isRemirrorMenuOpen && props.viewMode === "Note")
+                }
+                viewMode={props.viewMode}
               />
             </ListItemDetailDescription>
-            <DeleteDiv>
-              <DeleteElementChip
-                onClick={() => props.removeListItem(props.focusedListItemId)}
-              >
-                <Trash size={"1.3rem"} />
-                <Txt>Delete Item</Txt>
-              </DeleteElementChip>
-            </DeleteDiv>
+            {props.viewMode === "Task" && (
+              <DeleteDiv>
+                <DeleteElementChip
+                  onClick={() => props.removeListItem(props.focusedListItemId)}
+                >
+                  <Trash size={"1.3rem"} />
+                  <Txt>Delete Item</Txt>
+                </DeleteElementChip>
+              </DeleteDiv>
+            )}
           </ListItemDetailsPanel>
         )}
     </>
@@ -275,39 +304,20 @@ const Txt = styled.span`
   padding-top: 0.3rem;
 `;
 
-const ListItemDetailsPanel = styled.div`
+const ListItemDetailsPanel = styled.div<{ $mode: string }>`
   height: 100vh;
   overflow: scroll;
   background-color: ${(props) => props.theme.panel};
-  width: 100%;
+  min-width: 100%;
   grid-template-columns: 100%;
-  grid-template-rows: auto auto auto auto 1fr;
+  grid-template-rows: auto auto ${(props) =>
+      props.$mode === "Task" && " auto auto "} 1fr;
   display: grid;
   justify-items: center;
   align-content: start;
   overflow-x: hidden;
   &::-webkit-scrollbar {
     display: none;
-  }
-`;
-
-const SummaryCheckmark = styled.span`
-  height: 1em;
-  display: block;
-  cursor: pointer;
-  justify-self: start;
-  align-self: start;
-  &:hover {
-    opacity: 0.7;
-  }
-`;
-
-const CheckmarkWrapper = styled.span`
-  position: relative;
-  top: calc(-1em - 0.5rem);
-  opacity: 0;
-  &:hover {
-    opacity: 1;
   }
 `;
 
@@ -318,7 +328,7 @@ const UnfocusedSummary = styled.div`
   width: 100%;
 `;
 
-const DetailsSummaryInput = styled.input`
+const DetailsSummaryInput = styled.input<{ $mode: string }>`
   background-color: transparent;
   font: inherit;
   outline: none;
@@ -326,7 +336,8 @@ const DetailsSummaryInput = styled.input`
   color: inherit;
   justify-self: start;
   &:focus {
-    border-bottom: solid ${(props) => props.theme.text} 1px;
+    border-bottom: ${(props) =>
+      props.$mode === "Task" && "1px solid " + props.theme.text};
   }
   width: 100%;
   box-sizing: border-box;
@@ -334,32 +345,39 @@ const DetailsSummaryInput = styled.input`
   text-overflow: ellipsis;
 `;
 
-const ListItemDetailsSummary = styled.div`
-  font-size: 22pt;
+const ListItemDetailsSummary = styled.div<{ $mode: string }>`
+  font-size: 2rem;
   margin: 0.5rem;
+  margin-bottom: ${(props) => props.$mode === "Note" && "0rem"};
   padding: 0.5rem;
-  border-radius: 0.5rem;
-  min-height: 2rem;
+  border-radius: ${(props) => props.$mode === "Task" && "0.5rem"};
+  min-height: 3rem;
   display: grid;
-  width: 90%;
-  grid-template-columns: 7% 93%;
-  justify-items: center;
+  width: ${(props) => (props.$mode === "Task" ? "90%" : "100%")};
+  grid-template-columns: 2rem 1fr;
+  grid-column-gap: 1rem;
+  justify-items: start;
   align-items: center;
   &:hover {
-    background-color: ${(props) => props.theme.background};
+    background-color: ${(props) =>
+      props.$mode === "Task" && props.theme.background};
   }
+  border-bottom: ${(props) =>
+    props.$mode === "Note" && "3px solid " + props.theme.background};
   box-sizing: border-box;
 `;
 
-const ListItemDetailsFieldElementCreated = styled.div`
-  padding: 0.25rem 0.25rem 0.25rem 0rem;
+const ListItemDetailsFieldElementCreated = styled.div<{ $mode: string }>`
+  padding: 0rem 0.25rem 0.25rem
+    ${(props) => (props.$mode === "Task" ? "0rem" : "0.25rem")};
   text-align: start;
-  width: 90%;
+  width: ${(props) => (props.$mode === "Task" ? "90%" : "100%")};
   font-size: 0.8rem;
   display: grid;
   grid-template-columns: auto auto;
-  margin-bottom: 0.4rem;
+  margin-bottom: ${(props) => (props.$mode === "Task" ? "0.4rem" : "0rem")};
   opacity: 0.7;
+  box-sizing: border-box;
 `;
 
 const EditButton = styled.div`
@@ -377,17 +395,23 @@ const EditButton = styled.div`
   }
 `;
 
-const ListItemFiedls = styled.div<{ $areFieldsBeingEdited: boolean }>`
+const ListItemFiedls = styled.div<{
+  $areFieldsBeingEdited: boolean;
+  $mode: string;
+}>`
   display: grid;
   grid-template-columns: ${(props) =>
     props.$areFieldsBeingEdited
       ? "fit-content(20%) auto 4%"
       : "fit-content(20%) auto"};
   text-align: start;
-  width: 90%;
+  width: ${(props) => (props.$mode === "Task" ? "90%" : "100%")};
   grid-column-gap: 1rem;
   grid-row-gap: 0.5rem;
   align-items: center;
+  border-bottom: ${(props) =>
+    props.$mode === "Note" && "3px solid " + props.theme.background};
+  padding-left: ${(props) => props.$mode === "Note" && "1rem"};
 `;
 
 const ListItemDetailsFieldInput = styled.input`
@@ -404,14 +428,17 @@ const ListItemDetailsFieldInput = styled.input`
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  border: none;
+  outline: none;
   &:hover {
     background-color: ${(props) => props.theme.background};
     opacity: 0.7;
   }
 `;
 
-const ListItemDetailsTagsList = styled.div`
-  background-color: ${(props) => props.theme.background};
+const ListItemDetailsTagsList = styled.div<{ $mode: string }>`
+  background-color: ${(props) =>
+    props.$mode === "Task" && props.theme.background};
   color: inherit;
   border-radius: 0.5rem;
   border-width: 0px;
@@ -427,9 +454,14 @@ const ListItemDetailsTagsList = styled.div`
   align-items: center;
   box-sizing: border-box;
   cursor: text;
+  & > div {
+    background-color: ${(props) =>
+      props.$mode === "Note" && props.theme.background};
+  }
 `;
 
 const TagChip = styled.div`
+  box-sizing: border-box;
   height: 1.8rem;
   padding: 0.1rem 0.4rem 0 0.4rem;
   background-color: ${(props) => props.theme.panel};
@@ -437,7 +469,7 @@ const TagChip = styled.div`
   margin-right: 0.5rem;
   margin-bottom: 0rem;
   font-size: 1rem;
-  text-align: center;
+  text-align: end;
   display: grid;
   align-items: center;
   align-content: center;
@@ -467,7 +499,7 @@ const DeleteTag = styled.span`
   }
 `;
 
-const AddTagChip = styled.input`
+const AddTagChip = styled.input<{ $width: string }>`
   background-color: transparent;
   box-sizing: border-box;
   color: inherit;
@@ -477,8 +509,8 @@ const AddTagChip = styled.input`
   text-align: start;
   height: 1.8rem;
   font-size: 1rem;
-  cursor: pointer;
   outline: none;
+  width: ${(props) => props.$width};
   max-width: 20rem;
   &:hover {
     opacity: 0.7;
@@ -487,18 +519,23 @@ const AddTagChip = styled.input`
 
 const DescriptionTitle = styled.div`
   width: 90%;
+  display: grid;
+  grid-template-columns: auto auto;
+  justify-content: start;
+  align-items: center;
+  grid-column-gap: 0.5rem;
   text-align: start;
   font-size: 1.2rem;
   margin-top: 2rem;
   cursor: default;
 `;
 
-const ListItemDetailDescription = styled.div`
-  width: 90%;
+const ListItemDetailDescription = styled.div<{ $mode: string }>`
+  width: ${(props) => (props.$mode === "Task" ? "90%" : "100%")};
   border-width: 0px;
   display: block;
   resize: vertical;
-  border-radius: 0.5rem;
+  border-radius: ${(props) => (props.$mode === "Task" ? "0.5rem" : "0rem")};
   outline: none;
   box-sizing: border-box;
   margin-bottom: 1rem;
