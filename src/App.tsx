@@ -31,9 +31,15 @@ export interface Filter {
 
 export default function App() {
   const [viewMode, setViewMode] = useState("Task");
-
   const toggleViewMode = () => {
     setViewMode(viewMode === "Task" ? "Note" : "Task");
+  };
+
+  const [theme, setTheme] = useState("dark");
+
+  const iconStyles = {
+    color: theme === "dark" ? "#edeef2" : "black",
+    size: "1rem",
   };
 
   const [savedFiltersState, setSavedFiltersState] = useState<{
@@ -131,14 +137,17 @@ export default function App() {
     setTempFilterSet(tempFilterSet);
   };
 
-  const [theme, setTheme] = useState("dark");
-
-  const [list, setList] = useState<{ [itemId: string]: ListItem }>({});
+  const [list, setListState] = useState<{ [itemId: string]: ListItem }>({});
   useEffect(() => {
     getListApi().then((list) => {
-      setList(list);
+      setListState(list);
     });
   }, []);
+
+  const setList = (listProp: { [itemId: string]: ListItem }) => {
+    setListState(listProp);
+    setListApi(listProp);
+  };
 
   const [fieldsList, setFieldsList] = useState<{ [tag: string]: boolean }>({});
   useEffect(() => {
@@ -197,7 +206,7 @@ export default function App() {
     }
 
     setList(tempList);
-    setListApi(tempList);
+    refreshUpdatedProperty(id);
   };
 
   const removeTagFromListItem = (id: string, tag: string) => {
@@ -208,7 +217,7 @@ export default function App() {
     }
 
     setList(tempList);
-    setListApi(tempList);
+    refreshUpdatedProperty(id);
   };
 
   const setListItemSummary = (id: string, summary: string) => {
@@ -217,7 +226,7 @@ export default function App() {
     tempList[id].summary = summary;
 
     setList(tempList);
-    setListApi(tempList);
+    refreshUpdatedProperty(id);
   };
 
   const removeListItem = (id: string) => {
@@ -226,34 +235,122 @@ export default function App() {
     delete tempList[id];
 
     setList(tempList);
-    setListApi(tempList);
   };
 
-  const iconStyles = {
-    color: theme === "dark" ? "#edeef2" : "black",
-    size: "1rem",
+  const setListItemDescription = (id: string, description: string) => {
+    const tempList: { [itemId: string]: ListItem } = { ...list };
+
+    tempList[id].description = description;
+
+    setList(tempList);
+    refreshUpdatedProperty(id);
+  };
+
+  const editTag = (id: string, currentTag: string, newTag: string) => {
+    const tempList: { [itemId: string]: ListItem } = { ...list };
+
+    if (tempList[id].tags.includes(currentTag)) {
+      tempList[id].tags[tempList[id].tags.indexOf(currentTag)] = newTag;
+    }
+
+    setList(tempList);
+    refreshUpdatedProperty(id);
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const fileReader = new FileReader();
+    if (!e.target.files) return;
+    fileReader.readAsText(e.target.files[0], "UTF-8");
+    fileReader.onload = (e) => {
+      const imported: { [itemId: string]: ListItem } = JSON.parse(
+        "" + e.target?.result
+      );
+      const tempList: { [itemId: string]: ListItem } = { ...list };
+      Object.keys(imported).forEach((key) => {
+        tempList[key as keyof typeof tempList] = imported[key];
+      });
+      setList(tempList);
+    };
+  };
+
+  const addListItem = () => {
+    const tempList: { [itemId: string]: ListItem } = { ...list };
+
+    const newId = uuidv4();
+    const newTags: string[] = Object.values(getTempFilterSet())
+      .filter(
+        (filter: Filter) =>
+          (filter.fieldToFilter === "Tags" &&
+            filter.expectedValue !== "Untagged") ||
+          filter.operator === "Equals"
+      )
+      .map((filter) =>
+        filter.operator === "Equals"
+          ? `$${filter.fieldToFilter}=${filter.expectedValue}`
+          : filter.expectedValue
+      );
+    tempList[newId] = {
+      id: newId,
+      summary: "",
+      description: "",
+      tags: ["$Created=" + Date.now(), "$Updated=" + Date.now(), ...newTags],
+    };
+
+    setList(tempList);
+  };
+
+  const refreshUpdatedProperty = (id: string) => {
+    const editTagLocal = (id: string, currentTag: string, newTag: string) => {
+      const tempList: { [itemId: string]: ListItem } = { ...list };
+
+      if (tempList[id].tags.includes(currentTag)) {
+        tempList[id].tags[tempList[id].tags.indexOf(currentTag)] = newTag;
+      }
+
+      setList(tempList);
+    };
+    const addTagToListItemLocal = (id: string, tag: string) => {
+      const tempList: { [itemId: string]: ListItem } = { ...list };
+      if (tempList[id].tags.includes(tag)) {
+        return;
+      } else {
+        tempList[id].tags.push(tag);
+      }
+
+      setList(tempList);
+    };
+    if (
+      list[id].tags.includes(
+        list[id].tags.find((tag) => tag.includes("$Updated=")) ?? "Updated"
+      )
+    ) {
+      editTagLocal(
+        id,
+        list[id].tags.find((tag) => tag.includes("$Updated=")) ?? "Updated",
+        "$Updated=" + Date.now()
+      );
+    } else {
+      addTagToListItemLocal(id, "$Updated=" + Date.now());
+    }
   };
 
   const getFilterSectionProps = () => {
     return {
       list: list,
-      setList: (itemList: { [itemId: string]: ListItem }) => {
-        setList(itemList);
-        setListApi(itemList);
-      },
       searchBarValue: searchBarValue,
       setSearchBarValue: setSearchBarValue,
       fieldsList: fieldsList,
       setSortByList: setFieldsList,
       isSortAsc: isSortAsc,
-      setIsSortAcs: setIsSortAcs,
+      toggleIsSortAsc: () => setIsSortAcs(!isSortAsc),
       tagsList: getTagsList(list),
       isShowingCompleted: isShowingCompleted,
-      setIsShowingCompleted: setIsShowingCompleted,
+      toggleIsShowingCompleted: () =>
+        setIsShowingCompleted(!isShowingCompleted),
       isFilteringMatchAny: isFilteringMatchAny,
       setIsFilteringMatchAny: setIsFilteringMatchAny,
       theme: theme,
-      setTheme: setTheme,
+      toggleTheme: () => setTheme(theme === "light" ? "dark" : "light"),
       tempFilterSet: getTempFilterSet(),
       setTempFilterSet: setTempFilterSet,
       addFilterToFilterSet: addFilterToTempFilterSet,
@@ -263,16 +360,13 @@ export default function App() {
       addSavedFilter: addSavedFilter,
       removeSavedFilter: removeSavedFilter,
       toggleViewMode: toggleViewMode,
+      handleFileUpload: handleFileUpload,
     };
   };
 
   const getListSectionProps = () => {
     return {
       list: list,
-      setList: (itemList: { [itemId: string]: ListItem }) => {
-        setList(itemList);
-        setListApi(itemList);
-      },
       tagsList: getTagsList(list),
       isFilteringMatchAny: isFilteringMatchAny,
       searchBarValue: searchBarValue,
@@ -287,16 +381,13 @@ export default function App() {
       removeListItem: removeListItem,
       theme: theme,
       tempFilterSet: getTempFilterSet(),
+      addListItem: addListItem,
     };
   };
 
   const getListItemSectionProps = () => {
     return {
       list: list,
-      setList: (itemList: { [itemId: string]: ListItem }) => {
-        setList(itemList);
-        setListApi(itemList);
-      },
       theme: theme,
       removeListItem: removeListItem,
       focusedListItemId: focusedListItemId,
@@ -304,6 +395,8 @@ export default function App() {
       addTagToListItem: addTagToListItem,
       setListItemSummary: setListItemSummary,
       viewMode: viewMode,
+      setListItemDescription: setListItemDescription,
+      editTag: editTag,
     };
   };
 
@@ -326,6 +419,7 @@ const Page = styled.div<{ $mode: string }>`
   width: 100%;
   background-color: ${(props) => props.theme.background};
   display: grid;
-  grid-template-columns: ${props => props.$mode === 'Task' ? "15% 40% 45%" : "15% 15% 70%"};
+  grid-template-columns: ${(props) =>
+    props.$mode === "Task" ? "15% 40% 45%" : "15% 15% 70%"};
   overflow-x: hidden;
 `;

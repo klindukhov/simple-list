@@ -6,7 +6,7 @@ import { Check, PencilSimple, Trash, X } from "@phosphor-icons/react";
 
 import { RemirrorEditor } from "./ui/RemirrorEditor";
 import PreviewCheckmark from "./ui/PreviewCheckMark";
-import { CaretLeftRotaiton, SquareButton } from "./FilterSection";
+import { CaretLeftRotaiton, SquareButton } from "./ui/common";
 
 interface ListItemdetailSectionProps {
   list: { [itemId: string]: ListItem };
@@ -15,9 +15,10 @@ interface ListItemdetailSectionProps {
   removeTagFromListItem: (id: string, tag: string) => void;
   addTagToListItem: (id: string, tag: string) => void;
   setListItemSummary: (id: string, summary: string) => void;
-  setList: (list: { [itemId: string]: ListItem }) => void;
   theme: string;
   viewMode: string;
+  setListItemDescription: (id: string, description: string) => void;
+  editTag: (id: string, currentTag: string, newTag: string) => void;
 }
 
 export default function ListItemDetailSection(
@@ -30,35 +31,28 @@ export default function ListItemDetailSection(
 
   const [areFieldsBeingEdited, setAreFieldsBeingEdited] = useState(false);
 
-  const setListItemDescription = (id: string, description: string) => {
-    const tempList: { [itemId: string]: ListItem } = { ...props.list };
-
-    tempList[id].description = description;
-
-    props.setList(tempList);
-  };
-
   const [isRemirrorMenuOpen, setIsRemirrorMenuOpen] = useState(false);
 
-  const editTagInListItem = (
-    id: string,
-    currentTag: string,
-    newTag: string
-  ) => {
-    const tempList: { [itemId: string]: ListItem } = { ...props.list };
-
-    if (tempList[id].tags.includes(currentTag)) {
-      tempList[id].tags[tempList[id].tags.indexOf(currentTag)] = newTag;
-    }
-
-    props.setList(tempList);
+  const getIsItemCompleted = (id: string) => {
+    return props.list[id].tags.includes(
+      props.list[id].tags.find((tag) => tag.includes("Completed")) ??
+        "Completed"
+    );
   };
 
   const toggleCompleted = () => {
-    if (props.list[props.focusedListItemId].tags.includes("Completed")) {
-      props.removeTagFromListItem(props.focusedListItemId, "Completed");
+    if (getIsItemCompleted(props.focusedListItemId)) {
+      props.removeTagFromListItem(
+        props.focusedListItemId,
+        props.list[props.focusedListItemId].tags.find((tag) =>
+          tag.includes("Completed")
+        ) ?? "Completed"
+      );
     } else {
-      props.addTagToListItem(props.focusedListItemId, "Completed");
+      props.addTagToListItem(
+        props.focusedListItemId,
+        "$Completed=" + Date.now()
+      );
     }
   };
 
@@ -119,16 +113,44 @@ export default function ListItemDetailSection(
             </ListItemDetailsSummary>
             {props.viewMode === "Task" && (
               <ListItemDetailsFieldElementCreated $mode={props.viewMode}>
-                <Txt>
-                  Created:{" "}
-                  {new Date(
-                    +(
-                      props.list[props.focusedListItemId].tags
-                        .find((e) => e.includes("$Created="))
-                        ?.split("=")[1] ?? 0
-                    )
-                  ).toLocaleDateString("en-GB")}
-                </Txt>
+                <CreatedUpdatedDiv>
+                  <Txt>
+                    Created:{" "}
+                    {new Date(
+                      +(
+                        props.list[props.focusedListItemId].tags
+                          .find((e) => e.includes("$Created="))
+                          ?.split("=")[1] ?? 0
+                      )
+                    ).toLocaleDateString("en-GB")}
+                  </Txt>
+
+                  <Txt>
+                    Updated:{" "}
+                    {new Date(
+                      +(
+                        props.list[props.focusedListItemId].tags
+                          .find((e) => e.includes("$Updated="))
+                          ?.split("=")[1] ?? 0
+                      )
+                    ).toLocaleDateString("en-GB")}
+                    {props.list[props.focusedListItemId].tags
+                      .find((e) => e.includes("$Updated="))
+                      ?.split("=")[1] ?? 0}
+                  </Txt>
+                  {getIsItemCompleted(props.focusedListItemId) && (
+                    <Txt>
+                      Completed:{" "}
+                      {new Date(
+                        +(
+                          props.list[props.focusedListItemId].tags
+                            .find((e) => e.includes("$Completed="))
+                            ?.split("=")[1] ?? 0
+                        )
+                      ).toLocaleDateString("en-GB")}
+                    </Txt>
+                  )}
+                </CreatedUpdatedDiv>
                 <EditButton
                   onClick={() => setAreFieldsBeingEdited(!areFieldsBeingEdited)}
                 >
@@ -153,14 +175,20 @@ export default function ListItemDetailSection(
             >
               {props.viewMode === "Task" &&
                 props.list[props.focusedListItemId].tags
-                  .filter((e) => e[0] === "$" && !e.includes("$Created="))
+                  .filter(
+                    (e) =>
+                      e[0] === "$" &&
+                      !e.includes("$Created=") &&
+                      !e.includes("$Completed=") &&
+                      !e.includes("$Updated=")
+                  )
                   .map((tag) => (
                     <React.Fragment key={tag.split("$")[1].split("=")[0]}>
                       <Txt>{tag.split("$")[1].split("=")[0] + ": "}</Txt>
                       <ListItemDetailsFieldInput
                         value={tag.split("$")[1].split("=")[1]}
                         onChange={(e) =>
-                          editTagInListItem(
+                          props.editTag(
                             props.focusedListItemId,
                             tag,
                             `$${tag.split("$")[1].split("=")[0]}=${
@@ -274,7 +302,7 @@ export default function ListItemDetailSection(
                 key={props.focusedListItemId}
                 state={props.list[props.focusedListItemId].description}
                 setState={(state: string) => {
-                  setListItemDescription(props.focusedListItemId, state);
+                  props.setListItemDescription(props.focusedListItemId, state);
                 }}
                 showMenu={
                   isRemirrorMenuOpen ||
@@ -299,7 +327,15 @@ export default function ListItemDetailSection(
   );
 }
 
+const CreatedUpdatedDiv = styled.div`
+  display: grid;
+  grid-template-columns: auto auto auto;
+  justify-content: start;
+  grid-column-gap: 0.5rem;
+`;
+
 const Txt = styled.span`
+  box-sizing: border-box;
   cursor: default;
   padding-top: 0.3rem;
 `;

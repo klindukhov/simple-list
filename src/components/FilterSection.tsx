@@ -2,7 +2,6 @@ import { styled } from "styled-components";
 import Tooltip from "./ui/Tooltip";
 import { Filter, ListItem } from "../App";
 import {
-  CaretLeft,
   DownloadSimple,
   Eye,
   EyeSlash,
@@ -20,23 +19,24 @@ import {
 } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
 import React from "react";
+import { CaretLeftRotaiton, SquareButton } from "./ui/common";
+import { EMPTY_FILTER_TEMPLATE, FILTER_PROPERTY_OPERATORS, FILTER_TAG_OPERATORS } from "../filters";
 
 interface FilterSectionProps {
   list: { [itemId: string]: ListItem };
-  setList: (list: { [itemId: string]: ListItem }) => void;
   searchBarValue: string;
   setSearchBarValue: (value: string) => void;
   fieldsList: { [tag: string]: boolean };
   setSortByList: (value: { [tag: string]: boolean }) => void;
   isSortAsc: boolean;
-  setIsSortAcs: (value: boolean) => void;
+  toggleIsSortAsc: () => void;
   tagsList: string[];
   isShowingCompleted: boolean;
-  setIsShowingCompleted: (value: boolean) => void;
+  toggleIsShowingCompleted: () => void;
   isFilteringMatchAny: boolean;
   setIsFilteringMatchAny: (value: boolean) => void;
   theme: string;
-  setTheme: (theme: string) => void;
+  toggleTheme: () => void;
   tempFilterSet: { [filterId: string]: Filter };
   setTempFilterSet: (filterset: { [filterId: string]: Filter }) => void;
   addFilterToFilterSet: (filter: Filter) => void;
@@ -49,47 +49,10 @@ interface FilterSectionProps {
   ) => void;
   removeSavedFilter: (filteName: string) => void;
   toggleViewMode: () => void;
+  handleFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
-export const FILTER_OPERATORS = {
-  Contains: (actualValue: string, expectedValue: string) => {
-    return actualValue.includes(expectedValue);
-  },
-  "Bigger then": (actualValue: string, expectedValue: string) => {
-    return actualValue > expectedValue;
-  },
-  "Smaller then": (actualValue: string, expectedValue: string) => {
-    return actualValue < expectedValue;
-  },
-  Equals: (actualValue: string, expectedValue: string) => {
-    return actualValue === expectedValue;
-  },
-};
-
-const EMPTY_FILTER_TEMPLATE = {
-  id: "new",
-  fieldToFilter: "",
-  operator: "",
-  expectedValue: "",
-};
-
 export default function FilterSection(props: FilterSectionProps) {
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const fileReader = new FileReader();
-    if (!e.target.files) return;
-    fileReader.readAsText(e.target.files[0], "UTF-8");
-    fileReader.onload = (e) => {
-      const imported: { [itemId: string]: ListItem } = JSON.parse(
-        "" + e.target?.result
-      );
-      const tempList: { [itemId: string]: ListItem } = { ...props.list };
-      Object.keys(imported).forEach((key) => {
-        tempList[key as keyof typeof tempList] = imported[key];
-      });
-      props.setList(tempList);
-    };
-  };
-
   const exportList = () => {
     const fileData = JSON.stringify(props.list);
     const blob = new Blob([fileData], { type: "text/plain" });
@@ -130,9 +93,6 @@ export default function FilterSection(props: FilterSectionProps) {
     const tempFilter: Filter = { ...newFilter };
 
     tempFilter.fieldToFilter = selectedField;
-    if (selectedField === "Tags") {
-      tempFilter.operator = "Include";
-    }
 
     setNewFilter(tempFilter);
   };
@@ -201,10 +161,6 @@ export default function FilterSection(props: FilterSectionProps) {
     }
   };
 
-  const applySavedFilter = (filterName: string) => {
-    props.setTempFilterSet(props.savedFilters[filterName]);
-  };
-
   const [isDisplayingsavedFilters, setIsDisplayingSavedFilters] =
     useState(false);
 
@@ -213,16 +169,12 @@ export default function FilterSection(props: FilterSectionProps) {
       <HiddenInput
         type='file'
         id='importFileInput'
-        onChange={(e) => handleFileUpload(e)}
+        onChange={(e) => props.handleFileUpload(e)}
         accept='.json'
       />
       <FilteringSidePanel>
         <ExportImportPanel>
-          <SquareButton
-            onClick={() =>
-              props.setTheme(props.theme === "dark" ? "light" : "dark")
-            }
-          >
+          <SquareButton onClick={() => props.toggleTheme()}>
             {props.theme === "dark" && <Sun />}
             {props.theme === "light" && <Moon />}
           </SquareButton>
@@ -263,9 +215,7 @@ export default function FilterSection(props: FilterSectionProps) {
                 </option>
               ))}
           </SelectInput>
-          <SquareButtonJustifyEnd
-            onClick={() => props.setIsSortAcs(!props.isSortAsc)}
-          >
+          <SquareButtonJustifyEnd onClick={() => props.toggleIsSortAsc()}>
             {props.isSortAsc && <SortAscending size={"1.5rem"} />}
             {!props.isSortAsc && <SortDescending size={"1.5rem"} />}
           </SquareButtonJustifyEnd>
@@ -292,9 +242,7 @@ export default function FilterSection(props: FilterSectionProps) {
             )}
           </ShowCompletedDiv>
           <SquareButtonJustifyEnd
-            onClick={() =>
-              props.setIsShowingCompleted(!props.isShowingCompleted)
-            }
+            onClick={() => props.toggleIsShowingCompleted()}
           >
             <Tooltip
               text={
@@ -316,7 +264,11 @@ export default function FilterSection(props: FilterSectionProps) {
               .map((filterName) => (
                 <SavedFilterDiv>
                   <InputField disabled value={filterName} />{" "}
-                  <WideButton onClick={() => applySavedFilter(filterName)}>
+                  <WideButton
+                    onClick={() =>
+                      props.setTempFilterSet(props.savedFilters[filterName])
+                    }
+                  >
                     Apply
                   </WideButton>
                   <SquareButtonJustifyEnd
@@ -435,15 +387,14 @@ export default function FilterSection(props: FilterSectionProps) {
                                 onChange={(e) =>
                                   handleNewFilterOperatorChange(e.target.value)
                                 }
-                                disabled={newFilter.fieldToFilter === "Tags"}
                                 value={newFilter.operator}
                               >
                                 <option disabled hidden value={""}>
                                   {"Select operator"}
                                 </option>
                                 {(newFilter.fieldToFilter === "Tags"
-                                  ? ["Include"]
-                                  : Object.keys(FILTER_OPERATORS)
+                                  ? Object.keys(FILTER_TAG_OPERATORS)
+                                  : Object.keys(FILTER_PROPERTY_OPERATORS)
                                 ).map((operator) => (
                                   <option key={operator} value={operator}>
                                     {operator}
@@ -539,27 +490,6 @@ const ExportImportPanel = styled(FilteringPanelElement)`
   grid-template-columns: auto auto auto auto;
   margin-top: 0.5rem;
   margin-bottom: 1.5rem;
-`;
-
-export const SquareButton = styled.button`
-  background-color: transparent;
-  color: inherit;
-  outline: none;
-  border-radius: 0.5rem;
-  border: none;
-  width: 2rem;
-  height: 2rem;
-  box-sizing: border-box;
-  display: grid;
-  justify-content: center;
-  align-content: center;
-  cursor: pointer;
-  &:hover {
-    background-color: ${(props) => props.theme.background07};
-  }
-  &:active {
-    opacity: 0.7;
-  }
 `;
 
 const WideButton = styled(SquareButton)`
@@ -701,11 +631,6 @@ const SavedFilterDiv = styled.div`
     border-bottom-right-radius: 0.5rem;
     border-bottom-left-radius: 0.5rem;
   }
-`;
-
-export const CaretLeftRotaiton = styled(CaretLeft)<{ $isRotated: boolean }>`
-  transform: rotate(${(props) => (props.$isRotated ? "-90deg" : "0deg")});
-  transition-duration: 100ms;
 `;
 
 const MatchAnyAllElement = styled(FilteringPanelGroupElement)`
