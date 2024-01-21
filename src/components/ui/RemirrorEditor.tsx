@@ -47,6 +47,7 @@ import { useEffect } from "react";
 
 interface MenuProps {
   setState: (state: string) => void;
+  state: EditorState | string;
   showMenu: boolean;
   viewMode: string;
 }
@@ -70,7 +71,9 @@ export const Menu = (props: MenuProps) => {
   const { getMarkdown } = useHelpers();
 
   useEffect(() => {
-    props.setState(getMarkdown());
+    if (props.state !== getMarkdown()) {
+      props.setState(getMarkdown());
+    }
   }, [getMarkdown()]);
 
   return (
@@ -246,6 +249,7 @@ export const RemirrorEditor = (props: RemirrorEditorProps) => {
         >
           <Menu
             setState={props.setState}
+            state={props.state}
             showMenu={props.showMenu}
             viewMode={props.viewMode}
           />
@@ -323,14 +327,17 @@ const MenuDiv = styled.div<{ $mode: string }>`
   &::-webkit-scrollbar {
     display: none;
   }
+  & > button {
+    background-color: ${(props) =>
+      props.$mode === "Task" ? props.theme.panel : props.theme.background};
+  }
 `;
 
 const MenuButton = styled.button<{ $active?: boolean }>`
   height: 2rem;
   box-sizing: border-box;
   width: 2rem;
-  background-color: ${(props) =>
-    props.$active ? props.theme.panel : "transparent"};
+  ${(props) => !props.$active && "background-color: transparent"};
   border: none;
   outline: none;
   margin-right: 2px;

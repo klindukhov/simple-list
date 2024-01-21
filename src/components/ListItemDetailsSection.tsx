@@ -134,9 +134,6 @@ export default function ListItemDetailSection(
                           ?.split("=")[1] ?? 0
                       )
                     ).toLocaleDateString("en-GB")}
-                    {props.list[props.focusedListItemId].tags
-                      .find((e) => e.includes("$Updated="))
-                      ?.split("=")[1] ?? 0}
                   </Txt>
                   {getIsItemCompleted(props.focusedListItemId) && (
                     <Txt>
@@ -576,6 +573,9 @@ const ListItemDetailDescription = styled.div<{ $mode: string }>`
   box-sizing: border-box;
   margin-bottom: 1rem;
   margin-top: 0.5rem;
+  & > div > div > div > div.remirror-editor-wrapper > div {
+    ${(props) => props.$mode !== "Task" && "max-height: calc(100vh - 4rem);"}
+  }
 `;
 
 const DeleteField = styled.div`
