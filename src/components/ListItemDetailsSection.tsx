@@ -92,7 +92,9 @@ export default function ListItemDetailSection(
                 onClick={() => toggleCompleted()}
                 height='2rem'
                 checked={props.list[props.focusedListItemId].tags.includes(
-                  "Completed"
+                  props.list[props.focusedListItemId].tags.find((tag) =>
+                    tag.includes("Completed")
+                  ) ?? "Completed"
                 )}
               />
               {!isSummaryFocused && (
