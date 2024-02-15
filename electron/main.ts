@@ -2,6 +2,8 @@ import { app, BrowserWindow } from "electron";
 import path from "node:path";
 import contextMenu from "electron-context-menu";
 
+app.commandLine.appendSwitch("enable-experimental-web-platform-features");
+
 contextMenu({
   showSaveImageAs: true,
 });

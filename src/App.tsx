@@ -13,7 +13,9 @@ import { v4 as uuidv4 } from "uuid";
 
 import { ThemeProvider } from "styled-components";
 import { lightTheme, darkTheme, GlobalStyles } from "./components/ui/Themes.ts";
-import { IconContext } from "@phosphor-icons/react";
+import { Folder, IconContext, X } from "@phosphor-icons/react";
+import { setNewSaveFile } from "./api";
+import { WideButton } from "./components/ui/common.ts";
 
 export interface ListItem {
   id: string;
@@ -30,6 +32,9 @@ export interface Filter {
 }
 
 export default function App() {
+  const [isSaveFileSelected, setIsSaveFileSelected] = useState(false);
+  const [isFileSelectionPopUpCancellable, setIsFileSelectionPopUpCancellable] =
+    useState(false);
   const [viewMode, setViewMode] = useState("Task");
   const toggleViewMode = () => {
     setViewMode(viewMode === "Task" ? "Note" : "Task");
@@ -139,14 +144,17 @@ export default function App() {
 
   const [list, setListState] = useState<{ [itemId: string]: ListItem }>({});
   useEffect(() => {
-    getListApi().then((list) => {
-      setListState(list);
-    });
+    getListApi()
+      .then((list) => {
+        setListState(list);
+        setIsSaveFileSelected(true);
+      })
+      .catch(() => setIsSaveFileSelected(false));
   }, []);
 
   const setList = (listProp: { [itemId: string]: ListItem }) => {
     setListState(listProp);
-    setListApi(listProp);
+    setListApi(listProp).catch(() => setIsSaveFileSelected(false));
   };
 
   const [fieldsList, setFieldsList] = useState<{ [tag: string]: boolean }>({});
@@ -361,6 +369,10 @@ export default function App() {
       removeSavedFilter: removeSavedFilter,
       toggleViewMode: toggleViewMode,
       handleFileUpload: handleFileUpload,
+      selectNewSaveFile: () => {
+        setIsSaveFileSelected(false);
+        setIsFileSelectionPopUpCancellable(true);
+      },
     };
   };
 
@@ -404,6 +416,35 @@ export default function App() {
     <ThemeProvider theme={theme === "light" ? lightTheme : darkTheme}>
       <GlobalStyles />
       <IconContext.Provider value={iconStyles}>
+        {!isSaveFileSelected && (
+          <PopUpBackdrop>
+            <PopUp>
+              Please select new save file location.
+              <PopUpBottomRow $isCancellable={isFileSelectionPopUpCancellable}>
+                <WideButtonReverse
+                  onClick={async () => {
+                    const isNewFileSaved = await setNewSaveFile();
+                    setIsSaveFileSelected(isNewFileSaved);
+                    setIsFileSelectionPopUpCancellable(!isNewFileSaved);
+                    setList(list);
+                  }}
+                >
+                  Select <Folder />
+                </WideButtonReverse>
+                {isFileSelectionPopUpCancellable && (
+                  <WideButtonReverse
+                    onClick={() => {
+                      setIsSaveFileSelected(true);
+                      setIsFileSelectionPopUpCancellable(false);
+                    }}
+                  >
+                    Cancel <X />
+                  </WideButtonReverse>
+                )}
+              </PopUpBottomRow>
+            </PopUp>
+          </PopUpBackdrop>
+        )}
         <Page $mode={viewMode}>
           <FilterSection {...getFilterSectionProps()} />
           <ListSection {...getListSectionProps()} />
@@ -422,4 +463,41 @@ const Page = styled.div<{ $mode: string }>`
   grid-template-columns: ${(props) =>
     props.$mode === "Task" ? "15% 40% 45%" : "15% 15% 70%"};
   overflow-x: hidden;
+`;
+
+const PopUpBackdrop = styled.div`
+  height: 100vh;
+  width: 100vw;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 10;
+  position: absolute;
+  display: grid;
+  align-items: center;
+  justify-items: center;
+`;
+
+const PopUp = styled.div`
+  height: 15vh;
+  width: 20vw;
+  background-color: ${(props) => props.theme.background};
+  border-radius: 0.5rem;
+  display: grid;
+  justify-items: center;
+  align-items: center;
+  font-size: large;
+  grid-template-rows: auto auto;
+  border: solid 1px ${(props) => props.theme.text};
+`;
+
+const PopUpBottomRow = styled.div<{ $isCancellable: boolean }>`
+  display: grid;
+  grid-template-columns: auto ${(props) => props.$isCancellable && "auto"};
+  grid-column-gap: 4rem;
+`;
+
+const WideButtonReverse = styled(WideButton)`
+  background-color: ${(props) => props.theme.panel};
+  &:hover {
+    background-color: ${(props) => props.theme.panel07};
+  }
 `;

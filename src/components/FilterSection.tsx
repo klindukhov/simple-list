@@ -5,6 +5,7 @@ import {
   DownloadSimple,
   Eye,
   EyeSlash,
+  Folder,
   Funnel,
   Gear,
   Intersect,
@@ -19,8 +20,12 @@ import {
 } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
 import React from "react";
-import { CaretLeftRotaiton, SquareButton } from "./ui/common";
-import { EMPTY_FILTER_TEMPLATE, FILTER_PROPERTY_OPERATORS, FILTER_TAG_OPERATORS } from "../filters";
+import { CaretLeftRotaiton, SquareButton, WideButton } from "./ui/common";
+import {
+  EMPTY_FILTER_TEMPLATE,
+  FILTER_PROPERTY_OPERATORS,
+  FILTER_TAG_OPERATORS,
+} from "../filters";
 
 interface FilterSectionProps {
   list: { [itemId: string]: ListItem };
@@ -50,6 +55,7 @@ interface FilterSectionProps {
   removeSavedFilter: (filteName: string) => void;
   toggleViewMode: () => void;
   handleFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  selectNewSaveFile: () => void;
 }
 
 export default function FilterSection(props: FilterSectionProps) {
@@ -188,6 +194,9 @@ export default function FilterSection(props: FilterSectionProps) {
             Import
             <DownloadSimple />
           </WideButton>
+          <SquareButton onClick={props.selectNewSaveFile}>
+            <Folder />
+          </SquareButton>
           <SquareButtonJustifyEnd onClick={props.toggleViewMode}>
             <Gear />{" "}
           </SquareButtonJustifyEnd>
@@ -487,26 +496,10 @@ const FilteringPanelElement = styled.div`
 `;
 
 const ExportImportPanel = styled(FilteringPanelElement)`
-  grid-template-columns: auto auto auto auto;
+  grid-template-columns: auto auto auto auto auto;
+  box-sizing: border-box;
   margin-top: 0.5rem;
   margin-bottom: 1.5rem;
-`;
-
-const WideButton = styled(SquareButton)`
-  height: 2rem;
-  width: auto;
-  display: grid;
-  align-items: center;
-  grid-template-columns: auto auto;
-  grid-column-gap: 0.5rem;
-  justify-items: center;
-  cursor: pointer;
-  &:hover {
-    background-color: ${(props) => props.theme.background07};
-  }
-  &:active {
-    opacity: 0.5;
-  }
 `;
 
 const WideButtonStart = styled(WideButton)`
