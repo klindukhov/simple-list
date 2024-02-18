@@ -100,7 +100,6 @@ export default function ListSection(props: ListSectionProps) {
     const getIsItemIncluded = (item: ListItem, filter: Filter): boolean => {
       if (!item.tags.find((tag) => filter.fieldToFilter === getFieldKey(tag)))
         return false;
-
       return FILTER_PROPERTY_OPERATORS[
         filter.operator as keyof typeof FILTER_PROPERTY_OPERATORS
       ](
@@ -347,7 +346,14 @@ const EmptyListPlaceholder = styled.div`
 `;
 
 const ListSectionDiv = styled.div<{ $areItemsToDisplay: boolean }>`
-  height: 100vh;
+  margin-top: ${(props) =>
+    !props.theme.isFilteringPanelOpen &&
+    props.theme.viewMode === "Note" &&
+    "3rem"};
+  height: ${(props) =>
+    !props.theme.isFilteringPanelOpen && props.theme.viewMode === "Note"
+      ? "calc(100vh - 3rem)"
+      : "100vh"};
   overflow: scroll;
   display: grid;
   grid-template-columns: 100%;
@@ -380,7 +386,9 @@ const ListItemDiv = styled.div`
   border-color: ${(props) => props.theme.panel};
   border-style: solid;
   &:first-child {
-    margin-top: 1rem;
+    ${(props) =>
+      (props.theme.isFilteringPanelOpen || props.theme.viewMode === "Task") &&
+      "margin-top: 1rem;"}
     border: none;
   }
   &:last-child {

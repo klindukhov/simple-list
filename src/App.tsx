@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
 import {
   getList as getListApi,
@@ -13,9 +13,10 @@ import { v4 as uuidv4 } from "uuid";
 
 import { ThemeProvider } from "styled-components";
 import { lightTheme, darkTheme, GlobalStyles } from "./components/ui/Themes.ts";
-import { Folder, IconContext, X } from "@phosphor-icons/react";
+import { Folder, CaretLeft, IconContext, X, List } from "@phosphor-icons/react";
 import { setNewSaveFile } from "./api";
 import { WideButton } from "./components/ui/common.ts";
+import { SquareButton } from "./components/ui/common.ts";
 
 export interface ListItem {
   id: string;
@@ -36,9 +37,8 @@ export default function App() {
   const [isFileSelectionPopUpCancellable, setIsFileSelectionPopUpCancellable] =
     useState(false);
   const [viewMode, setViewMode] = useState("Task");
-  const toggleViewMode = () => {
-    setViewMode(viewMode === "Task" ? "Note" : "Task");
-  };
+
+  const [isFilteringPanelOpen, setIsFilteringPanelOpen] = useState(true);
 
   const [theme, setTheme] = useState("dark");
 
@@ -157,13 +157,50 @@ export default function App() {
     setListApi(listProp).catch(() => setIsSaveFileSelected(false));
   };
 
+  const [isShowingCompleted, setIsShowingCompleted] = useState(false);
+
+  const generateFieldsList = useCallback(
+    (itemList: { [itemId: string]: ListItem }): { [tag: string]: boolean } => {
+      if (Object.keys(itemList).length === 0) return {};
+
+      const allTags = Object.keys(
+        Object.fromEntries(
+          Object.entries(itemList).filter(
+            (e) =>
+              isShowingCompleted ||
+              !e[1].tags.includes(
+                e[1].tags.find((tag) => tag.includes("Completed")) ??
+                  "Completed"
+              )
+          )
+        )
+      )
+        .map((id) => itemList[id].tags)
+        .reduce((allTags, tags) => [...allTags, ...tags], []);
+
+      const uniqueSortingTags = Array.from(
+        new Set(
+          allTags
+            .filter((tag) => tag[0] === "$")
+            .map((e) => e.split("$")[1].split("=")[0])
+        )
+      );
+
+      const sortingList: { [tag: string]: boolean } = {};
+      uniqueSortingTags.forEach((tag) => {
+        sortingList[tag] = tag === "Created";
+      });
+      return sortingList;
+    },
+    [isShowingCompleted]
+  );
+
   const [fieldsList, setFieldsList] = useState<{ [tag: string]: boolean }>({});
   useEffect(() => {
     setFieldsList(generateFieldsList(list));
-  }, [list]);
+  }, [list, isShowingCompleted, generateFieldsList]);
 
   const [isFilteringMatchAny, setIsFilteringMatchAny] = useState(true);
-  const [isShowingCompleted, setIsShowingCompleted] = useState(false);
 
   const [isSortAsc, setIsSortAcs] = useState(false);
 
@@ -174,35 +211,21 @@ export default function App() {
   const getTagsList = (itemList: { [itemId: string]: ListItem }): string[] => {
     if (Object.keys(itemList).length === 0) return [];
 
-    const allTags = Object.keys(itemList)
+    const allTags = Object.keys(
+      Object.fromEntries(
+        Object.entries(itemList).filter(
+          (e) =>
+            isShowingCompleted ||
+            !e[1].tags.includes(
+              e[1].tags.find((tag) => tag.includes("Completed")) ?? "Completed"
+            )
+        )
+      )
+    )
       .map((id) => itemList[id].tags)
       .reduce((allTags, tags) => [...allTags, ...tags]);
 
     return Array.from(new Set(allTags));
-  };
-
-  const generateFieldsList = (itemList: {
-    [itemId: string]: ListItem;
-  }): { [tag: string]: boolean } => {
-    if (Object.keys(itemList).length === 0) return {};
-
-    const allTags = Object.keys(itemList)
-      .map((id) => itemList[id].tags)
-      .reduce((allTags, tags) => [...allTags, ...tags]);
-
-    const uniqueSortingTags = Array.from(
-      new Set(
-        allTags
-          .filter((tag) => tag[0] === "$")
-          .map((e) => e.split("$")[1].split("=")[0])
-      )
-    );
-
-    const sortingList: { [tag: string]: boolean } = {};
-    uniqueSortingTags.forEach((tag) => {
-      sortingList[tag] = tag === "Created";
-    });
-    return sortingList;
   };
 
   const addTagToListItem = (id: string, tag: string) => {
@@ -289,7 +312,8 @@ export default function App() {
       .filter(
         (filter: Filter) =>
           (filter.fieldToFilter === "Tags" &&
-            filter.expectedValue !== "Untagged") ||
+            filter.expectedValue !== "Untagged" &&
+            filter.operator !== "Exclude") ||
           filter.operator === "Equals"
       )
       .map((filter) =>
@@ -367,7 +391,9 @@ export default function App() {
       savedFilters: savedFiltersState,
       addSavedFilter: addSavedFilter,
       removeSavedFilter: removeSavedFilter,
-      toggleViewMode: toggleViewMode,
+      toggleViewMode: () => {
+        setViewMode(viewMode === "Task" ? "Note" : "Task");
+      },
       handleFileUpload: handleFileUpload,
       selectNewSaveFile: () => {
         setIsSaveFileSelected(false);
@@ -394,13 +420,16 @@ export default function App() {
       theme: theme,
       tempFilterSet: getTempFilterSet(),
       addListItem: addListItem,
+      isFilteringPanelOpen: isFilteringPanelOpen,
+      toggleIsFilteringPanelOpen: () => {
+        setIsFilteringPanelOpen(!isFilteringPanelOpen);
+      },
     };
   };
 
   const getListItemSectionProps = () => {
     return {
       list: list,
-      theme: theme,
       removeListItem: removeListItem,
       focusedListItemId: focusedListItemId,
       removeTagFromListItem: removeTagFromListItem,
@@ -412,8 +441,21 @@ export default function App() {
     };
   };
 
+  const getTheme = (
+    theme: string,
+    isFilteringPanelOpen: boolean,
+    viewMode: string
+  ) => {
+    const themeContext: { [key: string]: string | boolean } =
+      theme === "light" ? lightTheme : darkTheme;
+    themeContext.isFilteringPanelOpen = isFilteringPanelOpen;
+    themeContext.viewMode = viewMode;
+
+    return themeContext;
+  };
+
   return (
-    <ThemeProvider theme={theme === "light" ? lightTheme : darkTheme}>
+    <ThemeProvider theme={getTheme(theme, isFilteringPanelOpen, viewMode)}>
       <GlobalStyles />
       <IconContext.Provider value={iconStyles}>
         {!isSaveFileSelected && (
@@ -445,8 +487,15 @@ export default function App() {
             </PopUp>
           </PopUpBackdrop>
         )}
-        <Page $mode={viewMode}>
-          <FilterSection {...getFilterSectionProps()} />
+        <Page>
+          <SquareButtonBurger
+            onClick={() => setIsFilteringPanelOpen(!isFilteringPanelOpen)}
+          >
+            {isFilteringPanelOpen ? <CaretLeft /> : <List />}
+          </SquareButtonBurger>
+          {isFilteringPanelOpen && (
+            <FilterSection {...getFilterSectionProps()} />
+          )}
           <ListSection {...getListSectionProps()} />
           <ListItemDetailSection {...getListItemSectionProps()} />
         </Page>
@@ -455,13 +504,31 @@ export default function App() {
   );
 }
 
-const Page = styled.div<{ $mode: string }>`
+const SquareButtonBurger = styled(SquareButton)`
+  position: absolute;
+  margin-top: 0.5rem;
+  margin-left: 0.5rem;
+  &:hover {
+    ${(props) =>
+      !props.theme.isFilteringPanelOpen &&
+      `background-color: ${props.theme.panel07};`}
+  }
+`;
+
+const Page = styled.div`
   height: 100vh;
   width: 100%;
   background-color: ${(props) => props.theme.background};
   display: grid;
   grid-template-columns: ${(props) =>
-    props.$mode === "Task" ? "15% 40% 45%" : "15% 15% 70%"};
+    props.theme.isFilteringPanelOpen
+      ? props.theme.viewMode === "Task"
+        ? "15% 40% 45%"
+        : "15% 15% 70%"
+      : props.theme.viewMode === "Task"
+      ? "40% 60%"
+      : "15% 85%"};
+
   overflow-x: hidden;
 `;
 
