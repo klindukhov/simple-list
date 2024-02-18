@@ -15,7 +15,6 @@ interface ListItemdetailSectionProps {
   removeTagFromListItem: (id: string, tag: string) => void;
   addTagToListItem: (id: string, tag: string) => void;
   setListItemSummary: (id: string, summary: string) => void;
-  theme: string;
   viewMode: string;
   setListItemDescription: (id: string, description: string) => void;
   editTag: (id: string, currentTag: string, newTag: string) => void;
@@ -75,19 +74,14 @@ export default function ListItemDetailSection(
         props.list[props.focusedListItemId].summary === "") && (
         <ListItemDetailsPanelPlaceholder>
           <PlaceholderDiv />
-          <RemirrorEditor
-            state=''
-            setState={() => {}}
-            showMenu={false}
-            viewMode='Task'
-          />
+          <RemirrorEditor state='' setState={() => {}} showMenu={false} />
         </ListItemDetailsPanelPlaceholder>
       )}
       {props.focusedListItemId !== "0" &&
         props.list[props.focusedListItemId] &&
         props.list[props.focusedListItemId].summary !== "" && (
-          <ListItemDetailsPanel $mode={props.viewMode}>
-            <ListItemDetailsSummary $mode={props.viewMode}>
+          <ListItemDetailsPanel>
+            <ListItemDetailsSummary>
               <PreviewCheckmark
                 onClick={() => toggleCompleted()}
                 height='2rem'
@@ -109,12 +103,11 @@ export default function ListItemDetailSection(
                   onBlur={() => setIsSummaryFocused(false)}
                   autoFocus={true}
                   onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
-                  $mode={props.viewMode}
                 />
               )}
             </ListItemDetailsSummary>
             {props.viewMode === "Task" && (
-              <ListItemDetailsFieldElementCreated $mode={props.viewMode}>
+              <ListItemDetailsFieldElementCreated>
                 <CreatedUpdatedDiv>
                   <Txt>
                     Created:{" "}
@@ -168,10 +161,7 @@ export default function ListItemDetailSection(
                 </EditButton>
               </ListItemDetailsFieldElementCreated>
             )}
-            <ListItemFiedls
-              $areFieldsBeingEdited={areFieldsBeingEdited}
-              $mode={props.viewMode}
-            >
+            <ListItemFiedls $areFieldsBeingEdited={areFieldsBeingEdited}>
               {props.viewMode === "Task" &&
                 props.list[props.focusedListItemId].tags
                   .filter(
@@ -240,7 +230,6 @@ export default function ListItemDetailSection(
               <Txt>Tags:</Txt>
               <ListItemDetailsTagsList
                 onClick={() => document.getElementById("addTagChip")?.focus()}
-                $mode={props.viewMode}
               >
                 {props.list[props.focusedListItemId].tags
                   .filter((e) => e[0] != "$")
@@ -296,7 +285,7 @@ export default function ListItemDetailSection(
               </DescriptionTitle>
             )}
 
-            <ListItemDetailDescription $mode={props.viewMode}>
+            <ListItemDetailDescription>
               <RemirrorEditor
                 key={props.focusedListItemId}
                 state={props.list[props.focusedListItemId].description}
@@ -307,7 +296,6 @@ export default function ListItemDetailSection(
                   isRemirrorMenuOpen ||
                   (!isRemirrorMenuOpen && props.viewMode === "Note")
                 }
-                viewMode={props.viewMode}
               />
             </ListItemDetailDescription>
             {props.viewMode === "Task" && (
@@ -339,14 +327,14 @@ const Txt = styled.span`
   padding-top: 0.3rem;
 `;
 
-const ListItemDetailsPanel = styled.div<{ $mode: string }>`
+const ListItemDetailsPanel = styled.div`
   height: 100vh;
   overflow: scroll;
   background-color: ${(props) => props.theme.panel};
   min-width: 100%;
   grid-template-columns: 100%;
   grid-template-rows: auto auto ${(props) =>
-      props.$mode === "Task" && " auto auto "} 1fr;
+      props.theme.viewMode === "Task" && " auto auto "} 1fr;
   display: grid;
   justify-items: center;
   align-content: start;
@@ -361,9 +349,15 @@ const UnfocusedSummary = styled.div`
   overflow-wrap: break-word;
   hyphens: auto;
   width: 100%;
+  word-wrap: break-word;
+  -ms-word-break: break-all;
+  word-break: break-word;
+  -ms-hyphens: auto;
+  -moz-hyphens: auto;
+  -webkit-hyphens: auto;
 `;
 
-const DetailsSummaryInput = styled.input<{ $mode: string }>`
+const DetailsSummaryInput = styled.input`
   background-color: transparent;
   font: inherit;
   outline: none;
@@ -372,7 +366,7 @@ const DetailsSummaryInput = styled.input<{ $mode: string }>`
   justify-self: start;
   &:focus {
     border-bottom: ${(props) =>
-      props.$mode === "Task" && "1px solid " + props.theme.text};
+      props.theme.viewMode === "Task" && "1px solid " + props.theme.text};
   }
   width: 100%;
   box-sizing: border-box;
@@ -380,37 +374,38 @@ const DetailsSummaryInput = styled.input<{ $mode: string }>`
   text-overflow: ellipsis;
 `;
 
-const ListItemDetailsSummary = styled.div<{ $mode: string }>`
+const ListItemDetailsSummary = styled.div`
   font-size: 2rem;
   margin: 0.5rem;
-  margin-bottom: ${(props) => props.$mode === "Note" && "0rem"};
+  margin-bottom: ${(props) => props.theme.viewMode === "Note" && "0rem"};
   padding: 0.5rem;
-  border-radius: ${(props) => props.$mode === "Task" && "0.5rem"};
+  border-radius: ${(props) => props.theme.viewMode === "Task" && "0.5rem"};
   min-height: 3rem;
   display: grid;
-  width: ${(props) => (props.$mode === "Task" ? "90%" : "100%")};
+  width: ${(props) => (props.theme.viewMode === "Task" ? "90%" : "100%")};
   grid-template-columns: 2rem 1fr;
   grid-column-gap: 1rem;
   justify-items: start;
   align-items: center;
   &:hover {
     background-color: ${(props) =>
-      props.$mode === "Task" && props.theme.background};
+      props.theme.viewMode === "Task" && props.theme.background};
   }
   border-bottom: ${(props) =>
-    props.$mode === "Note" && "3px solid " + props.theme.background};
+    props.theme.viewMode === "Note" && "3px solid " + props.theme.background};
   box-sizing: border-box;
 `;
 
-const ListItemDetailsFieldElementCreated = styled.div<{ $mode: string }>`
+const ListItemDetailsFieldElementCreated = styled.div`
   padding: 0rem 0.25rem 0.25rem
-    ${(props) => (props.$mode === "Task" ? "0rem" : "0.25rem")};
+    ${(props) => (props.theme.viewMode === "Task" ? "0rem" : "0.25rem")};
   text-align: start;
-  width: ${(props) => (props.$mode === "Task" ? "90%" : "100%")};
+  width: ${(props) => (props.theme.viewMode === "Task" ? "90%" : "100%")};
   font-size: 0.8rem;
   display: grid;
   grid-template-columns: auto auto;
-  margin-bottom: ${(props) => (props.$mode === "Task" ? "0.4rem" : "0rem")};
+  margin-bottom: ${(props) =>
+    props.theme.viewMode === "Task" ? "0.4rem" : "0rem"};
   opacity: 0.7;
   box-sizing: border-box;
 `;
@@ -432,7 +427,6 @@ const EditButton = styled.div`
 
 const ListItemFiedls = styled.div<{
   $areFieldsBeingEdited: boolean;
-  $mode: string;
 }>`
   display: grid;
   grid-template-columns: ${(props) =>
@@ -440,13 +434,13 @@ const ListItemFiedls = styled.div<{
       ? "fit-content(20%) auto 4%"
       : "fit-content(20%) auto"};
   text-align: start;
-  width: ${(props) => (props.$mode === "Task" ? "90%" : "100%")};
+  width: ${(props) => (props.theme.viewMode === "Task" ? "90%" : "100%")};
   grid-column-gap: 1rem;
   grid-row-gap: 0.5rem;
   align-items: center;
   border-bottom: ${(props) =>
-    props.$mode === "Note" && "3px solid " + props.theme.background};
-  padding-left: ${(props) => props.$mode === "Note" && "1rem"};
+    props.theme.viewMode === "Note" && "3px solid " + props.theme.background};
+  padding-left: ${(props) => props.theme.viewMode === "Note" && "1rem"};
 `;
 
 const ListItemDetailsFieldInput = styled.input`
@@ -471,9 +465,9 @@ const ListItemDetailsFieldInput = styled.input`
   }
 `;
 
-const ListItemDetailsTagsList = styled.div<{ $mode: string }>`
+const ListItemDetailsTagsList = styled.div`
   background-color: ${(props) =>
-    props.$mode === "Task" && props.theme.background};
+    props.theme.viewMode === "Task" && props.theme.background};
   color: inherit;
   border-radius: 0.5rem;
   border-width: 0px;
@@ -491,7 +485,7 @@ const ListItemDetailsTagsList = styled.div<{ $mode: string }>`
   cursor: text;
   & > div {
     background-color: ${(props) =>
-      props.$mode === "Note" && props.theme.background};
+      props.theme.viewMode === "Note" && props.theme.background};
   }
 `;
 
@@ -565,18 +559,20 @@ const DescriptionTitle = styled.div`
   cursor: default;
 `;
 
-const ListItemDetailDescription = styled.div<{ $mode: string }>`
-  width: ${(props) => (props.$mode === "Task" ? "90%" : "100%")};
+const ListItemDetailDescription = styled.div`
+  width: ${(props) => (props.theme.viewMode === "Task" ? "90%" : "100%")};
   border-width: 0px;
   display: block;
   resize: vertical;
-  border-radius: ${(props) => (props.$mode === "Task" ? "0.5rem" : "0rem")};
+  border-radius: ${(props) =>
+    props.theme.viewMode === "Task" ? "0.5rem" : "0rem"};
   outline: none;
   box-sizing: border-box;
   margin-bottom: 1rem;
   margin-top: 0.5rem;
   & > div > div > div > div.remirror-editor-wrapper > div {
-    ${(props) => props.$mode !== "Task" && "max-height: calc(100vh - 4rem);"}
+    ${(props) =>
+      props.theme.viewMode !== "Task" && "max-height: calc(100vh - 4rem);"}
   }
 `;
 

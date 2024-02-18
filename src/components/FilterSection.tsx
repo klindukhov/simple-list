@@ -6,12 +6,12 @@ import {
   Eye,
   EyeSlash,
   Funnel,
-  Gear,
   Intersect,
   MagnifyingGlass,
   Moon,
   SortAscending,
   SortDescending,
+  SquareHalf,
   Sun,
   Trash,
   Unite,
@@ -20,7 +20,11 @@ import {
 import { useEffect, useState } from "react";
 import React from "react";
 import { CaretLeftRotaiton, SquareButton } from "./ui/common";
-import { EMPTY_FILTER_TEMPLATE, FILTER_PROPERTY_OPERATORS, FILTER_TAG_OPERATORS } from "../filters";
+import {
+  EMPTY_FILTER_TEMPLATE,
+  FILTER_PROPERTY_OPERATORS,
+  FILTER_TAG_OPERATORS,
+} from "../filters";
 
 interface FilterSectionProps {
   list: { [itemId: string]: ListItem };
@@ -93,6 +97,7 @@ export default function FilterSection(props: FilterSectionProps) {
     const tempFilter: Filter = { ...newFilter };
 
     tempFilter.fieldToFilter = selectedField;
+    tempFilter.operator = "";
 
     setNewFilter(tempFilter);
   };
@@ -189,7 +194,7 @@ export default function FilterSection(props: FilterSectionProps) {
             <DownloadSimple />
           </WideButton>
           <SquareButtonJustifyEnd onClick={props.toggleViewMode}>
-            <Gear />{" "}
+            <SquareHalf size={"1.2rem"} />{" "}
           </SquareButtonJustifyEnd>
         </ExportImportPanel>
         <SearchBarElement>
@@ -350,7 +355,9 @@ export default function FilterSection(props: FilterSectionProps) {
                                 <Txt>{filter.operator}</Txt>
                               </FilterFieldDiv>
                               <ExpectedValueDiv>
-                                <Txt>{filter.expectedValue}</Txt>
+                                <TxtInlineBlock title={filter.expectedValue}>
+                                  {filter.expectedValue}
+                                </TxtInlineBlock>
                               </ExpectedValueDiv>
                               <SquareButtonJustifyEnd
                                 onClick={() =>
@@ -479,7 +486,6 @@ const Txt = styled.span`
 
 const FilteringPanelElement = styled.div`
   box-sizing: border-box;
-  /* border: 1px solid grey; */
   height: 2rem;
   width: 95%;
   display: grid;
@@ -490,6 +496,7 @@ const ExportImportPanel = styled(FilteringPanelElement)`
   grid-template-columns: auto auto auto auto;
   margin-top: 0.5rem;
   margin-bottom: 1.5rem;
+  padding-left: 2.5rem;
 `;
 
 const WideButton = styled(SquareButton)`
@@ -648,6 +655,7 @@ const FiltersContainer = styled.div`
   width: 100%;
   display: grid;
   justify-items: center;
+  overflow-y: scroll;
 `;
 
 const FilterSetNameInput = styled.div`
@@ -752,6 +760,19 @@ const ExpectedValueDiv = styled.div`
   box-sizing: border-box;
   padding-top: 0.1rem;
   width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding-left: 0.25rem;
+  padding-right: 0.25rem;
+`;
+
+const TxtInlineBlock = styled(Txt)`
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: inline-block;
 `;
 
 const FilterFieldDiv = styled.div`

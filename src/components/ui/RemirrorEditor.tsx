@@ -49,7 +49,6 @@ interface MenuProps {
   setState: (state: string) => void;
   state: EditorState | string;
   showMenu: boolean;
-  viewMode: string;
 }
 
 export const Menu = (props: MenuProps) => {
@@ -78,7 +77,7 @@ export const Menu = (props: MenuProps) => {
 
   return (
     props.showMenu && (
-      <MenuDiv $mode={props.viewMode}>
+      <MenuDiv>
         <ButtonGroup>
           <MenuButton
             onClick={() => {
@@ -213,7 +212,6 @@ interface RemirrorEditorProps {
   state: EditorState | string;
   setState: (state: string) => void;
   showMenu: boolean;
-  viewMode: string;
 }
 
 export const RemirrorEditor = (props: RemirrorEditorProps) => {
@@ -251,9 +249,8 @@ export const RemirrorEditor = (props: RemirrorEditorProps) => {
             setState={props.setState}
             state={props.state}
             showMenu={props.showMenu}
-            viewMode={props.viewMode}
           />
-          <EditorComponentWrapper $mode={props.viewMode}>
+          <EditorComponentWrapper>
             <EditorComponent />
           </EditorComponentWrapper>
         </Remirror>
@@ -270,12 +267,14 @@ const AllStyledComponentHeight = styled(AllStyledComponent)<{
   grid-template-rows: 100%;
 `;
 
-const EditorComponentWrapper = styled.div<{ $mode: string }>`
+const EditorComponentWrapper = styled.div`
   min-height: 100%;
   display: grid;
   grid-template-rows: 100%;
   background-color: ${(props) =>
-    props.$mode === "Task" ? props.theme.background : props.theme.panel};
+    props.theme.viewMode === "Task"
+      ? props.theme.background
+      : props.theme.panel};
   border-bottom-left-radius: 0.5rem;
   border-bottom-right-radius: 0.5rem;
   & > div.remirror-editor-wrapper {
@@ -306,17 +305,21 @@ const EditorComponentWrapper = styled.div<{ $mode: string }>`
   }
 `;
 
-const MenuDiv = styled.div<{ $mode: string }>`
+const MenuDiv = styled.div`
   border-top-left-radius: 0.5rem;
   border-top-right-radius: 0.5rem;
   box-sizing: border-box;
   padding: 0rem 0.5rem 0rem 0.5rem;
   background-color: ${(props) =>
-    props.$mode === "Task" ? props.theme.background : props.theme.panel};
+    props.theme.viewMode === "Task"
+      ? props.theme.background
+      : props.theme.panel};
   border-bottom-width: 3px;
   border-bottom-style: solid;
   border-bottom-color: ${(props) =>
-    props.$mode === "Task" ? props.theme.panel : props.theme.background};
+    props.theme.viewMode === "Task"
+      ? props.theme.panel
+      : props.theme.background};
   width: 100%;
   height: 3rem;
   display: flex;
@@ -329,7 +332,9 @@ const MenuDiv = styled.div<{ $mode: string }>`
   }
   & > button {
     background-color: ${(props) =>
-      props.$mode === "Task" ? props.theme.panel : props.theme.background};
+      props.theme.viewMode === "Task"
+        ? props.theme.panel
+        : props.theme.background};
   }
 `;
 
