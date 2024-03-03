@@ -7,6 +7,7 @@ import { Check, PencilSimple, Trash, X } from "@phosphor-icons/react";
 import { RemirrorEditor } from "./ui/RemirrorEditor";
 import PreviewCheckmark from "./ui/PreviewCheckMark";
 import { CaretLeftRotaiton, SquareButton } from "./ui/common";
+import AutocompleteInput from "./ui/AutocompleteInput";
 
 interface ListItemdetailSectionProps {
   list: { [itemId: string]: ListItem };
@@ -18,6 +19,7 @@ interface ListItemdetailSectionProps {
   viewMode: string;
   setListItemDescription: (id: string, description: string) => void;
   editTag: (id: string, currentTag: string, newTag: string) => void;
+  tagsList: string[];
 }
 
 export default function ListItemDetailSection(
@@ -64,6 +66,18 @@ export default function ListItemDetailSection(
         ? e.target.value.substring(1)
         : e.target.value
     );
+  };
+
+  const getHintTags = (tagsList: string[], stringToMatch: string): string[] => {
+    return tagsList.filter((tag) => {
+      return (
+        tag[0] !== "$" &&
+        tag.toLowerCase().includes(stringToMatch.toLowerCase()) &&
+        !props.list[props.focusedListItemId].tags
+          .filter((e) => e[0] != "$")
+          .includes(tag)
+      );
+    });
   };
 
   return (
@@ -255,22 +269,36 @@ export default function ListItemDetailSection(
                     $width={
                       (newTag.length + 1 < 2 ? 2 : newTag.length + 1) + "ch"
                     }
-                    id='addTagChip'
-                    value={newTag}
-                    onChange={(e) => setNewTag(e.target.value)}
-                    onBlur={() => {
-                      if (newTag !== "+" && newTag !== "" && newTag !== " ") {
-                        props.addTagToListItem(props.focusedListItemId, newTag);
+                  >
+                    <AutocompleteInput
+                      hintList={getHintTags(props.tagsList, newTag)}
+                      id='addTagChip'
+                      value={newTag}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                        setNewTag((e.target as HTMLInputElement).value)
                       }
-                      setNewTag("");
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.currentTarget.blur();
-                        document.getElementById("addTagChip")?.focus();
-                      }
-                    }}
-                  />
+                      onHintApply={(hint: string) => {
+                        props.addTagToListItem(props.focusedListItemId, hint);
+                        setNewTag("");
+                      }}
+                      onBlur={() => {
+                        if (newTag !== "+" && newTag !== "" && newTag !== " ") {
+                          props.addTagToListItem(
+                            props.focusedListItemId,
+                            newTag
+                          );
+                        }
+                        setNewTag("");
+                      }}
+                      onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.currentTarget.blur();
+                          document.getElementById("addTagChip")?.focus();
+                          setNewTag("");
+                        }
+                      }}
+                    />
+                  </AddTagChip>
                 )}
               </ListItemDetailsTagsList>
             </ListItemFiedls>
@@ -528,21 +556,25 @@ const DeleteTag = styled.span`
   }
 `;
 
-const AddTagChip = styled.input<{ $width: string }>`
-  background-color: transparent;
-  box-sizing: border-box;
-  color: inherit;
-  padding-bottom: 0.2rem;
-  border-radius: 0.5rem;
-  border-width: 0px;
-  text-align: start;
-  height: 1.8rem;
-  font-size: 1rem;
-  outline: none;
-  width: ${(props) => props.$width};
-  max-width: 20rem;
-  &:hover {
-    opacity: 0.7;
+const AddTagChip = styled.div<{ $width: string }>`
+  display: grid;
+  align-content: center;
+  background-color: transparent !important;
+  & > div > input {
+    background-color: transparent;
+    box-sizing: border-box;
+    color: inherit;
+    border-radius: 0.5rem;
+    border-width: 0px;
+    text-align: start;
+    height: 1.8rem;
+    font-size: 1rem;
+    outline: none;
+    width: ${(props) => props.$width};
+    max-width: 20rem;
+    &:hover {
+      opacity: 0.7;
+    }
   }
 `;
 

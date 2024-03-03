@@ -476,6 +476,7 @@ const FilteringSidePanel = styled.div`
   &::-webkit-scrollbar {
     display: none;
   }
+  ${(props) => !props.theme.isFilteringPanelOpen && "display: none;"}
 `;
 
 const Txt = styled.span`
