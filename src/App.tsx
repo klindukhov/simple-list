@@ -16,6 +16,8 @@ import { lightTheme, darkTheme, GlobalStyles } from "./components/ui/Themes.ts";
 import { CaretLeft, IconContext, List } from "@phosphor-icons/react";
 import { SquareButton } from "./components/ui/common.ts";
 
+import { useMediaQuery } from "react-responsive";
+
 export interface ListItem {
   id: string;
   summary: string;
@@ -31,9 +33,14 @@ export interface Filter {
 }
 
 export default function App() {
-  const [viewMode, setViewMode] = useState("Task");
+  const isMobile: boolean = useMediaQuery({ query: "(max-width: 1224px)" });
+  const [viewMode, setViewMode] = useState(isMobile ? "Note" : "Task");
 
-  const [isFilteringPanelOpen, setIsFilteringPanelOpen] = useState(true);
+  const [isFilteringPanelOpen, setIsFilteringPanelOpen] = useState(!isMobile);
+  const [isListSectionOpen, setIsListSectionOpen] = useState(true);
+  const [isItemDetailsSectionOpen, setIsItemDetailsSectionOpen] = useState(
+    !isMobile
+  );
 
   const [theme, setTheme] = useState("dark");
 
@@ -412,6 +419,8 @@ export default function App() {
       toggleIsFilteringPanelOpen: () => {
         setIsFilteringPanelOpen(!isFilteringPanelOpen);
       },
+      isMobile: isMobile,
+      handleOpenItemDetailsSection: handleOpenItemDetailsSection,
     };
   };
 
@@ -427,6 +436,7 @@ export default function App() {
       setListItemDescription: setListItemDescription,
       editTag: editTag,
       tagsList: getTagsList(list),
+      isMobile: isMobile,
     };
   };
 
@@ -438,9 +448,32 @@ export default function App() {
     const themeContext: { [key: string]: string | boolean } =
       theme === "light" ? lightTheme : darkTheme;
     themeContext.isFilteringPanelOpen = isFilteringPanelOpen;
-    themeContext.viewMode = viewMode;
-
+    themeContext.isListSectionOpen = isListSectionOpen;
+    themeContext.isItemDetailsSectionOpen = isItemDetailsSectionOpen;
+    themeContext.viewMode = isMobile ? "Note" : viewMode;
+    themeContext.isMobile = isMobile;
     return themeContext;
+  };
+
+  const handleBurgerClick = () => {
+    if (!isMobile) {
+      setIsFilteringPanelOpen(!isFilteringPanelOpen);
+    }
+    if (isMobile) {
+      if (isItemDetailsSectionOpen) {
+        setIsListSectionOpen(true);
+        setIsItemDetailsSectionOpen(false);
+      } else {
+        setIsFilteringPanelOpen(!isFilteringPanelOpen);
+        setIsListSectionOpen(!isListSectionOpen);
+      }
+    }
+  };
+
+  const handleOpenItemDetailsSection = () => {
+    setIsFilteringPanelOpen(false);
+    setIsListSectionOpen(false);
+    setIsItemDetailsSectionOpen(true);
   };
 
   return (
@@ -448,10 +481,15 @@ export default function App() {
       <GlobalStyles />
       <IconContext.Provider value={iconStyles}>
         <Page>
-          <SquareButtonBurger
-            onClick={() => setIsFilteringPanelOpen(!isFilteringPanelOpen)}
-          >
-            {isFilteringPanelOpen ? <CaretLeft /> : <List />}
+          <SquareButtonBurger onClick={handleBurgerClick}>
+            {isFilteringPanelOpen ||
+            (!isListSectionOpen &&
+              !isFilteringPanelOpen &&
+              isItemDetailsSectionOpen) ? (
+              <CaretLeft />
+            ) : (
+              <List />
+            )}
           </SquareButtonBurger>
           <FilterSection {...getFilterSectionProps()} />
           <ListSection {...getListSectionProps()} />
@@ -474,12 +512,14 @@ const SquareButtonBurger = styled(SquareButton)`
 `;
 
 const Page = styled.div`
-  height: 100vh;
+  height: 100dvh;
   width: 100%;
   background-color: ${(props) => props.theme.background};
   display: grid;
   grid-template-columns: ${(props) =>
-    props.theme.isFilteringPanelOpen
+    props.theme.isMobile
+      ? "100%"
+      : props.theme.isFilteringPanelOpen
       ? props.theme.viewMode === "Task"
         ? "15% 40% 45%"
         : "15% 15% 70%"

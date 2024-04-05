@@ -1,6 +1,6 @@
 import { styled } from "styled-components";
 import { Filter, ListItem } from "../App";
-import { CursorClick } from "@phosphor-icons/react";
+import { CaretRight, CursorClick } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
 import { FILTER_PROPERTY_OPERATORS, FILTER_TAG_OPERATORS } from "../filters";
 import PreviewCheckmark from "./ui/PreviewCheckMark";
@@ -22,6 +22,8 @@ interface ListSectionProps {
   theme: string;
   tempFilterSet: { [filterId: string]: Filter };
   addListItem: () => void;
+  isMobile: boolean;
+  handleOpenItemDetailsSection: () => void;
 }
 
 export default function ListSection(props: ListSectionProps) {
@@ -310,7 +312,7 @@ export default function ListSection(props: ListSectionProps) {
           >
             <PreviewCheckmark
               onClick={() => toggleItemCompleted(id)}
-              height='1.2rem'
+              height="1.2rem"
               checked={!!getIsItemAppearingCompleted(id)}
             />
             <ListItemElementInput
@@ -332,11 +334,27 @@ export default function ListSection(props: ListSectionProps) {
               }}
               $isCompleted={getIsItemAppearingCompleted(id) ?? false}
             />
+            {props.isMobile && (
+              <CaretRightButton
+                onClick={() => {
+                  props.handleOpenItemDetailsSection();
+                  props.setFocusedListItemId(id);
+                }}
+              >
+                <CaretRight height={"1.2rem"} />
+              </CaretRightButton>
+            )}
           </ListItemDiv>
         ))}
     </ListSectionDiv>
   );
 }
+
+const CaretRightButton = styled.div`
+  &:active {
+    opacity: 0.7;
+  }
+`;
 
 const EmptyListPlaceholder = styled.div`
   display: grid;
@@ -352,10 +370,10 @@ const ListSectionDiv = styled.div<{ $areItemsToDisplay: boolean }>`
     "3rem"};
   height: ${(props) =>
     !props.theme.isFilteringPanelOpen && props.theme.viewMode === "Note"
-      ? "calc(100vh - 3rem)"
-      : "100vh"};
+      ? "calc(100dvh - 3rem)"
+      : "100dvh"};
   overflow: scroll;
-  display: grid;
+  display: ${(props) => (props.theme.isListSectionOpen ? "grid" : "none")};
   grid-template-columns: 100%;
   grid-row-gap: 0px;
   justify-items: center;
@@ -378,7 +396,8 @@ const ListItemDiv = styled.div`
   background-color: transparent;
   padding: 0.5rem;
   display: grid;
-  grid-template-columns: 1.2rem 1fr;
+  grid-template-columns: 1.2rem 1fr ${(props) =>
+      props.theme.isMobile && "1.2rem"};
   justify-content: start;
   grid-column-gap: 1rem;
   align-items: center;
