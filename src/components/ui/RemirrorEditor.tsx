@@ -325,7 +325,7 @@ const MenuDiv = styled.div`
   display: flex;
   flex-wrap: nowrap;
   align-items: center;
-  overflow-x: scroll;
+  overflow-x: auto;
   overflow-y: hidden;
   &::-webkit-scrollbar {
     display: none;
