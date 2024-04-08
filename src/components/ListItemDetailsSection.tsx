@@ -434,17 +434,17 @@ const Txt = styled.span`
 
 const ListItemDetailsPanel = styled.div`
   height: 100dvh;
-  overflow: scroll;
   background-color: ${(props) => props.theme.panel};
   min-width: 100%;
   grid-template-columns: 100%;
-  grid-template-rows: auto auto ${(props) =>
-      props.theme.viewMode === "Task" && " auto auto "} 1fr;
+  grid-template-rows: auto ${(props) => !props.theme.isMobile && " auto "} ${(
+      props
+    ) => props.theme.viewMode === "Task" && " auto auto "} 1fr;
   display: ${(props) =>
     props.theme.isItemDetailsSectionOpen ? "grid" : "none"};
   justify-items: center;
   align-content: start;
-  overflow-x: hidden;
+  overflow: hidden;
   &::-webkit-scrollbar {
     display: none;
   }
@@ -671,9 +671,9 @@ const DescriptionTitle = styled.div`
 
 const ListItemDetailDescription = styled.div`
   width: ${(props) => (props.theme.viewMode === "Task" ? "90%" : "100%")};
+  overflow: hidden;
   border-width: 0px;
   display: block;
-  resize: vertical;
   border-radius: ${(props) =>
     props.theme.viewMode === "Task" ? "0.5rem" : "0rem"};
   outline: none;

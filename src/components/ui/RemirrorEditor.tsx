@@ -268,7 +268,8 @@ const AllStyledComponentHeight = styled(AllStyledComponent)<{
 `;
 
 const EditorComponentWrapper = styled.div`
-  min-height: 100%;
+  overflow-y: scroll;
+  height: 100%;
   display: grid;
   grid-template-rows: 100%;
   background-color: ${(props) =>
@@ -279,12 +280,13 @@ const EditorComponentWrapper = styled.div`
   border-bottom-right-radius: 0.5rem;
   & > div.remirror-editor-wrapper {
     padding-top: 0px;
-    min-height: 100%;
+    height: 100%;
     display: grid;
     grid-template-rows: 100%;
   }
   & > div.remirror-editor-wrapper > div {
-    min-height: 100% !important;
+    overflow-y: scroll;
+    height: 100% !important;
     box-shadow: none !important;
     & > h1,
     h2,
@@ -320,12 +322,12 @@ const MenuDiv = styled.div`
     props.theme.viewMode === "Task"
       ? props.theme.panel
       : props.theme.background};
-  width: 100%;
   height: 3rem;
+  max-width: 100vw;
   display: flex;
   flex-wrap: nowrap;
   align-items: center;
-  overflow-x: auto;
+  overflow-x: scroll;
   overflow-y: hidden;
   &::-webkit-scrollbar {
     display: none;
