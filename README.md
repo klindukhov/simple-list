@@ -1,27 +1,19 @@
-# React + TypeScript + Vite
+# Simple list
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+### Local-only tool for storing and organizing personal tasks and notes
 
-Currently, two official plugins are available:
+![image](https://github.com/klindukhov/simple-list/assets/61867600/13e7d674-1f6b-4d36-b9ac-355a419511b2)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+### Demos:
 
-## Expanding the ESLint configuration
+- Desktop web: [main](https://list-plus.netlify.app/), [latest UI updates + PWA](https://list-plus-ui-improvements.netlify.app/) - data stored in Local Storage and IndexedDB or WebSQL
+- Desktop electron: [source](https://github.com/klindukhov/simple-list/tree/main_electron) - data stored in a JSON file in the file system
+- Mobile: [latest UI updates + PWA](https://list-plus-ui-improvements.netlify.app/) - data stored in Local Storage and IndexedDB or WebSQL
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+### Technologies and resources:
 
-- Configure the top-level `parserOptions` property like this:
-
-```js
-   parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-    project: ['./tsconfig.json', './tsconfig.node.json'],
-    tsconfigRootDir: __dirname,
-   },
-```
-
-- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
-- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
+- [Template: React + TypeScript + Vite](https://vitejs.dev/)
+- [Styled-components](https://styled-components.com/)
+- [Remirror](https://remirror.io/)
+- [Local Forage](https://github.com/localForage/localForage)
+- [Phosphor icons](https://phosphoricons.com/)
