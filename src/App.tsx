@@ -438,6 +438,7 @@ export default function App() {
       viewMode: viewMode,
       setListItemDescription: setListItemDescription,
       editTag: editTag,
+      tagsList: getTagsList(list),
     };
   };
 
@@ -493,9 +494,7 @@ export default function App() {
           >
             {isFilteringPanelOpen ? <CaretLeft /> : <List />}
           </SquareButtonBurger>
-          {isFilteringPanelOpen && (
-            <FilterSection {...getFilterSectionProps()} />
-          )}
+          <FilterSection {...getFilterSectionProps()} />
           <ListSection {...getListSectionProps()} />
           <ListItemDetailSection {...getListItemSectionProps()} />
         </Page>
