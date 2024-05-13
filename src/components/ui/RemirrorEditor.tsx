@@ -330,18 +330,16 @@ const MenuDiv = styled.div`
   &::-webkit-scrollbar {
     display: none;
   }
-  & > button {
-    background-color: ${(props) =>
-      props.theme.viewMode === "Task"
-        ? props.theme.panel
-        : props.theme.background};
-  }
 `;
 
 const MenuButton = styled.button<{ $active?: boolean }>`
   height: 2rem;
   box-sizing: border-box;
   width: 2rem;
+  background-color: ${(props) =>
+    props.theme.viewMode === "Task"
+      ? props.theme.panel
+      : props.theme.background};
   ${(props) => !props.$active && "background-color: transparent"};
   border: none;
   outline: none;
