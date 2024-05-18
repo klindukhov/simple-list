@@ -28,6 +28,7 @@ interface ListItemdetailSectionProps {
   editTag: (id: string, currentTag: string, newTag: string) => void;
   tagsList: string[];
   isMobile: boolean;
+  onItemDeleteMobile: () => void;
 }
 
 export default function ListItemDetailSection(
@@ -90,305 +91,316 @@ export default function ListItemDetailSection(
     });
   };
 
+  const getIsPlaceholderDisplayed = () => {
+    return (
+      props.focusedListItemId === "0" ||
+      !props.list[props.focusedListItemId] ||
+      Object.keys(props.list).length === 0 ||
+      props.list[props.focusedListItemId].summary === ""
+    );
+  };
+
+  const getIsContentDisplayed = () => {
+    return (
+      props.focusedListItemId !== "0" &&
+      props.list[props.focusedListItemId] &&
+      props.list[props.focusedListItemId].summary !== ""
+    );
+  };
+
   return (
     <>
-      {(props.focusedListItemId === "0" ||
-        !props.list[props.focusedListItemId] ||
-        Object.keys(props.list).length === 0 ||
-        props.list[props.focusedListItemId].summary === "") && (
+      {getIsPlaceholderDisplayed() && (
         <ListItemDetailsPanelPlaceholder>
           <PlaceholderDiv />
-          <RemirrorEditor state="" setState={() => {}} showMenu={false} />
+          <RemirrorEditor state='' setState={() => {}} showMenu={false} />
         </ListItemDetailsPanelPlaceholder>
       )}
-      {props.focusedListItemId !== "0" &&
-        props.list[props.focusedListItemId] &&
-        props.list[props.focusedListItemId].summary !== "" && (
-          <ListItemDetailsPanel>
-            <ListItemDetailsSummary>
-              {!props.isMobile ? (
-                <PreviewCheckmark
-                  onClick={() => toggleCompleted()}
-                  height="2rem"
-                  checked={props.list[props.focusedListItemId].tags.includes(
-                    props.list[props.focusedListItemId].tags.find((tag) =>
-                      tag.includes("Completed")
-                    ) ?? "Completed"
-                  )}
-                />
-              ) : (
-                <div></div>
-              )}
-              {!isSummaryFocused && (
-                <UnfocusedSummary onClick={() => setIsSummaryFocused(true)}>
-                  {props.list[props.focusedListItemId].summary}
-                </UnfocusedSummary>
-              )}
-              {isSummaryFocused && (
-                <DetailsSummaryInput
-                  value={props.list[props.focusedListItemId].summary}
-                  onChange={handleSummaryChange}
-                  onBlur={() => setIsSummaryFocused(false)}
-                  autoFocus={true}
-                  onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
-                />
-              )}
-            </ListItemDetailsSummary>
-            {(!props.isMobile || (props.isMobile && isMobileDetails)) && (
-              <>
-                {props.viewMode === "Task" && (
-                  <ListItemDetailsFieldElementCreated>
-                    <CreatedUpdatedDiv>
-                      <Txt>
-                        Created:{" "}
-                        {new Date(
-                          +(
-                            props.list[props.focusedListItemId].tags
-                              .find((e) => e.includes("$Created="))
-                              ?.split("=")[1] ?? 0
-                          )
-                        ).toLocaleDateString("en-GB")}
-                      </Txt>
-
-                      <Txt>
-                        Updated:{" "}
-                        {new Date(
-                          +(
-                            props.list[props.focusedListItemId].tags
-                              .find((e) => e.includes("$Updated="))
-                              ?.split("=")[1] ?? 0
-                          )
-                        ).toLocaleDateString("en-GB")}
-                      </Txt>
-                      {getIsItemCompleted(props.focusedListItemId) && (
-                        <Txt>
-                          Completed:{" "}
-                          {new Date(
-                            +(
-                              props.list[props.focusedListItemId].tags
-                                .find((e) => e.includes("$Completed="))
-                                ?.split("=")[1] ?? 0
-                            )
-                          ).toLocaleDateString("en-GB")}
-                        </Txt>
-                      )}
-                    </CreatedUpdatedDiv>
-                    <EditButton
-                      onClick={() =>
-                        setAreFieldsBeingEdited(!areFieldsBeingEdited)
-                      }
-                    >
-                      {areFieldsBeingEdited && (
-                        <>
-                          <Txt>Save</Txt>
-                          <Check />
-                        </>
-                      )}
-                      {!areFieldsBeingEdited && (
-                        <>
-                          <Txt>Edit</Txt>
-                          <PencilSimple />
-                        </>
-                      )}
-                    </EditButton>
-                  </ListItemDetailsFieldElementCreated>
+      {getIsContentDisplayed() && (
+        <ListItemDetailsPanel $isMobileDetails={isMobileDetails}>
+          <ListItemDetailsSummary>
+            {!props.isMobile ? (
+              <PreviewCheckmark
+                onClick={() => toggleCompleted()}
+                height='2rem'
+                checked={props.list[props.focusedListItemId].tags.includes(
+                  props.list[props.focusedListItemId].tags.find((tag) =>
+                    tag.includes("Completed")
+                  ) ?? "Completed"
                 )}
-                <ListItemFiedls $areFieldsBeingEdited={areFieldsBeingEdited}>
-                  {props.viewMode === "Task" &&
-                    props.list[props.focusedListItemId].tags
-                      .filter(
-                        (e) =>
-                          e[0] === "$" &&
-                          !e.includes("$Created=") &&
-                          !e.includes("$Completed=") &&
-                          !e.includes("$Updated=")
-                      )
-                      .map((tag) => (
-                        <React.Fragment key={tag.split("$")[1].split("=")[0]}>
-                          <Txt>{tag.split("$")[1].split("=")[0] + ": "}</Txt>
-                          <ListItemDetailsFieldInput
-                            value={tag.split("$")[1].split("=")[1]}
-                            onChange={(e) =>
-                              props.editTag(
-                                props.focusedListItemId,
-                                tag,
-                                `$${tag.split("$")[1].split("=")[0]}=${
-                                  e.target.value
-                                }`
-                              )
-                            }
-                            onKeyDown={(e) =>
-                              e.key === "Enter" && e.currentTarget.blur()
-                            }
-                            placeholder="value"
-                          />
-                          {areFieldsBeingEdited && (
-                            <DeleteField
-                              onClick={() =>
-                                props.removeTagFromListItem(
-                                  props.focusedListItemId,
-                                  tag
-                                )
-                              }
-                            >
-                              <Trash />
-                            </DeleteField>
-                          )}
-                        </React.Fragment>
-                      ))}
-                  {areFieldsBeingEdited && (
-                    <>
-                      <ListItemDetailsFieldInput
-                        placeholder="Add new field"
-                        onKeyDown={(e) =>
-                          e.key === "Enter" && e.currentTarget.blur()
-                        }
-                        onBlur={() => {
-                          if (newCustomFieldInput !== "") {
-                            props.addTagToListItem(
-                              props.focusedListItemId,
-                              "$" + newCustomFieldInput + "="
-                            );
-                          }
-                          setNewCustomFieldInput("");
-                        }}
-                        value={newCustomFieldInput}
-                        onChange={(e) => setNewCustomFieldInput(e.target.value)}
-                      />
-                      <div></div>
-                      <div></div>
-                    </>
-                  )}
-                  <Txt>Tags:</Txt>
-                  <ListItemDetailsTagsList
+              />
+            ) : (
+              <div></div>
+            )}
+            {!isSummaryFocused && (
+              <UnfocusedSummary onClick={() => setIsSummaryFocused(true)}>
+                {props.list[props.focusedListItemId].summary}
+              </UnfocusedSummary>
+            )}
+            {isSummaryFocused && (
+              <DetailsSummaryInput
+                value={props.list[props.focusedListItemId].summary}
+                onChange={handleSummaryChange}
+                onBlur={() => setIsSummaryFocused(false)}
+                autoFocus={true}
+                onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
+              />
+            )}
+          </ListItemDetailsSummary>
+          {(!props.isMobile || (props.isMobile && isMobileDetails)) && (
+            <>
+              {(props.viewMode === "Task" ||
+                (props.isMobile && isMobileDetails)) && (
+                <ListItemDetailsFieldElementCreated>
+                  <CreatedUpdatedDiv>
+                    <Txt>
+                      Created:{" "}
+                      {new Date(
+                        +(
+                          props.list[props.focusedListItemId].tags
+                            .find((e) => e.includes("$Created="))
+                            ?.split("=")[1] ?? 0
+                        )
+                      ).toLocaleDateString("en-GB")}
+                    </Txt>
+
+                    <Txt>
+                      Updated:{" "}
+                      {new Date(
+                        +(
+                          props.list[props.focusedListItemId].tags
+                            .find((e) => e.includes("$Updated="))
+                            ?.split("=")[1] ?? 0
+                        )
+                      ).toLocaleDateString("en-GB")}
+                    </Txt>
+                    {getIsItemCompleted(props.focusedListItemId) && (
+                      <Txt>
+                        Completed:{" "}
+                        {new Date(
+                          +(
+                            props.list[props.focusedListItemId].tags
+                              .find((e) => e.includes("$Completed="))
+                              ?.split("=")[1] ?? 0
+                          )
+                        ).toLocaleDateString("en-GB")}
+                      </Txt>
+                    )}
+                  </CreatedUpdatedDiv>
+                  <EditButton
                     onClick={() =>
-                      document.getElementById("addTagChip")?.focus()
+                      setAreFieldsBeingEdited(!areFieldsBeingEdited)
                     }
                   >
-                    {props.list[props.focusedListItemId].tags
-                      .filter((e) => e[0] != "$")
-                      .map((tag) => (
-                        <TagChip key={tag}>
-                          <span>
-                            <TagChipText>{tag}</TagChipText>
-                            <DeleteTag
-                              onClick={() =>
-                                props.removeTagFromListItem(
-                                  props.focusedListItemId,
-                                  tag
-                                )
-                              }
-                            >
-                              <X size={"0.8rem"} />
-                            </DeleteTag>
-                          </span>
-                        </TagChip>
-                      ))}
-                    {props.list[props.focusedListItemId].summary.length > 0 && (
-                      <AddTagChip
-                        $width={
-                          (newTag.length + 1 < 2 ? 2 : newTag.length + 1) + "ch"
-                        }
-                      >
-                        <AutocompleteInput
-                          hintList={getHintTags(props.tagsList, newTag)}
-                          id="addTagChip"
-                          value={newTag}
-                          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                            setNewTag((e.target as HTMLInputElement).value)
+                    {areFieldsBeingEdited && (
+                      <>
+                        <Txt>Save</Txt>
+                        <Check />
+                      </>
+                    )}
+                    {!areFieldsBeingEdited && (
+                      <>
+                        <Txt>Edit</Txt>
+                        <PencilSimple />
+                      </>
+                    )}
+                  </EditButton>
+                </ListItemDetailsFieldElementCreated>
+              )}
+              <ListItemFiedls $areFieldsBeingEdited={areFieldsBeingEdited}>
+                {(props.viewMode === "Task" ||
+                  (props.isMobile && isMobileDetails)) &&
+                  props.list[props.focusedListItemId].tags
+                    .filter(
+                      (e) =>
+                        e[0] === "$" &&
+                        !e.includes("$Created=") &&
+                        !e.includes("$Completed=") &&
+                        !e.includes("$Updated=")
+                    )
+                    .map((tag) => (
+                      <React.Fragment key={tag.split("$")[1].split("=")[0]}>
+                        <Txt>{tag.split("$")[1].split("=")[0] + ": "}</Txt>
+                        <ListItemDetailsFieldInput
+                          value={tag.split("$")[1].split("=")[1]}
+                          onChange={(e) =>
+                            props.editTag(
+                              props.focusedListItemId,
+                              tag,
+                              `$${tag.split("$")[1].split("=")[0]}=${
+                                e.target.value
+                              }`
+                            )
                           }
-                          onHintApply={(hint: string) => {
+                          onKeyDown={(e) =>
+                            e.key === "Enter" && e.currentTarget.blur()
+                          }
+                          placeholder='value'
+                        />
+                        {areFieldsBeingEdited && (
+                          <DeleteField
+                            onClick={() =>
+                              props.removeTagFromListItem(
+                                props.focusedListItemId,
+                                tag
+                              )
+                            }
+                          >
+                            <Trash />
+                          </DeleteField>
+                        )}
+                      </React.Fragment>
+                    ))}
+                {areFieldsBeingEdited && (
+                  <>
+                    <ListItemDetailsFieldInput
+                      placeholder='Add new field'
+                      onKeyDown={(e) =>
+                        e.key === "Enter" && e.currentTarget.blur()
+                      }
+                      onBlur={() => {
+                        if (newCustomFieldInput !== "") {
+                          props.addTagToListItem(
+                            props.focusedListItemId,
+                            "$" + newCustomFieldInput + "="
+                          );
+                        }
+                        setNewCustomFieldInput("");
+                      }}
+                      value={newCustomFieldInput}
+                      onChange={(e) => setNewCustomFieldInput(e.target.value)}
+                    />
+                    <div></div>
+                    <div></div>
+                  </>
+                )}
+                <Txt>Tags:</Txt>
+                <ListItemDetailsTagsList
+                  onClick={() => document.getElementById("addTagChip")?.focus()}
+                >
+                  {props.list[props.focusedListItemId].tags
+                    .filter((e) => e[0] != "$")
+                    .map((tag) => (
+                      <TagChip key={tag}>
+                        <span>
+                          <TagChipText>{tag}</TagChipText>
+                          <DeleteTag
+                            onClick={() =>
+                              props.removeTagFromListItem(
+                                props.focusedListItemId,
+                                tag
+                              )
+                            }
+                          >
+                            <X size={"0.8rem"} />
+                          </DeleteTag>
+                        </span>
+                      </TagChip>
+                    ))}
+                  {props.list[props.focusedListItemId].summary.length > 0 && (
+                    <AddTagChip
+                      $width={
+                        (newTag.length + 1 < 2 ? 2 : newTag.length + 1) + "ch"
+                      }
+                    >
+                      <AutocompleteInput
+                        hintList={getHintTags(props.tagsList, newTag)}
+                        id='addTagChip'
+                        value={newTag}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                          setNewTag((e.target as HTMLInputElement).value)
+                        }
+                        onHintApply={(hint: string) => {
+                          props.addTagToListItem(props.focusedListItemId, hint);
+                          setNewTag("");
+                        }}
+                        onBlur={() => {
+                          if (
+                            newTag !== "+" &&
+                            newTag !== "" &&
+                            newTag !== " "
+                          ) {
                             props.addTagToListItem(
                               props.focusedListItemId,
-                              hint
+                              newTag
                             );
+                          }
+                          setNewTag("");
+                        }}
+                        onKeyDown={(
+                          e: React.KeyboardEvent<HTMLInputElement>
+                        ) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.currentTarget.blur();
+                            document.getElementById("addTagChip")?.focus();
                             setNewTag("");
-                          }}
-                          onBlur={() => {
-                            if (
-                              newTag !== "+" &&
-                              newTag !== "" &&
-                              newTag !== " "
-                            ) {
-                              props.addTagToListItem(
-                                props.focusedListItemId,
-                                newTag
-                              );
-                            }
-                            setNewTag("");
-                          }}
-                          onKeyDown={(
-                            e: React.KeyboardEvent<HTMLInputElement>
-                          ) => {
-                            if (e.key === "Enter" || e.key === " ") {
-                              e.currentTarget.blur();
-                              document.getElementById("addTagChip")?.focus();
-                              setNewTag("");
-                            }
-                          }}
-                        />
-                      </AddTagChip>
-                    )}
-                  </ListItemDetailsTagsList>
-                </ListItemFiedls>
-                {props.viewMode === "Task" && (
-                  <DescriptionTitle>
-                    <Txt>Description:</Txt>
-                    <SquareButton
-                      onClick={() => setIsRemirrorMenuOpen(!isRemirrorMenuOpen)}
-                    >
-                      <CaretLeftRotaiton $isRotated={isRemirrorMenuOpen} />
-                    </SquareButton>
-                  </DescriptionTitle>
-                )}
-              </>
-            )}
-            {((props.isMobile && !isMobileDetails) || !props.isMobile) && (
-              <ListItemDetailDescription>
-                <RemirrorEditor
-                  key={props.focusedListItemId}
-                  state={props.list[props.focusedListItemId].description}
-                  setState={(state: string) => {
-                    props.setListItemDescription(
-                      props.focusedListItemId,
-                      state
-                    );
-                  }}
-                  showMenu={
-                    isRemirrorMenuOpen ||
-                    (!isRemirrorMenuOpen && props.viewMode === "Note")
-                  }
-                />
-              </ListItemDetailDescription>
-            )}
-            {props.isMobile && (
-              <MobileOptionsDiv>
-                <MobileOptionsSubDiv
-                  $isMobileDetails={isMobileDetails}
-                  onClick={() => setIsMobileDetails(false)}
-                >
-                  <PencilCircle size={"1.5rem"} />
-                </MobileOptionsSubDiv>
-                <MobileOptionsSubDiv
-                  $isMobileDetails={isMobileDetails}
-                  onClick={() => setIsMobileDetails(true)}
-                >
-                  <Rows size={"1.5rem"} />
-                </MobileOptionsSubDiv>
-              </MobileOptionsDiv>
-            )}
-            {props.viewMode === "Task" && (
-              <DeleteDiv>
-                <DeleteElementChip
-                  onClick={() => props.removeListItem(props.focusedListItemId)}
-                >
-                  <Trash size={"1.3rem"} />
-                  <Txt>Delete Item</Txt>
-                </DeleteElementChip>
-              </DeleteDiv>
-            )}
-          </ListItemDetailsPanel>
-        )}
+                          }
+                        }}
+                      />
+                    </AddTagChip>
+                  )}
+                </ListItemDetailsTagsList>
+              </ListItemFiedls>
+              {props.viewMode === "Task" && (
+                <DescriptionTitle>
+                  <Txt>Description:</Txt>
+                  <SquareButton
+                    onClick={() => setIsRemirrorMenuOpen(!isRemirrorMenuOpen)}
+                  >
+                    <CaretLeftRotaiton $isRotated={isRemirrorMenuOpen} />
+                  </SquareButton>
+                </DescriptionTitle>
+              )}
+            </>
+          )}
+          {((props.isMobile && !isMobileDetails) || !props.isMobile) && (
+            <ListItemDetailDescription>
+              <RemirrorEditor
+                key={props.focusedListItemId}
+                state={props.list[props.focusedListItemId].description}
+                setState={(state: string) => {
+                  props.setListItemDescription(props.focusedListItemId, state);
+                }}
+                showMenu={
+                  isRemirrorMenuOpen ||
+                  (!isRemirrorMenuOpen && props.viewMode === "Note")
+                }
+              />
+            </ListItemDetailDescription>
+          )}
+          {(props.viewMode === "Task" ||
+            (props.isMobile && isMobileDetails)) && (
+            <DeleteDiv>
+              <DeleteElementChip
+                onClick={() => {
+                  props.removeListItem(props.focusedListItemId);
+                  setIsMobileDetails(false);
+                  props.onItemDeleteMobile();
+                }}
+              >
+                <Trash size={"1.3rem"} />
+                <Txt>Delete Item</Txt>
+              </DeleteElementChip>
+            </DeleteDiv>
+          )}
+          {props.isMobile && (
+            <MobileOptionsDiv>
+              <MobileOptionsSubDiv
+                $isMobileDetails={isMobileDetails}
+                onClick={() => setIsMobileDetails(false)}
+              >
+                <PencilCircle size={"1.5rem"} />
+              </MobileOptionsSubDiv>
+              <MobileOptionsSubDiv
+                $isMobileDetails={isMobileDetails}
+                onClick={() => setIsMobileDetails(true)}
+              >
+                <Rows size={"1.5rem"} />
+              </MobileOptionsSubDiv>
+            </MobileOptionsDiv>
+          )}
+        </ListItemDetailsPanel>
+      )}
     </>
   );
 }
@@ -432,14 +444,16 @@ const Txt = styled.span`
   padding-top: 0.3rem;
 `;
 
-const ListItemDetailsPanel = styled.div`
+const ListItemDetailsPanel = styled.div<{ $isMobileDetails: boolean }>`
   height: 100dvh;
   background-color: ${(props) => props.theme.panel};
   min-width: 100%;
   grid-template-columns: 100%;
   grid-template-rows: auto ${(props) => !props.theme.isMobile && " auto "} ${(
       props
-    ) => props.theme.viewMode === "Task" && " auto auto "} 1fr;
+    ) =>
+      (props.theme.viewMode === "Task" || props.$isMobileDetails) &&
+      " auto auto "} 1fr;
   display: ${(props) =>
     props.theme.isItemDetailsSectionOpen ? "grid" : "none"};
   justify-items: center;
@@ -547,6 +561,9 @@ const ListItemFiedls = styled.div<{
   border-bottom: ${(props) =>
     props.theme.viewMode === "Note" && "3px solid " + props.theme.background};
   padding-left: ${(props) => props.theme.viewMode === "Note" && "1rem"};
+  ${(props) =>
+    props.theme.isMobile &&
+    "box-sizing: border-box; padding-right: 1rem; margin-top: 1rem;"}
 `;
 
 const ListItemDetailsFieldInput = styled.input`

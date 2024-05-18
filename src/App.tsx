@@ -437,6 +437,7 @@ export default function App() {
       editTag: editTag,
       tagsList: getTagsList(list),
       isMobile: isMobile,
+      onItemDeleteMobile: onItemDeleteMobile,
     };
   };
 
@@ -468,6 +469,11 @@ export default function App() {
         setIsListSectionOpen(!isListSectionOpen);
       }
     }
+  };
+
+  const onItemDeleteMobile = () => {
+    setIsItemDetailsSectionOpen(false);
+    setIsListSectionOpen(true);
   };
 
   const handleOpenItemDetailsSection = () => {
