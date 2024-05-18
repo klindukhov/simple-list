@@ -172,10 +172,10 @@ export default function FilterSection(props: FilterSectionProps) {
   return (
     <>
       <HiddenInput
-        type="file"
-        id="importFileInput"
+        type='file'
+        id='importFileInput'
         onChange={(e) => props.handleFileUpload(e)}
-        accept=".json"
+        accept='.json'
       />
       <FilteringSidePanel>
         <ExportImportPanel>
@@ -200,7 +200,7 @@ export default function FilterSection(props: FilterSectionProps) {
         <SearchBarElement>
           <InputField
             onChange={(e) => props.setSearchBarValue(e.target.value)}
-            id="searhBarInput"
+            id='searhBarInput'
           />
           {props.searchBarValue === "" && (
             <MagnifyingGlassWrapper
@@ -311,7 +311,7 @@ export default function FilterSection(props: FilterSectionProps) {
             {isFiltersetBeingSaved && (
               <FilterSetNameInput>
                 <InputField
-                  placeholder="Filterset name"
+                  placeholder='Filterset name'
                   onChange={(e) => setNewSavedFilterName(e.target.value)}
                 />
                 <WideButton onClick={() => handleNewFiltersetSave()}>
@@ -413,7 +413,7 @@ export default function FilterSection(props: FilterSectionProps) {
                                   onChange={(e) =>
                                     handleExpectedValueChange(e.target.value)
                                   }
-                                  placeholder="Expected value"
+                                  placeholder='Expected value'
                                   value={newFilter.expectedValue}
                                 />
                               )}
@@ -657,6 +657,9 @@ const FiltersContainer = styled.div`
   display: grid;
   justify-items: center;
   overflow-y: scroll;
+  &::-webkit-scrollbar {
+    display: none;
+  }
 `;
 
 const FilterSetNameInput = styled.div`

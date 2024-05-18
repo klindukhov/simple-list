@@ -169,6 +169,9 @@ const OptionsDiv = styled.div<{ $top: string; $left: string }>`
   z-index: 2;
   max-height: 10rem;
   overflow-y: scroll;
+  &::-webkit-scrollbar {
+    display: none;
+  }
 `;
 
 const Option = styled.div<{ $isHighlighted: boolean }>`

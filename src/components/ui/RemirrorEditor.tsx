@@ -305,6 +305,9 @@ const EditorComponentWrapper = styled.div`
     border-top-left-radius: 0.5rem;
     border-top-right-radius: 0.5rem;
   }
+  &::-webkit-scrollbar {
+    display: none;
+  }
 `;
 
 const MenuDiv = styled.div`
