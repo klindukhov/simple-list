@@ -245,14 +245,14 @@ export const RemirrorEditor = (props: RemirrorEditorProps) => {
             setState(e.state);
           }}
         >
+          <EditorComponentWrapper>
+            <EditorComponent />
+          </EditorComponentWrapper>
           <Menu
             setState={props.setState}
             state={props.state}
             showMenu={props.showMenu}
           />
-          <EditorComponentWrapper>
-            <EditorComponent />
-          </EditorComponentWrapper>
         </Remirror>
       </ThemeProvider>
     </AllStyledComponentHeight>
@@ -311,14 +311,18 @@ const EditorComponentWrapper = styled.div`
 `;
 
 const MenuDiv = styled.div`
-  border-top-left-radius: 0.5rem;
-  border-top-right-radius: 0.5rem;
   box-sizing: border-box;
   padding: 0rem 0.5rem 0rem 0.5rem;
   background-color: ${(props) =>
     props.theme.viewMode === "Task"
       ? props.theme.background
       : props.theme.panel};
+  border-top-width: 3px;
+  border-top-style: solid;
+  border-top-color: ${(props) =>
+    props.theme.viewMode === "Task"
+      ? props.theme.panel
+      : props.theme.background};
   border-bottom-width: 3px;
   border-bottom-style: solid;
   border-bottom-color: ${(props) =>

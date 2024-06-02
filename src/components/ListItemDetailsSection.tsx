@@ -4,9 +4,9 @@ import { useState } from "react";
 import React from "react";
 import {
   Check,
+  Info,
   PencilCircle,
   PencilSimple,
-  Rows,
   Trash,
   X,
 } from "@phosphor-icons/react";
@@ -385,18 +385,22 @@ export default function ListItemDetailSection(
           )}
           {props.isMobile && (
             <MobileOptionsDiv>
-              <MobileOptionsSubDiv
-                $isMobileDetails={isMobileDetails}
-                onClick={() => setIsMobileDetails(false)}
-              >
-                <PencilCircle size={"1.5rem"} />
-              </MobileOptionsSubDiv>
-              <MobileOptionsSubDiv
-                $isMobileDetails={isMobileDetails}
-                onClick={() => setIsMobileDetails(true)}
-              >
-                <Rows size={"1.5rem"} />
-              </MobileOptionsSubDiv>
+              {isMobileDetails && (
+                <MobileOptionsSubDiv
+                  $isMobileDetails={isMobileDetails}
+                  onClick={() => setIsMobileDetails(!isMobileDetails)}
+                >
+                  <PencilCircle size={"1.5rem"} />
+                </MobileOptionsSubDiv>
+              )}
+              {!isMobileDetails && (
+                <MobileOptionsSubDiv
+                  $isMobileDetails={isMobileDetails}
+                  onClick={() => setIsMobileDetails(true)}
+                >
+                  <Info size={"1.5rem"} />
+                </MobileOptionsSubDiv>
+              )}
             </MobileOptionsDiv>
           )}
         </ListItemDetailsPanel>
@@ -407,28 +411,24 @@ export default function ListItemDetailSection(
 
 const MobileOptionsDiv = styled.div`
   width: 100%;
-  height: 3rem;
+  height: 0rem;
   display: grid;
   grid-template-columns: 50% 50%;
   align-self: end;
 `;
 
 const MobileOptionsSubDiv = styled.div<{ $isMobileDetails: boolean }>`
-  width: 100%;
-  height: 100%;
+  width: 2.5rem;
+  height: 2.5rem;
   box-sizing: border-box;
-  border: 2px solid ${(props) => props.theme.background};
-  &:first-child {
-    background-color: ${(props) =>
-      !props.$isMobileDetails ? props.theme.background : "transparent"};
-  }
-  &:last-child {
-    background-color: ${(props) =>
-      props.$isMobileDetails ? props.theme.background : "transparent"};
-  }
+  background-color: ${(props) => props.theme.background};
+  border-radius: 1.25rem;
   display: grid;
   justify-content: center;
   align-items: center;
+  position: relative;
+  bottom: ${(props) => (props.$isMobileDetails ? "4.5rem" : "7rem")};
+  right: calc(3rem - 100vw);
 `;
 
 const CreatedUpdatedDiv = styled.div`
