@@ -1,9 +1,10 @@
 import { styled } from "styled-components";
 import { Filter, ListItem } from "../App";
-import { CaretRight, CursorClick } from "@phosphor-icons/react";
+import { CaretRight, CursorClick, List } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
 import { FILTER_PROPERTY_OPERATORS, FILTER_TAG_OPERATORS } from "../filters";
 import PreviewCheckmark from "./ui/PreviewCheckMark";
+import { SquareButton } from "./ui/common";
 
 interface ListSectionProps {
   list: { [itemId: string]: ListItem };
@@ -24,6 +25,7 @@ interface ListSectionProps {
   addListItem: () => void;
   isMobile: boolean;
   handleOpenItemDetailsSection: () => void;
+  handleBurgerClick: () => void;
 }
 
 export default function ListSection(props: ListSectionProps) {
@@ -291,65 +293,88 @@ export default function ListSection(props: ListSectionProps) {
   };
 
   return (
-    <ListSectionDiv
-      onClick={handleListSectionClick}
-      $areItemsToDisplay={areItemsToDisplay()}
-      onMouseEnter={handleMouseEnter}
-    >
-      {!areItemsToDisplay() && (
-        <EmptyListPlaceholder>
-          <CursorClick size={32} />
-          Click here to add an item
-        </EmptyListPlaceholder>
-      )}
-      {areItemsToDisplay() &&
-        getListItems().map((id) => (
-          <ListItemDiv
-            key={id}
-            onClick={(e) => {
-              e.stopPropagation();
-            }}
-          >
-            <PreviewCheckmark
-              onClick={() => toggleItemCompleted(id)}
-              height="1.2rem"
-              checked={!!getIsItemAppearingCompleted(id)}
-            />
-            <ListItemElementInput
-              value={props.list[id].summary}
-              onChange={(e) => {
-                props.setListItemSummary(id, e.target.value);
-                setIsLastItemEmpty(e.target.value === "");
+    <>
+      <NavBar>
+        <SquareButtonBurger onClick={props.handleBurgerClick}>
+          <List />
+        </SquareButtonBurger>
+      </NavBar>
+      <ListSectionDiv
+        onClick={handleListSectionClick}
+        $areItemsToDisplay={areItemsToDisplay()}
+        onMouseEnter={handleMouseEnter}
+      >
+        {!areItemsToDisplay() && (
+          <EmptyListPlaceholder>
+            <CursorClick size={32} />
+            Click here to add an item
+          </EmptyListPlaceholder>
+        )}
+        {areItemsToDisplay() &&
+          getListItems().map((id) => (
+            <ListItemDiv
+              key={id}
+              onClick={(e) => {
+                e.stopPropagation();
               }}
-              onFocus={() => props.setFocusedListItemId(id)}
-              onBlur={handleListItemBlur}
-              autoFocus={props.list[id].summary === ""}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  if ((e.target as HTMLInputElement).value !== "") {
-                    handleListSectionClick();
-                    e.currentTarget.blur();
-                  }
-                }
-              }}
-              $isCompleted={getIsItemAppearingCompleted(id) ?? false}
-            />
-            {props.isMobile && (
-              <CaretRightButton
-                onClick={() => {
-                  props.handleOpenItemDetailsSection();
-                  props.setFocusedListItemId(id);
+            >
+              <PreviewCheckmark
+                onClick={() => toggleItemCompleted(id)}
+                height='1.2rem'
+                checked={!!getIsItemAppearingCompleted(id)}
+              />
+              <ListItemElementInput
+                value={props.list[id].summary}
+                onChange={(e) => {
+                  props.setListItemSummary(id, e.target.value);
+                  setIsLastItemEmpty(e.target.value === "");
                 }}
-              >
-                <CaretRight height={"1.2rem"} />
-              </CaretRightButton>
-            )}
-          </ListItemDiv>
-        ))}
-    </ListSectionDiv>
+                onFocus={() => props.setFocusedListItemId(id)}
+                onBlur={handleListItemBlur}
+                autoFocus={props.list[id].summary === ""}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    if ((e.target as HTMLInputElement).value !== "") {
+                      handleListSectionClick();
+                      e.currentTarget.blur();
+                    }
+                  }
+                }}
+                $isCompleted={getIsItemAppearingCompleted(id) ?? false}
+              />
+              {props.isMobile && (
+                <CaretRightButton
+                  onClick={() => {
+                    props.handleOpenItemDetailsSection();
+                    props.setFocusedListItemId(id);
+                  }}
+                >
+                  <CaretRight height={"1.2rem"} />
+                </CaretRightButton>
+              )}
+            </ListItemDiv>
+          ))}
+      </ListSectionDiv>
+    </>
   );
 }
 
+const SquareButtonBurger = styled(SquareButton)`
+  position: absolute;
+  margin-top: 0.5rem;
+  margin-left: 0.5rem;
+  &:hover {
+    ${(props) =>
+      !props.theme.isFilteringPanelOpen &&
+      `background-color: ${props.theme.panel07};`}
+  }
+`;
+
+const NavBar = styled.div`
+  height: 3rem;
+  width: 100%;
+  display: ${(props) => (props.theme.isListSectionOpen ? "grid" : "none")};
+`;
 const CaretRightButton = styled.div`
   &:active {
     opacity: 0.7;
@@ -364,10 +389,6 @@ const EmptyListPlaceholder = styled.div`
 `;
 
 const ListSectionDiv = styled.div<{ $areItemsToDisplay: boolean }>`
-  margin-top: ${(props) =>
-    !props.theme.isFilteringPanelOpen &&
-    props.theme.viewMode === "Note" &&
-    "3rem"};
   height: ${(props) =>
     !props.theme.isFilteringPanelOpen && props.theme.viewMode === "Note"
       ? "calc(100dvh - 3rem)"

@@ -3,6 +3,7 @@ import { ListItem } from "../App";
 import { useState } from "react";
 import React from "react";
 import {
+  CaretLeft,
   Check,
   Info,
   PencilCircle,
@@ -12,9 +13,8 @@ import {
 } from "@phosphor-icons/react";
 
 import { RemirrorEditor } from "./ui/RemirrorEditor";
-import PreviewCheckmark from "./ui/PreviewCheckMark";
-import { CaretLeftRotaiton, SquareButton } from "./ui/common";
 import AutocompleteInput from "./ui/AutocompleteInput";
+import { SquareButton } from "./ui/common";
 
 interface ListItemdetailSectionProps {
   list: { [itemId: string]: ListItem };
@@ -23,12 +23,11 @@ interface ListItemdetailSectionProps {
   removeTagFromListItem: (id: string, tag: string) => void;
   addTagToListItem: (id: string, tag: string) => void;
   setListItemSummary: (id: string, summary: string) => void;
-  viewMode: string;
   setListItemDescription: (id: string, description: string) => void;
   editTag: (id: string, currentTag: string, newTag: string) => void;
   tagsList: string[];
-  isMobile: boolean;
   onItemDeleteMobile: () => void;
+  handleBurgerClick: () => void;
 }
 
 export default function ListItemDetailSection(
@@ -41,8 +40,6 @@ export default function ListItemDetailSection(
 
   const [areFieldsBeingEdited, setAreFieldsBeingEdited] = useState(false);
 
-  const [isRemirrorMenuOpen, setIsRemirrorMenuOpen] = useState(false);
-
   const [isMobileDetails, setIsMobileDetails] = useState(false);
 
   const getIsItemCompleted = (id: string) => {
@@ -50,22 +47,6 @@ export default function ListItemDetailSection(
       props.list[id].tags.find((tag) => tag.includes("Completed")) ??
         "Completed"
     );
-  };
-
-  const toggleCompleted = () => {
-    if (getIsItemCompleted(props.focusedListItemId)) {
-      props.removeTagFromListItem(
-        props.focusedListItemId,
-        props.list[props.focusedListItemId].tags.find((tag) =>
-          tag.includes("Completed")
-        ) ?? "Completed"
-      );
-    } else {
-      props.addTagToListItem(
-        props.focusedListItemId,
-        "$Completed=" + Date.now()
-      );
-    }
   };
 
   const handleSummaryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -119,19 +100,9 @@ export default function ListItemDetailSection(
       {getIsContentDisplayed() && (
         <ListItemDetailsPanel $isMobileDetails={isMobileDetails}>
           <ListItemDetailsSummary>
-            {!props.isMobile ? (
-              <PreviewCheckmark
-                onClick={() => toggleCompleted()}
-                height='2rem'
-                checked={props.list[props.focusedListItemId].tags.includes(
-                  props.list[props.focusedListItemId].tags.find((tag) =>
-                    tag.includes("Completed")
-                  ) ?? "Completed"
-                )}
-              />
-            ) : (
-              <div></div>
-            )}
+            <SquareButton onClick={props.handleBurgerClick}>
+              <CaretLeft />
+            </SquareButton>
             {!isSummaryFocused && (
               <UnfocusedSummary onClick={() => setIsSummaryFocused(true)}>
                 {props.list[props.focusedListItemId].summary}
@@ -147,10 +118,9 @@ export default function ListItemDetailSection(
               />
             )}
           </ListItemDetailsSummary>
-          {(!props.isMobile || (props.isMobile && isMobileDetails)) && (
+          {isMobileDetails && (
             <>
-              {(props.viewMode === "Task" ||
-                (props.isMobile && isMobileDetails)) && (
+              {isMobileDetails && (
                 <ListItemDetailsFieldElementCreated>
                   <CreatedUpdatedDiv>
                     <Txt>
@@ -208,8 +178,7 @@ export default function ListItemDetailSection(
                 </ListItemDetailsFieldElementCreated>
               )}
               <ListItemFiedls $areFieldsBeingEdited={areFieldsBeingEdited}>
-                {(props.viewMode === "Task" ||
-                  (props.isMobile && isMobileDetails)) &&
+                {isMobileDetails &&
                   props.list[props.focusedListItemId].tags
                     .filter(
                       (e) =>
@@ -341,19 +310,9 @@ export default function ListItemDetailSection(
                   )}
                 </ListItemDetailsTagsList>
               </ListItemFiedls>
-              {props.viewMode === "Task" && (
-                <DescriptionTitle>
-                  <Txt>Description:</Txt>
-                  <SquareButton
-                    onClick={() => setIsRemirrorMenuOpen(!isRemirrorMenuOpen)}
-                  >
-                    <CaretLeftRotaiton $isRotated={isRemirrorMenuOpen} />
-                  </SquareButton>
-                </DescriptionTitle>
-              )}
             </>
           )}
-          {((props.isMobile && !isMobileDetails) || !props.isMobile) && (
+          {!isMobileDetails && (
             <ListItemDetailDescription>
               <RemirrorEditor
                 key={props.focusedListItemId}
@@ -361,15 +320,11 @@ export default function ListItemDetailSection(
                 setState={(state: string) => {
                   props.setListItemDescription(props.focusedListItemId, state);
                 }}
-                showMenu={
-                  isRemirrorMenuOpen ||
-                  (!isRemirrorMenuOpen && props.viewMode === "Note")
-                }
+                showMenu={true}
               />
             </ListItemDetailDescription>
           )}
-          {(props.viewMode === "Task" ||
-            (props.isMobile && isMobileDetails)) && (
+          {isMobileDetails && (
             <DeleteDiv>
               <DeleteElementChip
                 onClick={() => {
@@ -383,26 +338,24 @@ export default function ListItemDetailSection(
               </DeleteElementChip>
             </DeleteDiv>
           )}
-          {props.isMobile && (
-            <MobileOptionsDiv>
-              {isMobileDetails && (
-                <MobileOptionsSubDiv
-                  $isMobileDetails={isMobileDetails}
-                  onClick={() => setIsMobileDetails(!isMobileDetails)}
-                >
-                  <PencilCircle size={"1.5rem"} />
-                </MobileOptionsSubDiv>
-              )}
-              {!isMobileDetails && (
-                <MobileOptionsSubDiv
-                  $isMobileDetails={isMobileDetails}
-                  onClick={() => setIsMobileDetails(true)}
-                >
-                  <Info size={"1.5rem"} />
-                </MobileOptionsSubDiv>
-              )}
-            </MobileOptionsDiv>
-          )}
+          <MobileOptionsDiv>
+            {isMobileDetails && (
+              <MobileOptionsSubDiv
+                $isMobileDetails={isMobileDetails}
+                onClick={() => setIsMobileDetails(!isMobileDetails)}
+              >
+                <PencilCircle size={"1.5rem"} />
+              </MobileOptionsSubDiv>
+            )}
+            {!isMobileDetails && (
+              <MobileOptionsSubDiv
+                $isMobileDetails={isMobileDetails}
+                onClick={() => setIsMobileDetails(true)}
+              >
+                <Info size={"1.5rem"} />
+              </MobileOptionsSubDiv>
+            )}
+          </MobileOptionsDiv>
         </ListItemDetailsPanel>
       )}
     </>
@@ -671,19 +624,6 @@ const AddTagChip = styled.div<{ $width: string }>`
       opacity: 0.7;
     }
   }
-`;
-
-const DescriptionTitle = styled.div`
-  width: 90%;
-  display: grid;
-  grid-template-columns: auto auto;
-  justify-content: start;
-  align-items: center;
-  grid-column-gap: 0.5rem;
-  text-align: start;
-  font-size: 1.2rem;
-  margin-top: 2rem;
-  cursor: default;
 `;
 
 const ListItemDetailDescription = styled.div`

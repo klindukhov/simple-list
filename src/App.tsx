@@ -13,8 +13,7 @@ import { v4 as uuidv4 } from "uuid";
 
 import { ThemeProvider } from "styled-components";
 import { lightTheme, darkTheme, GlobalStyles } from "./components/ui/Themes.ts";
-import { CaretLeft, IconContext, List } from "@phosphor-icons/react";
-import { SquareButton } from "./components/ui/common.ts";
+import { IconContext } from "@phosphor-icons/react";
 
 import { useMediaQuery } from "react-responsive";
 
@@ -34,8 +33,6 @@ export interface Filter {
 
 export default function App() {
   const isMobile: boolean = useMediaQuery({ query: "(max-width: 1224px)" });
-  const [viewMode, setViewMode] = useState(isMobile ? "Note" : "Task");
-
   const [isFilteringPanelOpen, setIsFilteringPanelOpen] = useState(!isMobile);
   const [isListSectionOpen, setIsListSectionOpen] = useState(true);
   const [isItemDetailsSectionOpen, setIsItemDetailsSectionOpen] = useState(
@@ -94,14 +91,7 @@ export default function App() {
         setSavedFiltersState(filters);
       } else {
         const tempSavedFilters = { ...filters };
-        tempSavedFilters["tempFilterSet"] = {
-          default: {
-            id: "default",
-            fieldToFilter: "Tags",
-            operator: "Include",
-            expectedValue: "Untagged",
-          },
-        };
+        tempSavedFilters["tempFilterSet"] = {};
         setSavedFiltersState(tempSavedFilters);
       }
     });
@@ -390,10 +380,8 @@ export default function App() {
       savedFilters: savedFiltersState,
       addSavedFilter: addSavedFilter,
       removeSavedFilter: removeSavedFilter,
-      toggleViewMode: () => {
-        setViewMode(viewMode === "Task" ? "Note" : "Task");
-      },
       handleFileUpload: handleFileUpload,
+      handleBurgerClick: handleBurgerClick,
     };
   };
 
@@ -421,6 +409,7 @@ export default function App() {
       },
       isMobile: isMobile,
       handleOpenItemDetailsSection: handleOpenItemDetailsSection,
+      handleBurgerClick: handleBurgerClick,
     };
   };
 
@@ -432,27 +421,23 @@ export default function App() {
       removeTagFromListItem: removeTagFromListItem,
       addTagToListItem: addTagToListItem,
       setListItemSummary: setListItemSummary,
-      viewMode: viewMode,
       setListItemDescription: setListItemDescription,
       editTag: editTag,
       tagsList: getTagsList(list),
       isMobile: isMobile,
       onItemDeleteMobile: onItemDeleteMobile,
+      handleBurgerClick: handleBurgerClick,
     };
   };
 
-  const getTheme = (
-    theme: string,
-    isFilteringPanelOpen: boolean,
-    viewMode: string
-  ) => {
+  const getTheme = (theme: string, isFilteringPanelOpen: boolean) => {
     const themeContext: { [key: string]: string | boolean } =
       theme === "light" ? lightTheme : darkTheme;
     themeContext.isFilteringPanelOpen = isFilteringPanelOpen;
     themeContext.isListSectionOpen = isListSectionOpen;
     themeContext.isItemDetailsSectionOpen = isItemDetailsSectionOpen;
-    themeContext.viewMode = isMobile ? "Note" : viewMode;
-    themeContext.isMobile = isMobile;
+    themeContext.viewMode = "Note";
+    themeContext.isMobile = true;
     return themeContext;
   };
 
@@ -483,20 +468,10 @@ export default function App() {
   };
 
   return (
-    <ThemeProvider theme={getTheme(theme, isFilteringPanelOpen, viewMode)}>
+    <ThemeProvider theme={getTheme(theme, isFilteringPanelOpen)}>
       <GlobalStyles />
       <IconContext.Provider value={iconStyles}>
         <Page>
-          <SquareButtonBurger onClick={handleBurgerClick}>
-            {isFilteringPanelOpen ||
-            (!isListSectionOpen &&
-              !isFilteringPanelOpen &&
-              isItemDetailsSectionOpen) ? (
-              <CaretLeft />
-            ) : (
-              <List />
-            )}
-          </SquareButtonBurger>
           <FilterSection {...getFilterSectionProps()} />
           <ListSection {...getListSectionProps()} />
           <ListItemDetailSection {...getListItemSectionProps()} />
@@ -505,17 +480,6 @@ export default function App() {
     </ThemeProvider>
   );
 }
-
-const SquareButtonBurger = styled(SquareButton)`
-  position: absolute;
-  margin-top: 0.5rem;
-  margin-left: 0.5rem;
-  &:hover {
-    ${(props) =>
-      !props.theme.isFilteringPanelOpen &&
-      `background-color: ${props.theme.panel07};`}
-  }
-`;
 
 const Page = styled.div`
   height: 100dvh;

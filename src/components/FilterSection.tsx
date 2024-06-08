@@ -11,7 +11,6 @@ import {
   Moon,
   SortAscending,
   SortDescending,
-  SquareHalf,
   Sun,
   Trash,
   Unite,
@@ -52,8 +51,8 @@ interface FilterSectionProps {
     filterset: { [filterId: string]: Filter }
   ) => void;
   removeSavedFilter: (filteName: string) => void;
-  toggleViewMode: () => void;
   handleFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  handleBurgerClick: () => void;
 }
 
 export default function FilterSection(props: FilterSectionProps) {
@@ -179,10 +178,9 @@ export default function FilterSection(props: FilterSectionProps) {
       />
       <FilteringSidePanel>
         <ExportImportPanel>
-          <SquareButton onClick={() => props.toggleTheme()}>
-            {props.theme === "dark" && <Sun />}
-            {props.theme === "light" && <Moon />}
-          </SquareButton>
+          <SquareButtonStart onClick={props.handleBurgerClick}>
+            <CaretLeftRotaiton />
+          </SquareButtonStart>
           <WideButton onClick={exportList}>
             {"Export  "}
             <UploadSimple />
@@ -193,9 +191,10 @@ export default function FilterSection(props: FilterSectionProps) {
             Import
             <DownloadSimple />
           </WideButton>
-          <SquareButtonJustifyEnd onClick={props.toggleViewMode}>
-            <SquareHalf size={"1.2rem"} />{" "}
-          </SquareButtonJustifyEnd>
+          <SquareButton onClick={() => props.toggleTheme()}>
+            {props.theme === "dark" && <Sun />}
+            {props.theme === "light" && <Moon />}
+          </SquareButton>
         </ExportImportPanel>
         <SearchBarElement>
           <InputField
@@ -497,7 +496,15 @@ const ExportImportPanel = styled(FilteringPanelElement)`
   grid-template-columns: auto auto auto auto;
   margin-top: 0.5rem;
   margin-bottom: 1.5rem;
-  padding-left: 2.5rem;
+  & > button {
+    &:last-child {
+      justify-self: end;
+    }
+  }
+`;
+
+const SquareButtonStart = styled(SquareButton)`
+  justify-self: start;
 `;
 
 const WideButton = styled(SquareButton)`
