@@ -171,10 +171,10 @@ export default function FilterSection(props: FilterSectionProps) {
   return (
     <>
       <HiddenInput
-        type='file'
-        id='importFileInput'
+        type="file"
+        id="importFileInput"
         onChange={(e) => props.handleFileUpload(e)}
-        accept='.json'
+        accept=".json"
       />
       <FilteringSidePanel>
         <ExportImportPanel>
@@ -199,7 +199,7 @@ export default function FilterSection(props: FilterSectionProps) {
         <SearchBarElement>
           <InputField
             onChange={(e) => props.setSearchBarValue(e.target.value)}
-            id='searhBarInput'
+            id="searhBarInput"
           />
           {props.searchBarValue === "" && (
             <MagnifyingGlassWrapper
@@ -310,7 +310,7 @@ export default function FilterSection(props: FilterSectionProps) {
             {isFiltersetBeingSaved && (
               <FilterSetNameInput>
                 <InputField
-                  placeholder='Filterset name'
+                  placeholder="Filterset name"
                   onChange={(e) => setNewSavedFilterName(e.target.value)}
                 />
                 <WideButton onClick={() => handleNewFiltersetSave()}>
@@ -412,7 +412,7 @@ export default function FilterSection(props: FilterSectionProps) {
                                   onChange={(e) =>
                                     handleExpectedValueChange(e.target.value)
                                   }
-                                  placeholder='Expected value'
+                                  placeholder="Expected value"
                                   value={newFilter.expectedValue}
                                 />
                               )}
@@ -456,16 +456,30 @@ export default function FilterSection(props: FilterSectionProps) {
             )}
         </FiltersContainer>
       </FilteringSidePanel>
+      <BottomNav>
+        <SquareButtonStart onClick={props.handleBurgerClick}>
+          <CaretLeftRotaiton />
+        </SquareButtonStart>
+      </BottomNav>
     </>
   );
 }
+
+const BottomNav = styled.div`
+  height: 3rem;
+  background-color: ${(props) => props.theme.panel};
+  box-sizing: border-box;
+  padding: 0.5rem;
+  display: grid;
+  ${(props) => !props.theme.isFilteringPanelOpen && "display: none;"}
+`;
 
 const HiddenInput = styled.input`
   display: none;
 `;
 
 const FilteringSidePanel = styled.div`
-  height: 100dvh;
+  height: calc(100dvh - 3rem);
   overflow-y: scroll;
   overflow-x: hidden;
   background-color: ${(props) => props.theme.panel};

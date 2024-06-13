@@ -94,7 +94,7 @@ export default function ListItemDetailSection(
       {getIsPlaceholderDisplayed() && (
         <ListItemDetailsPanelPlaceholder>
           <PlaceholderDiv />
-          <RemirrorEditor state='' setState={() => {}} showMenu={false} />
+          <RemirrorEditor state="" setState={() => {}} showMenu={false} />
         </ListItemDetailsPanelPlaceholder>
       )}
       {getIsContentDisplayed() && (
@@ -204,7 +204,7 @@ export default function ListItemDetailSection(
                           onKeyDown={(e) =>
                             e.key === "Enter" && e.currentTarget.blur()
                           }
-                          placeholder='value'
+                          placeholder="value"
                         />
                         {areFieldsBeingEdited && (
                           <DeleteField
@@ -223,7 +223,7 @@ export default function ListItemDetailSection(
                 {areFieldsBeingEdited && (
                   <>
                     <ListItemDetailsFieldInput
-                      placeholder='Add new field'
+                      placeholder="Add new field"
                       onKeyDown={(e) =>
                         e.key === "Enter" && e.currentTarget.blur()
                       }
@@ -274,7 +274,7 @@ export default function ListItemDetailSection(
                     >
                       <AutocompleteInput
                         hintList={getHintTags(props.tagsList, newTag)}
-                        id='addTagChip'
+                        id="addTagChip"
                         value={newTag}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                           setNewTag((e.target as HTMLInputElement).value)
@@ -356,6 +356,24 @@ export default function ListItemDetailSection(
               </MobileOptionsSubDiv>
             )}
           </MobileOptionsDiv>
+          <MobileOptionsDiv>
+            {isMobileDetails && (
+              <MobileOptionsSubDivLeft
+                $isMobileDetails={isMobileDetails}
+                onClick={props.handleBurgerClick}
+              >
+                <CaretLeft />
+              </MobileOptionsSubDivLeft>
+            )}
+            {!isMobileDetails && (
+              <MobileOptionsSubDivLeft
+                $isMobileDetails={isMobileDetails}
+                onClick={props.handleBurgerClick}
+              >
+                <CaretLeft />
+              </MobileOptionsSubDivLeft>
+            )}
+          </MobileOptionsDiv>
         </ListItemDetailsPanel>
       )}
     </>
@@ -382,6 +400,9 @@ const MobileOptionsSubDiv = styled.div<{ $isMobileDetails: boolean }>`
   position: relative;
   bottom: ${(props) => (props.$isMobileDetails ? "4.5rem" : "7rem")};
   right: calc(3rem - 100vw);
+`;
+const MobileOptionsSubDivLeft = styled(MobileOptionsSubDiv)`
+  left: 0.5rem;
 `;
 
 const CreatedUpdatedDiv = styled.div`

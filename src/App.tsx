@@ -410,6 +410,7 @@ export default function App() {
       isMobile: isMobile,
       handleOpenItemDetailsSection: handleOpenItemDetailsSection,
       handleBurgerClick: handleBurgerClick,
+      setSearchBarValue: setSearchBarValue,
     };
   };
 

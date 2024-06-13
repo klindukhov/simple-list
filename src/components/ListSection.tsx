@@ -1,6 +1,6 @@
 import { styled } from "styled-components";
 import { Filter, ListItem } from "../App";
-import { CaretRight, CursorClick, List } from "@phosphor-icons/react";
+import { CaretRight, CursorClick, List, Plus } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
 import { FILTER_PROPERTY_OPERATORS, FILTER_TAG_OPERATORS } from "../filters";
 import PreviewCheckmark from "./ui/PreviewCheckMark";
@@ -26,6 +26,7 @@ interface ListSectionProps {
   isMobile: boolean;
   handleOpenItemDetailsSection: () => void;
   handleBurgerClick: () => void;
+  setSearchBarValue: (value: string) => void;
 }
 
 export default function ListSection(props: ListSectionProps) {
@@ -294,11 +295,6 @@ export default function ListSection(props: ListSectionProps) {
 
   return (
     <>
-      <NavBar>
-        <SquareButtonBurger onClick={props.handleBurgerClick}>
-          <List />
-        </SquareButtonBurger>
-      </NavBar>
       <ListSectionDiv
         onClick={handleListSectionClick}
         $areItemsToDisplay={areItemsToDisplay()}
@@ -320,7 +316,7 @@ export default function ListSection(props: ListSectionProps) {
             >
               <PreviewCheckmark
                 onClick={() => toggleItemCompleted(id)}
-                height='1.2rem'
+                height="1.2rem"
                 checked={!!getIsItemAppearingCompleted(id)}
               />
               <ListItemElementInput
@@ -355,26 +351,45 @@ export default function ListSection(props: ListSectionProps) {
             </ListItemDiv>
           ))}
       </ListSectionDiv>
+      <NavBar>
+        <SquareButton onClick={props.handleBurgerClick}>
+          <List />
+        </SquareButton>
+        <InputField
+          onChange={(e) => props.setSearchBarValue(e.target.value)}
+          id="searhBarInput"
+        />
+        <SquareButton onClick={handleListSectionClick}>
+          <Plus />
+        </SquareButton>
+      </NavBar>
     </>
   );
 }
-
-const SquareButtonBurger = styled(SquareButton)`
-  position: absolute;
-  margin-top: 0.5rem;
-  margin-left: 0.5rem;
-  &:hover {
-    ${(props) =>
-      !props.theme.isFilteringPanelOpen &&
-      `background-color: ${props.theme.panel07};`}
-  }
-`;
 
 const NavBar = styled.div`
   height: 3rem;
   width: 100%;
   display: ${(props) => (props.theme.isListSectionOpen ? "grid" : "none")};
+  grid-template-columns: 3rem 1fr 3rem;
+  align-items: center;
+  justify-items: center;
+  padding: 0.5rem;
+  box-sizing: border-box;
 `;
+
+const InputField = styled.input`
+  color: inherit;
+  background-color: ${(props) => props.theme.panel};
+  outline: none;
+  border-radius: 0.5rem;
+  border-width: 0px;
+  width: 100%;
+  height: 2rem;
+  box-sizing: border-box;
+  padding: 0.5rem;
+`;
+
 const CaretRightButton = styled.div`
   &:active {
     opacity: 0.7;
