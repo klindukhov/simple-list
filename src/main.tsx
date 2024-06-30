@@ -21,5 +21,6 @@ declare global {
   interface Window {
     showOpenFilePicker: () => Promise<FileSystemFileHandle[]>;
     showSaveFilePicker: () => Promise<FileSystemFileHandle>;
+    showDirectoryPicker: () => Promise<FileSystemDirectoryHandle>;
   }
 }

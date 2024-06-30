@@ -1,29 +1,25 @@
 import { useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
 import {
-  getList as getListApi,
   getSavedFilters,
   setSavedFilters as setSavedFiltersApi,
-  setList as setListApi,
+  useListApi,
 } from "./api";
-import ListSection from "./components/ListSection";
-import FilterSection from "./components/FilterSection";
-import ListItemDetailSection from "./components/ListItemDetailsSection";
+import ListSection, { ListSectionProps } from "./components/ListSection";
+import FilterSection, { FilterSectionProps } from "./components/FilterSection";
+import ListItemDetailSection, {
+  ListItemdetailSectionProps,
+} from "./components/ListItemDetailsSection";
 import { v4 as uuidv4 } from "uuid";
 
 import { ThemeProvider } from "styled-components";
 import { lightTheme, darkTheme, GlobalStyles } from "./components/ui/Themes.ts";
 import { Folder, CaretLeft, IconContext, X, List } from "@phosphor-icons/react";
-import { setNewSaveFile } from "./api";
+import { setNewSaveDirectory } from "./api";
 import { WideButton } from "./components/ui/common.ts";
 import { SquareButton } from "./components/ui/common.ts";
 
-export interface ListItem {
-  id: string;
-  summary: string;
-  description: string;
-  tags: string[];
-}
+import { IndexItem } from "./api.ts";
 
 export interface Filter {
   id: string;
@@ -33,7 +29,6 @@ export interface Filter {
 }
 
 export default function App() {
-  const [isSaveFileSelected, setIsSaveFileSelected] = useState(false);
   const [isFileSelectionPopUpCancellable, setIsFileSelectionPopUpCancellable] =
     useState(false);
   const [viewMode, setViewMode] = useState("Task");
@@ -92,14 +87,7 @@ export default function App() {
         setSavedFiltersState(filters);
       } else {
         const tempSavedFilters = { ...filters };
-        tempSavedFilters["tempFilterSet"] = {
-          default: {
-            id: "default",
-            fieldToFilter: "Tags",
-            operator: "Include",
-            expectedValue: "Untagged",
-          },
-        };
+        tempSavedFilters["tempFilterSet"] = {};
         setSavedFiltersState(tempSavedFilters);
       }
     });
@@ -142,25 +130,13 @@ export default function App() {
     setTempFilterSet(tempFilterSet);
   };
 
-  const [list, setListState] = useState<{ [itemId: string]: ListItem }>({});
-  useEffect(() => {
-    getListApi()
-      .then((list) => {
-        setListState(list);
-        setIsSaveFileSelected(true);
-      })
-      .catch(() => setIsSaveFileSelected(false));
-  }, []);
-
-  const setList = (listProp: { [itemId: string]: ListItem }) => {
-    setListState(listProp);
-    setListApi(listProp).catch(() => setIsSaveFileSelected(false));
-  };
-
   const [isShowingCompleted, setIsShowingCompleted] = useState(false);
 
+  const [itemList, listApi] = useListApi();
+
+  // Fields used in Filtering and Sorting (the field with "true" value is the one currently sorted by)
   const generateFieldsList = useCallback(
-    (itemList: { [itemId: string]: ListItem }): { [tag: string]: boolean } => {
+    (itemList: { [itemId: string]: IndexItem }): { [tag: string]: boolean } => {
       if (Object.keys(itemList).length === 0) return {};
 
       const allTags = Object.keys(
@@ -197,18 +173,18 @@ export default function App() {
 
   const [fieldsList, setFieldsList] = useState<{ [tag: string]: boolean }>({});
   useEffect(() => {
-    setFieldsList(generateFieldsList(list));
-  }, [list, isShowingCompleted, generateFieldsList]);
+    setFieldsList(generateFieldsList(itemList));
+  }, [itemList, isShowingCompleted, generateFieldsList]);
 
   const [isFilteringMatchAny, setIsFilteringMatchAny] = useState(true);
 
   const [isSortAsc, setIsSortAcs] = useState(false);
 
-  const [focusedListItemId, setFocusedListItemId] = useState<string>("0");
+  // const [focusedListItemId, setFocusedListItemId] = useState<string>("0");
 
   const [searchBarValue, setSearchBarValue] = useState("");
 
-  const getTagsList = (itemList: { [itemId: string]: ListItem }): string[] => {
+  const getTagsList = (itemList: { [itemId: string]: IndexItem }): string[] => {
     if (Object.keys(itemList).length === 0) return [];
 
     const allTags = Object.keys(
@@ -228,86 +204,16 @@ export default function App() {
     return Array.from(new Set(allTags));
   };
 
-  const addTagToListItem = (id: string, tag: string) => {
-    const tempList: { [itemId: string]: ListItem } = { ...list };
-    if (tempList[id].tags.includes(tag)) {
-      return;
-    } else {
-      tempList[id].tags.push(tag);
-    }
-
-    setList(tempList);
-    refreshUpdatedProperty(id);
-  };
-
-  const removeTagFromListItem = (id: string, tag: string) => {
-    const tempList: { [itemId: string]: ListItem } = { ...list };
-
-    if (tempList[id].tags.includes(tag)) {
-      tempList[id].tags.splice(tempList[id].tags.indexOf(tag), 1);
-    }
-
-    setList(tempList);
-    refreshUpdatedProperty(id);
-  };
-
-  const setListItemSummary = (id: string, summary: string) => {
-    const tempList: { [itemId: string]: ListItem } = { ...list };
-
-    tempList[id].summary = summary;
-
-    setList(tempList);
-    refreshUpdatedProperty(id);
-  };
-
-  const removeListItem = (id: string) => {
-    const tempList: { [itemId: string]: ListItem } = { ...list };
-
-    delete tempList[id];
-
-    setList(tempList);
-  };
-
-  const setListItemDescription = (id: string, description: string) => {
-    const tempList: { [itemId: string]: ListItem } = { ...list };
-
-    tempList[id].description = description;
-
-    setList(tempList);
-    refreshUpdatedProperty(id);
-  };
-
-  const editTag = (id: string, currentTag: string, newTag: string) => {
-    const tempList: { [itemId: string]: ListItem } = { ...list };
-
-    if (tempList[id].tags.includes(currentTag)) {
-      tempList[id].tags[tempList[id].tags.indexOf(currentTag)] = newTag;
-    }
-
-    setList(tempList);
-    refreshUpdatedProperty(id);
-  };
-
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const fileReader = new FileReader();
     if (!e.target.files) return;
     fileReader.readAsText(e.target.files[0], "UTF-8");
     fileReader.onload = (e) => {
-      const imported: { [itemId: string]: ListItem } = JSON.parse(
-        "" + e.target?.result
-      );
-      const tempList: { [itemId: string]: ListItem } = { ...list };
-      Object.keys(imported).forEach((key) => {
-        tempList[key as keyof typeof tempList] = imported[key];
-      });
-      setList(tempList);
+      listApi.parseFromFile("" + e.target?.result);
     };
   };
 
   const addListItem = () => {
-    const tempList: { [itemId: string]: ListItem } = { ...list };
-
-    const newId = uuidv4();
     const newTags: string[] = Object.values(getTempFilterSet())
       .filter(
         (filter: Filter) =>
@@ -321,61 +227,21 @@ export default function App() {
           ? `$${filter.fieldToFilter}=${filter.expectedValue}`
           : filter.expectedValue
       );
-    tempList[newId] = {
-      id: newId,
-      summary: "",
-      description: "",
-      tags: ["$Created=" + Date.now(), "$Updated=" + Date.now(), ...newTags],
-    };
 
-    setList(tempList);
+    listApi.addNewListItem(newTags);
   };
 
-  const refreshUpdatedProperty = (id: string) => {
-    const editTagLocal = (id: string, currentTag: string, newTag: string) => {
-      const tempList: { [itemId: string]: ListItem } = { ...list };
-
-      if (tempList[id].tags.includes(currentTag)) {
-        tempList[id].tags[tempList[id].tags.indexOf(currentTag)] = newTag;
-      }
-
-      setList(tempList);
-    };
-    const addTagToListItemLocal = (id: string, tag: string) => {
-      const tempList: { [itemId: string]: ListItem } = { ...list };
-      if (tempList[id].tags.includes(tag)) {
-        return;
-      } else {
-        tempList[id].tags.push(tag);
-      }
-
-      setList(tempList);
-    };
-    if (
-      list[id].tags.includes(
-        list[id].tags.find((tag) => tag.includes("$Updated=")) ?? "Updated"
-      )
-    ) {
-      editTagLocal(
-        id,
-        list[id].tags.find((tag) => tag.includes("$Updated=")) ?? "Updated",
-        "$Updated=" + Date.now()
-      );
-    } else {
-      addTagToListItemLocal(id, "$Updated=" + Date.now());
-    }
-  };
-
-  const getFilterSectionProps = () => {
+  const getFilterSectionProps = (): FilterSectionProps => {
     return {
-      list: list,
+      list: itemList,
+      listApi: listApi,
       searchBarValue: searchBarValue,
       setSearchBarValue: setSearchBarValue,
       fieldsList: fieldsList,
       setSortByList: setFieldsList,
       isSortAsc: isSortAsc,
       toggleIsSortAsc: () => setIsSortAcs(!isSortAsc),
-      tagsList: getTagsList(list),
+      tagsList: getTagsList(itemList),
       isShowingCompleted: isShowingCompleted,
       toggleIsShowingCompleted: () =>
         setIsShowingCompleted(!isShowingCompleted),
@@ -396,49 +262,38 @@ export default function App() {
       },
       handleFileUpload: handleFileUpload,
       selectNewSaveFile: () => {
-        setIsSaveFileSelected(false);
+        listApi.setIsSaveDirectorySelected(false);
         setIsFileSelectionPopUpCancellable(true);
       },
     };
   };
 
-  const getListSectionProps = () => {
+  const getListSectionProps = (): ListSectionProps => {
     return {
-      list: list,
-      tagsList: getTagsList(list),
+      list: itemList,
+      listApi: listApi,
+      tagsList: getTagsList(itemList),
       isFilteringMatchAny: isFilteringMatchAny,
       searchBarValue: searchBarValue,
       isShowingCompleted: isShowingCompleted,
       isSortAsc: isSortAsc,
       fieldsList: fieldsList,
-      removeTagFromListItem: removeTagFromListItem,
-      addTagToListItem: addTagToListItem,
-      setListItemSummary: setListItemSummary,
-      focusedListItemId: focusedListItemId,
-      setFocusedListItemId: setFocusedListItemId,
-      removeListItem: removeListItem,
+      focusedListItemId: listApi.focusedListItemId,
+      setFocusedListItemId: listApi.setFocusedListItemId,
       theme: theme,
       tempFilterSet: getTempFilterSet(),
       addListItem: addListItem,
-      isFilteringPanelOpen: isFilteringPanelOpen,
-      toggleIsFilteringPanelOpen: () => {
-        setIsFilteringPanelOpen(!isFilteringPanelOpen);
-      },
     };
   };
 
-  const getListItemSectionProps = () => {
+  const getListItemSectionProps = (): ListItemdetailSectionProps => {
     return {
-      list: list,
-      removeListItem: removeListItem,
-      focusedListItemId: focusedListItemId,
-      removeTagFromListItem: removeTagFromListItem,
-      addTagToListItem: addTagToListItem,
-      setListItemSummary: setListItemSummary,
+      list: itemList,
+      listApi: listApi,
+      focusedListItemId: listApi.focusedListItemId,
+      focusedItemDescription: listApi.focusedListItemDescription,
       viewMode: viewMode,
-      setListItemDescription: setListItemDescription,
-      editTag: editTag,
-      tagsList: getTagsList(list),
+      tagsList: getTagsList(itemList),
     };
   };
 
@@ -459,17 +314,16 @@ export default function App() {
     <ThemeProvider theme={getTheme(theme, isFilteringPanelOpen, viewMode)}>
       <GlobalStyles />
       <IconContext.Provider value={iconStyles}>
-        {!isSaveFileSelected && (
+        {!listApi.isSaveDirectorySelected && (
           <PopUpBackdrop>
             <PopUp>
-              Please select new save file location.
+              Please select new save folder location.
               <PopUpBottomRow $isCancellable={isFileSelectionPopUpCancellable}>
                 <WideButtonReverse
                   onClick={async () => {
-                    const isNewFileSaved = await setNewSaveFile();
-                    setIsSaveFileSelected(isNewFileSaved);
+                    const isNewFileSaved = await setNewSaveDirectory();
+                    listApi.setIsSaveDirectorySelected(isNewFileSaved);
                     setIsFileSelectionPopUpCancellable(!isNewFileSaved);
-                    setList(list);
                   }}
                 >
                   Select <Folder />
@@ -477,7 +331,7 @@ export default function App() {
                 {isFileSelectionPopUpCancellable && (
                   <WideButtonReverse
                     onClick={() => {
-                      setIsSaveFileSelected(true);
+                      listApi.setIsSaveDirectorySelected(true);
                       setIsFileSelectionPopUpCancellable(false);
                     }}
                   >

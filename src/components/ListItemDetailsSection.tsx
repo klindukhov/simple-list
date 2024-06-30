@@ -1,5 +1,4 @@
 import { styled } from "styled-components";
-import { ListItem } from "../App";
 import { useState } from "react";
 import React from "react";
 import { Check, PencilSimple, Trash, X } from "@phosphor-icons/react";
@@ -8,17 +7,14 @@ import { RemirrorEditor } from "./ui/RemirrorEditor";
 import PreviewCheckmark from "./ui/PreviewCheckMark";
 import { CaretLeftRotaiton, SquareButton } from "./ui/common";
 import AutocompleteInput from "./ui/AutocompleteInput";
+import { IndexItem, ListApi } from "../api";
 
-interface ListItemdetailSectionProps {
-  list: { [itemId: string]: ListItem };
-  removeListItem: (id: string) => void;
+export interface ListItemdetailSectionProps {
+  list: { [itemId: string]: IndexItem };
+  listApi: ListApi;
   focusedListItemId: string;
-  removeTagFromListItem: (id: string, tag: string) => void;
-  addTagToListItem: (id: string, tag: string) => void;
-  setListItemSummary: (id: string, summary: string) => void;
+  focusedItemDescription: string;
   viewMode: string;
-  setListItemDescription: (id: string, description: string) => void;
-  editTag: (id: string, currentTag: string, newTag: string) => void;
   tagsList: string[];
 }
 
@@ -43,14 +39,14 @@ export default function ListItemDetailSection(
 
   const toggleCompleted = () => {
     if (getIsItemCompleted(props.focusedListItemId)) {
-      props.removeTagFromListItem(
+      props.listApi.deleteListItemTag(
         props.focusedListItemId,
         props.list[props.focusedListItemId].tags.find((tag) =>
           tag.includes("Completed")
         ) ?? "Completed"
       );
     } else {
-      props.addTagToListItem(
+      props.listApi.addListItemTag(
         props.focusedListItemId,
         "$Completed=" + Date.now()
       );
@@ -58,7 +54,7 @@ export default function ListItemDetailSection(
   };
 
   const handleSummaryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    props.setListItemSummary(
+    props.listApi.setListItemSummary(
       props.focusedListItemId,
       e.target.value === ""
         ? " "
@@ -88,7 +84,7 @@ export default function ListItemDetailSection(
         props.list[props.focusedListItemId].summary === "") && (
         <ListItemDetailsPanelPlaceholder>
           <PlaceholderDiv />
-          <RemirrorEditor state='' setState={() => {}} showMenu={false} />
+          <RemirrorEditor state="" setState={() => {}} showMenu={false} />
         </ListItemDetailsPanelPlaceholder>
       )}
       {props.focusedListItemId !== "0" &&
@@ -98,7 +94,7 @@ export default function ListItemDetailSection(
             <ListItemDetailsSummary>
               <PreviewCheckmark
                 onClick={() => toggleCompleted()}
-                height='2rem'
+                height="2rem"
                 checked={props.list[props.focusedListItemId].tags.includes(
                   props.list[props.focusedListItemId].tags.find((tag) =>
                     tag.includes("Completed")
@@ -191,23 +187,21 @@ export default function ListItemDetailSection(
                       <ListItemDetailsFieldInput
                         value={tag.split("$")[1].split("=")[1]}
                         onChange={(e) =>
-                          props.editTag(
+                          props.listApi.setProperty(
                             props.focusedListItemId,
-                            tag,
-                            `$${tag.split("$")[1].split("=")[0]}=${
-                              e.target.value
-                            }`
+                            tag.split("$")[1].split("=")[0],
+                            e.target.value
                           )
                         }
                         onKeyDown={(e) =>
                           e.key === "Enter" && e.currentTarget.blur()
                         }
-                        placeholder='value'
+                        placeholder="value"
                       />
                       {areFieldsBeingEdited && (
                         <DeleteField
                           onClick={() =>
-                            props.removeTagFromListItem(
+                            props.listApi.deleteListItemTag(
                               props.focusedListItemId,
                               tag
                             )
@@ -221,13 +215,13 @@ export default function ListItemDetailSection(
               {areFieldsBeingEdited && (
                 <>
                   <ListItemDetailsFieldInput
-                    placeholder='Add new field'
+                    placeholder="Add new field"
                     onKeyDown={(e) =>
                       e.key === "Enter" && e.currentTarget.blur()
                     }
                     onBlur={() => {
                       if (newCustomFieldInput !== "") {
-                        props.addTagToListItem(
+                        props.listApi.addListItemTag(
                           props.focusedListItemId,
                           "$" + newCustomFieldInput + "="
                         );
@@ -253,7 +247,7 @@ export default function ListItemDetailSection(
                         <TagChipText>{tag}</TagChipText>
                         <DeleteTag
                           onClick={() =>
-                            props.removeTagFromListItem(
+                            props.listApi.deleteListItemTag(
                               props.focusedListItemId,
                               tag
                             )
@@ -272,18 +266,21 @@ export default function ListItemDetailSection(
                   >
                     <AutocompleteInput
                       hintList={getHintTags(props.tagsList, newTag)}
-                      id='addTagChip'
+                      id="addTagChip"
                       value={newTag}
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                         setNewTag((e.target as HTMLInputElement).value)
                       }
                       onHintApply={(hint: string) => {
-                        props.addTagToListItem(props.focusedListItemId, hint);
+                        props.listApi.addListItemTag(
+                          props.focusedListItemId,
+                          hint
+                        );
                         setNewTag("");
                       }}
                       onBlur={() => {
                         if (newTag !== "+" && newTag !== "" && newTag !== " ") {
-                          props.addTagToListItem(
+                          props.listApi.addListItemTag(
                             props.focusedListItemId,
                             newTag
                           );
@@ -316,9 +313,12 @@ export default function ListItemDetailSection(
             <ListItemDetailDescription>
               <RemirrorEditor
                 key={props.focusedListItemId}
-                state={props.list[props.focusedListItemId].description}
+                state={props.listApi.focusedListItemDescription}
                 setState={(state: string) => {
-                  props.setListItemDescription(props.focusedListItemId, state);
+                  props.listApi.setListItemDescription(
+                    props.focusedListItemId,
+                    state
+                  );
                 }}
                 showMenu={
                   isRemirrorMenuOpen ||
@@ -329,7 +329,9 @@ export default function ListItemDetailSection(
             {props.viewMode === "Task" && (
               <DeleteDiv>
                 <DeleteElementChip
-                  onClick={() => props.removeListItem(props.focusedListItemId)}
+                  onClick={() => {
+                    props.listApi.deleteListItem(props.focusedListItemId);
+                  }}
                 >
                   <Trash size={"1.3rem"} />
                   <Txt>Delete Item</Txt>

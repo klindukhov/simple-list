@@ -1,6 +1,6 @@
 import { styled } from "styled-components";
 import Tooltip from "./ui/Tooltip";
-import { Filter, ListItem } from "../App";
+import { Filter } from "../App";
 import {
   DownloadSimple,
   Eye,
@@ -26,9 +26,11 @@ import {
   FILTER_PROPERTY_OPERATORS,
   FILTER_TAG_OPERATORS,
 } from "../filters";
+import { IndexItem, ListApi } from "../api";
 
-interface FilterSectionProps {
-  list: { [itemId: string]: ListItem };
+export interface FilterSectionProps {
+  list: { [itemId: string]: IndexItem };
+  listApi: ListApi;
   searchBarValue: string;
   setSearchBarValue: (value: string) => void;
   fieldsList: { [tag: string]: boolean };
@@ -59,8 +61,8 @@ interface FilterSectionProps {
 }
 
 export default function FilterSection(props: FilterSectionProps) {
-  const exportList = () => {
-    const fileData = JSON.stringify(props.list);
+  const exportList = async () => {
+    const fileData = await props.listApi.getExportList();
     const blob = new Blob([fileData], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -174,10 +176,10 @@ export default function FilterSection(props: FilterSectionProps) {
   return (
     <>
       <HiddenInput
-        type='file'
-        id='importFileInput'
+        type="file"
+        id="importFileInput"
         onChange={(e) => props.handleFileUpload(e)}
-        accept='.json'
+        accept=".json"
       />
       <FilteringSidePanel>
         <ExportImportPanel>
@@ -205,7 +207,7 @@ export default function FilterSection(props: FilterSectionProps) {
         <SearchBarElement>
           <InputField
             onChange={(e) => props.setSearchBarValue(e.target.value)}
-            id='searhBarInput'
+            id="searhBarInput"
           />
           {props.searchBarValue === "" && (
             <MagnifyingGlassWrapper
@@ -316,7 +318,7 @@ export default function FilterSection(props: FilterSectionProps) {
             {isFiltersetBeingSaved && (
               <FilterSetNameInput>
                 <InputField
-                  placeholder='Filterset name'
+                  placeholder="Filterset name"
                   onChange={(e) => setNewSavedFilterName(e.target.value)}
                 />
                 <WideButton onClick={() => handleNewFiltersetSave()}>
@@ -418,7 +420,7 @@ export default function FilterSection(props: FilterSectionProps) {
                                   onChange={(e) =>
                                     handleExpectedValueChange(e.target.value)
                                   }
-                                  placeholder='Expected value'
+                                  placeholder="Expected value"
                                   value={newFilter.expectedValue}
                                 />
                               )}
