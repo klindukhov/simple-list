@@ -1,6 +1,6 @@
 import { styled } from "styled-components";
 import Tooltip from "./ui/Tooltip";
-import { Filter, ListItem } from "../App";
+import { Filter } from "../App";
 import {
   DownloadSimple,
   Eye,
@@ -24,9 +24,10 @@ import {
   FILTER_PROPERTY_OPERATORS,
   FILTER_TAG_OPERATORS,
 } from "../filters";
+import { IndexItem } from "../api";
 
-interface FilterSectionProps {
-  list: { [itemId: string]: ListItem };
+export interface FilterSectionProps {
+  list: { [itemId: string]: IndexItem };
   searchBarValue: string;
   setSearchBarValue: (value: string) => void;
   fieldsList: { [tag: string]: boolean };
@@ -53,19 +54,10 @@ interface FilterSectionProps {
   removeSavedFilter: (filteName: string) => void;
   handleFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleBurgerClick: () => void;
+  exportList: () => void;
 }
 
 export default function FilterSection(props: FilterSectionProps) {
-  const exportList = () => {
-    const fileData = JSON.stringify(props.list);
-    const blob = new Blob([fileData], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.download = "simpleListExport.json";
-    link.href = url;
-    link.click();
-  };
-
   const handleSortChange = (selectedTag: string) => {
     const tempFieldsList: { [tag: string]: boolean } = { ...props.fieldsList };
     for (const tag in tempFieldsList) {
@@ -181,7 +173,7 @@ export default function FilterSection(props: FilterSectionProps) {
           <SquareButtonStart onClick={props.handleBurgerClick}>
             <CaretLeftRotaiton />
           </SquareButtonStart>
-          <WideButton onClick={exportList}>
+          <WideButton onClick={props.exportList}>
             {"Export  "}
             <UploadSimple />
           </WideButton>

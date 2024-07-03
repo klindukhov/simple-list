@@ -1,5 +1,4 @@
 import { styled } from "styled-components";
-import { ListItem } from "../App";
 import { useState } from "react";
 import React from "react";
 import {
@@ -15,11 +14,13 @@ import {
 import { RemirrorEditor } from "./ui/RemirrorEditor";
 import AutocompleteInput from "./ui/AutocompleteInput";
 import { SquareButton } from "./ui/common";
+import { IndexItem } from "../api";
 
-interface ListItemdetailSectionProps {
-  list: { [itemId: string]: ListItem };
+export interface ListItemdetailSectionProps {
+  list: { [itemId: string]: IndexItem };
   removeListItem: (id: string) => void;
   focusedListItemId: string;
+  focusedListItemDescription: string;
   removeTagFromListItem: (id: string, tag: string) => void;
   addTagToListItem: (id: string, tag: string) => void;
   setListItemSummary: (id: string, summary: string) => void;
@@ -195,10 +196,8 @@ export default function ListItemDetailSection(
                           onChange={(e) =>
                             props.editTag(
                               props.focusedListItemId,
-                              tag,
-                              `$${tag.split("$")[1].split("=")[0]}=${
-                                e.target.value
-                              }`
+                              tag.split("$")[1].split("=")[0],
+                              e.target.value
                             )
                           }
                           onKeyDown={(e) =>
@@ -316,7 +315,7 @@ export default function ListItemDetailSection(
             <ListItemDetailDescription>
               <RemirrorEditor
                 key={props.focusedListItemId}
-                state={props.list[props.focusedListItemId].description}
+                state={props.focusedListItemDescription}
                 setState={(state: string) => {
                   props.setListItemDescription(props.focusedListItemId, state);
                 }}

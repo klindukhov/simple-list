@@ -1,13 +1,14 @@
 import { styled } from "styled-components";
-import { Filter, ListItem } from "../App";
+import { Filter } from "../App";
 import { CaretRight, CursorClick, List, Plus } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
 import { FILTER_PROPERTY_OPERATORS, FILTER_TAG_OPERATORS } from "../filters";
 import PreviewCheckmark from "./ui/PreviewCheckMark";
 import { SquareButton } from "./ui/common";
+import { IndexItem } from "../api";
 
-interface ListSectionProps {
-  list: { [itemId: string]: ListItem };
+export interface ListSectionProps {
+  list: { [itemId: string]: IndexItem };
   tagsList: string[];
   isFilteringMatchAny: boolean;
   searchBarValue: string;
@@ -18,6 +19,7 @@ interface ListSectionProps {
   addTagToListItem: (id: string, tag: string) => void;
   setListItemSummary: (id: string, summary: string) => void;
   focusedListItemId: string;
+  focusedListItemDescription: string;
   setFocusedListItemId: (id: string) => void;
   removeListItem: (id: string) => void;
   theme: string;
@@ -58,16 +60,13 @@ export default function ListSection(props: ListSectionProps) {
   };
 
   const getSearchResult = (
-    listParam: { [itemId: string]: ListItem },
+    listParam: { [itemId: string]: IndexItem },
     searchBarValueParam: string
   ) => {
-    const searchResult: { [itemId: string]: ListItem } = {};
+    const searchResult: { [itemId: string]: IndexItem } = {};
     Object.keys(listParam).forEach((id) => {
       if (
         listParam[id].summary
-          .toLowerCase()
-          .includes(searchBarValueParam.toLocaleLowerCase()) ||
-        listParam[id].description
           .toLowerCase()
           .includes(searchBarValueParam.toLocaleLowerCase())
       ) {
@@ -78,7 +77,7 @@ export default function ListSection(props: ListSectionProps) {
   };
 
   const getListFilteredByTag = (
-    listParam: { [itemId: string]: ListItem },
+    listParam: { [itemId: string]: IndexItem },
     filter: Filter
   ) => {
     return Object.fromEntries(
@@ -91,9 +90,9 @@ export default function ListSection(props: ListSectionProps) {
   };
 
   const getListFilterdByFieldValue = (
-    listParam: { [itemId: string]: ListItem },
+    listParam: { [itemId: string]: IndexItem },
     filter: Filter
-  ): { [itemId: string]: ListItem } => {
+  ): { [itemId: string]: IndexItem } => {
     const getFieldKey = (tag: string) => {
       return tag[0] === "$" ? tag.split("$")[1].split("=")[0] : "";
     };
@@ -102,7 +101,7 @@ export default function ListSection(props: ListSectionProps) {
       return tag[0] === "$" ? tag.split("=")[1] : "";
     };
 
-    const getIsItemIncluded = (item: ListItem, filter: Filter): boolean => {
+    const getIsItemIncluded = (item: IndexItem, filter: Filter): boolean => {
       if (!item.tags.find((tag) => filter.fieldToFilter === getFieldKey(tag)))
         return false;
       return FILTER_PROPERTY_OPERATORS[
@@ -117,21 +116,24 @@ export default function ListSection(props: ListSectionProps) {
     };
 
     return Object.keys(listParam).reduce(
-      (result: { [itemId: string]: ListItem }, itemId: keyof typeof result) => {
+      (
+        result: { [itemId: string]: IndexItem },
+        itemId: keyof typeof result
+      ) => {
         if (getIsItemIncluded(listParam[itemId], filter)) {
           result[itemId as keyof typeof result] = listParam[itemId];
         }
         return result;
       },
-      {} as { [itemId: string]: ListItem }
+      {} as { [itemId: string]: IndexItem }
     );
   };
 
   const getFilteredList = (
-    listParam: { [itemId: string]: ListItem },
+    listParam: { [itemId: string]: IndexItem },
     filterSet: { [filterId: string]: Filter }
   ) => {
-    const filteredListArr: { [itemId: string]: ListItem }[] = [];
+    const filteredListArr: { [itemId: string]: IndexItem }[] = [];
     Object.values(filterSet).forEach((filter) => {
       if (filter.fieldToFilter === "Tags") {
         filteredListArr.push(getListFilteredByTag(listParam, filter));
@@ -141,7 +143,7 @@ export default function ListSection(props: ListSectionProps) {
     });
 
     const getMergedFilteredList = (
-      listArr: { [itemId: string]: ListItem }[]
+      listArr: { [itemId: string]: IndexItem }[]
     ) => {
       if (props.isFilteringMatchAny) {
         return listArr.reduce(
@@ -150,8 +152,8 @@ export default function ListSection(props: ListSectionProps) {
         );
       }
       const intersectLists = (
-        o1: { [id: string]: ListItem },
-        o2: { [id: string]: ListItem }
+        o1: { [id: string]: IndexItem },
+        o2: { [id: string]: IndexItem }
       ) => {
         return Object.fromEntries(
           Object.entries(o1).filter((entry) => entry[0] in o2)
@@ -268,7 +270,7 @@ export default function ListSection(props: ListSectionProps) {
           !tag.includes("Completed")
         );
       }).length === 0 &&
-      props.list[props.focusedListItemId].description === ""
+      props.focusedListItemDescription === ""
     ) {
       props.removeListItem(props.focusedListItemId);
     } else {

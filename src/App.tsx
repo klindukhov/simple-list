@@ -1,14 +1,16 @@
 import { useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
 import {
-  getList as getListApi,
+  IndexItem,
   getSavedFilters,
   setSavedFilters as setSavedFiltersApi,
-  setList as setListApi,
+  useListApi,
 } from "./api";
-import ListSection from "./components/ListSection";
-import FilterSection from "./components/FilterSection";
-import ListItemDetailSection from "./components/ListItemDetailsSection";
+import ListSection, { ListSectionProps } from "./components/ListSection";
+import FilterSection, { FilterSectionProps } from "./components/FilterSection";
+import ListItemDetailSection, {
+  ListItemdetailSectionProps,
+} from "./components/ListItemDetailsSection";
 import { v4 as uuidv4 } from "uuid";
 
 import { ThemeProvider } from "styled-components";
@@ -16,13 +18,6 @@ import { lightTheme, darkTheme, GlobalStyles } from "./components/ui/Themes.ts";
 import { IconContext } from "@phosphor-icons/react";
 
 import { useMediaQuery } from "react-responsive";
-
-export interface ListItem {
-  id: string;
-  summary: string;
-  description: string;
-  tags: string[];
-}
 
 export interface Filter {
   id: string;
@@ -134,22 +129,12 @@ export default function App() {
     setTempFilterSet(tempFilterSet);
   };
 
-  const [list, setListState] = useState<{ [itemId: string]: ListItem }>({});
-  useEffect(() => {
-    getListApi().then((list) => {
-      setListState(list);
-    });
-  }, []);
-
-  const setList = (listProp: { [itemId: string]: ListItem }) => {
-    setListState(listProp);
-    setListApi(listProp);
-  };
+  const [list, listApi] = useListApi();
 
   const [isShowingCompleted, setIsShowingCompleted] = useState(false);
 
   const generateFieldsList = useCallback(
-    (itemList: { [itemId: string]: ListItem }): { [tag: string]: boolean } => {
+    (itemList: { [itemId: string]: IndexItem }): { [tag: string]: boolean } => {
       if (Object.keys(itemList).length === 0) return {};
 
       const allTags = Object.keys(
@@ -193,11 +178,9 @@ export default function App() {
 
   const [isSortAsc, setIsSortAcs] = useState(false);
 
-  const [focusedListItemId, setFocusedListItemId] = useState<string>("0");
-
   const [searchBarValue, setSearchBarValue] = useState("");
 
-  const getTagsList = (itemList: { [itemId: string]: ListItem }): string[] => {
+  const getTagsList = (itemList: { [itemId: string]: IndexItem }): string[] => {
     if (Object.keys(itemList).length === 0) return [];
 
     const allTags = Object.keys(
@@ -217,86 +200,16 @@ export default function App() {
     return Array.from(new Set(allTags));
   };
 
-  const addTagToListItem = (id: string, tag: string) => {
-    const tempList: { [itemId: string]: ListItem } = { ...list };
-    if (tempList[id].tags.includes(tag)) {
-      return;
-    } else {
-      tempList[id].tags.push(tag);
-    }
-
-    setList(tempList);
-    refreshUpdatedProperty(id);
-  };
-
-  const removeTagFromListItem = (id: string, tag: string) => {
-    const tempList: { [itemId: string]: ListItem } = { ...list };
-
-    if (tempList[id].tags.includes(tag)) {
-      tempList[id].tags.splice(tempList[id].tags.indexOf(tag), 1);
-    }
-
-    setList(tempList);
-    refreshUpdatedProperty(id);
-  };
-
-  const setListItemSummary = (id: string, summary: string) => {
-    const tempList: { [itemId: string]: ListItem } = { ...list };
-
-    tempList[id].summary = summary;
-
-    setList(tempList);
-    refreshUpdatedProperty(id);
-  };
-
-  const removeListItem = (id: string) => {
-    const tempList: { [itemId: string]: ListItem } = { ...list };
-
-    delete tempList[id];
-
-    setList(tempList);
-  };
-
-  const setListItemDescription = (id: string, description: string) => {
-    const tempList: { [itemId: string]: ListItem } = { ...list };
-
-    tempList[id].description = description;
-
-    setList(tempList);
-    refreshUpdatedProperty(id);
-  };
-
-  const editTag = (id: string, currentTag: string, newTag: string) => {
-    const tempList: { [itemId: string]: ListItem } = { ...list };
-
-    if (tempList[id].tags.includes(currentTag)) {
-      tempList[id].tags[tempList[id].tags.indexOf(currentTag)] = newTag;
-    }
-
-    setList(tempList);
-    refreshUpdatedProperty(id);
-  };
-
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const fileReader = new FileReader();
     if (!e.target.files) return;
     fileReader.readAsText(e.target.files[0], "UTF-8");
     fileReader.onload = (e) => {
-      const imported: { [itemId: string]: ListItem } = JSON.parse(
-        "" + e.target?.result
-      );
-      const tempList: { [itemId: string]: ListItem } = { ...list };
-      Object.keys(imported).forEach((key) => {
-        tempList[key as keyof typeof tempList] = imported[key];
-      });
-      setList(tempList);
+      listApi.parseFromFile("" + e.target?.result);
     };
   };
 
   const addListItem = () => {
-    const tempList: { [itemId: string]: ListItem } = { ...list };
-
-    const newId = uuidv4();
     const newTags: string[] = Object.values(getTempFilterSet())
       .filter(
         (filter: Filter) =>
@@ -310,52 +223,10 @@ export default function App() {
           ? `$${filter.fieldToFilter}=${filter.expectedValue}`
           : filter.expectedValue
       );
-    tempList[newId] = {
-      id: newId,
-      summary: "",
-      description: "",
-      tags: ["$Created=" + Date.now(), "$Updated=" + Date.now(), ...newTags],
-    };
-
-    setList(tempList);
+    listApi.addNewListItem(newTags);
   };
 
-  const refreshUpdatedProperty = (id: string) => {
-    const editTagLocal = (id: string, currentTag: string, newTag: string) => {
-      const tempList: { [itemId: string]: ListItem } = { ...list };
-
-      if (tempList[id].tags.includes(currentTag)) {
-        tempList[id].tags[tempList[id].tags.indexOf(currentTag)] = newTag;
-      }
-
-      setList(tempList);
-    };
-    const addTagToListItemLocal = (id: string, tag: string) => {
-      const tempList: { [itemId: string]: ListItem } = { ...list };
-      if (tempList[id].tags.includes(tag)) {
-        return;
-      } else {
-        tempList[id].tags.push(tag);
-      }
-
-      setList(tempList);
-    };
-    if (
-      list[id].tags.includes(
-        list[id].tags.find((tag) => tag.includes("$Updated=")) ?? "Updated"
-      )
-    ) {
-      editTagLocal(
-        id,
-        list[id].tags.find((tag) => tag.includes("$Updated=")) ?? "Updated",
-        "$Updated=" + Date.now()
-      );
-    } else {
-      addTagToListItemLocal(id, "$Updated=" + Date.now());
-    }
-  };
-
-  const getFilterSectionProps = () => {
+  const getFilterSectionProps = (): FilterSectionProps => {
     return {
       list: list,
       searchBarValue: searchBarValue,
@@ -382,10 +253,11 @@ export default function App() {
       removeSavedFilter: removeSavedFilter,
       handleFileUpload: handleFileUpload,
       handleBurgerClick: handleBurgerClick,
+      exportList: listApi.exportFile,
     };
   };
 
-  const getListSectionProps = () => {
+  const getListSectionProps = (): ListSectionProps => {
     return {
       list: list,
       tagsList: getTagsList(list),
@@ -394,19 +266,16 @@ export default function App() {
       isShowingCompleted: isShowingCompleted,
       isSortAsc: isSortAsc,
       fieldsList: fieldsList,
-      removeTagFromListItem: removeTagFromListItem,
-      addTagToListItem: addTagToListItem,
-      setListItemSummary: setListItemSummary,
-      focusedListItemId: focusedListItemId,
-      setFocusedListItemId: setFocusedListItemId,
-      removeListItem: removeListItem,
+      removeTagFromListItem: listApi.deleteListItemTag,
+      addTagToListItem: listApi.addListItemTag,
+      setListItemSummary: listApi.setListItemSummary,
+      focusedListItemId: listApi.focusedListItemId,
+      focusedListItemDescription: listApi.focusedListItemDescription,
+      setFocusedListItemId: listApi.setFocusedListItemId,
+      removeListItem: listApi.deleteListItem,
       theme: theme,
       tempFilterSet: getTempFilterSet(),
       addListItem: addListItem,
-      isFilteringPanelOpen: isFilteringPanelOpen,
-      toggleIsFilteringPanelOpen: () => {
-        setIsFilteringPanelOpen(!isFilteringPanelOpen);
-      },
       isMobile: isMobile,
       handleOpenItemDetailsSection: handleOpenItemDetailsSection,
       handleBurgerClick: handleBurgerClick,
@@ -414,18 +283,18 @@ export default function App() {
     };
   };
 
-  const getListItemSectionProps = () => {
+  const getListItemSectionProps = (): ListItemdetailSectionProps => {
     return {
       list: list,
-      removeListItem: removeListItem,
-      focusedListItemId: focusedListItemId,
-      removeTagFromListItem: removeTagFromListItem,
-      addTagToListItem: addTagToListItem,
-      setListItemSummary: setListItemSummary,
-      setListItemDescription: setListItemDescription,
-      editTag: editTag,
+      removeListItem: listApi.deleteListItem,
+      focusedListItemId: listApi.focusedListItemId,
+      focusedListItemDescription: listApi.focusedListItemDescription,
+      removeTagFromListItem: listApi.deleteListItem,
+      addTagToListItem: listApi.addListItemTag,
+      setListItemSummary: listApi.setListItemSummary,
+      setListItemDescription: listApi.setListItemDescription,
+      editTag: listApi.setProperty,
       tagsList: getTagsList(list),
-      isMobile: isMobile,
       onItemDeleteMobile: onItemDeleteMobile,
       handleBurgerClick: handleBurgerClick,
     };
