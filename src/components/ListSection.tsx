@@ -1,6 +1,18 @@
 import { styled } from "styled-components";
 import { Filter } from "../App";
-import { CaretRight, CursorClick, List, Plus } from "@phosphor-icons/react";
+import {
+  CaretRight,
+  CursorClick,
+  Eye,
+  EyeSlash,
+  Funnel,
+  Intersect,
+  List,
+  Plus,
+  SortAscending,
+  SortDescending,
+  Unite,
+} from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
 import { FILTER_PROPERTY_OPERATORS, FILTER_TAG_OPERATORS } from "../filters";
 import PreviewCheckmark from "./ui/PreviewCheckMark";
@@ -29,6 +41,9 @@ export interface ListSectionProps {
   handleOpenItemDetailsSection: () => void;
   handleBurgerClick: () => void;
   setSearchBarValue: (value: string) => void;
+  toggleIsShowingCompleted: () => void;
+  toggleIsFilteringMatchAny: () => void;
+  toggleIsSortAscending: () => void;
 }
 
 export default function ListSection(props: ListSectionProps) {
@@ -297,6 +312,27 @@ export default function ListSection(props: ListSectionProps) {
 
   return (
     <>
+      <TopNavBar>
+        <Chip onClick={props.handleBurgerClick}>
+          <Funnel size={"1.5rem"} />{" "}
+          <Txt>{Object.keys(props.tempFilterSet).length}</Txt>
+        </Chip>
+        <Chip onClick={props.handleBurgerClick}>
+          <List size={"1.5rem"} /> <Txt>{getListItems().length}</Txt>
+        </Chip>
+        <ChipOneElement onClick={() => props.toggleIsShowingCompleted()}>
+          {!props.isShowingCompleted && <EyeSlash size={"1.5rem"} />}
+          {props.isShowingCompleted && <Eye size={"1.5rem"} />}
+        </ChipOneElement>
+        <ChipOneElement onClick={props.toggleIsSortAscending}>
+          {props.isSortAsc && <SortAscending size={"1.5rem"} />}
+          {!props.isSortAsc && <SortDescending size={"1.5rem"} />}
+        </ChipOneElement>
+        <ChipOneElement onClick={props.toggleIsFilteringMatchAny}>
+          {props.isFilteringMatchAny && <Unite size={"1.5rem"} />}
+          {!props.isFilteringMatchAny && <Intersect size={"1.5rem"} />}
+        </ChipOneElement>
+      </TopNavBar>
       <ListSectionDiv
         onClick={handleListSectionClick}
         $areItemsToDisplay={areItemsToDisplay()}
@@ -355,25 +391,62 @@ export default function ListSection(props: ListSectionProps) {
       </ListSectionDiv>
       <NavBar>
         <SquareButton onClick={props.handleBurgerClick}>
-          <List />
+          <List size={"1.5rem"} />
         </SquareButton>
         <InputField
           onChange={(e) => props.setSearchBarValue(e.target.value)}
           id="searhBarInput"
         />
         <SquareButton onClick={handleListSectionClick}>
-          <Plus />
+          <Plus size={"1.5rem"} />
         </SquareButton>
       </NavBar>
     </>
   );
 }
 
+const Chip = styled.div`
+  height: 2rem;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: auto auto;
+  justify-items: center;
+  align-items: center;
+  padding: 0rem 0.5rem 0rem 0.5rem;
+  background-color: ${(props) => props.theme.panel};
+  border-radius: 0.5rem;
+  column-gap: 1rem;
+`;
+
+const ChipOneElement = styled.div`
+  height: 2rem;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: auto;
+  justify-items: center;
+  align-items: center;
+  padding: 0rem 0.5rem 0rem 0.5rem;
+  background-color: ${(props) => props.theme.panel};
+  border-radius: 0.5rem;
+  column-gap: 1rem;
+`;
+
 const NavBar = styled.div`
   height: 3rem;
   width: 100%;
   display: ${(props) => (props.theme.isListSectionOpen ? "grid" : "none")};
   grid-template-columns: 3rem 1fr 3rem;
+  align-items: center;
+  justify-items: center;
+  padding: 0.5rem;
+  box-sizing: border-box;
+`;
+
+const TopNavBar = styled.div`
+  height: 3rem;
+  width: 100%;
+  display: ${(props) => (props.theme.isListSectionOpen ? "grid" : "none")};
+  grid-template-columns: auto auto auto auto auto;
   align-items: center;
   justify-items: center;
   padding: 0.5rem;
@@ -408,7 +481,7 @@ const EmptyListPlaceholder = styled.div`
 const ListSectionDiv = styled.div<{ $areItemsToDisplay: boolean }>`
   height: ${(props) =>
     !props.theme.isFilteringPanelOpen && props.theme.viewMode === "Note"
-      ? "calc(100dvh - 3rem)"
+      ? "calc(100dvh - 6rem)"
       : "100dvh"};
   overflow: scroll;
   display: ${(props) => (props.theme.isListSectionOpen ? "grid" : "none")};
@@ -475,4 +548,9 @@ const ListItemElementInput = styled.input<{ $isCompleted: boolean }>`
   height: 100%;
   text-decoration: ${(props) =>
     props.$isCompleted ? "line-through" : "inherit"};
+`;
+
+const Txt = styled.div`
+  box-sizing: border-box;
+  margin-top: 0.1rem;
 `;

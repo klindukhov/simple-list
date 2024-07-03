@@ -280,6 +280,11 @@ export default function App() {
       handleOpenItemDetailsSection: handleOpenItemDetailsSection,
       handleBurgerClick: handleBurgerClick,
       setSearchBarValue: setSearchBarValue,
+      toggleIsShowingCompleted: () =>
+        setIsShowingCompleted(!isShowingCompleted),
+      toggleIsFilteringMatchAny: () =>
+        setIsFilteringMatchAny(!isFilteringMatchAny),
+      toggleIsSortAscending: () => setIsSortAcs(!isSortAsc),
     };
   };
 
