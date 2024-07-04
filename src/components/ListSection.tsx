@@ -223,31 +223,48 @@ export default function ListSection(props: ListSectionProps) {
           (getIsItemCompleted(id) && props.isShowingCompleted)
       )
       .sort((a, b) =>
-        (props.list[props.isSortAsc ? b : a].tags
-          .find((e) =>
-            e.includes(
-              `$${Object.keys(props.fieldsList).reduce(
-                (a, b) =>
-                  props.fieldsList[b as keyof typeof props.fieldsList] ? b : a,
-                "Created"
-              )}=`
+        sortCompare(
+          props.list[props.isSortAsc ? b : a].tags
+            .find((e) =>
+              e.includes(
+                `$${Object.keys(props.fieldsList).reduce(
+                  (a, b) =>
+                    props.fieldsList[b as keyof typeof props.fieldsList]
+                      ? b
+                      : a,
+                  "Created"
+                )}=`
+              )
             )
-          )
-          ?.split("=")[1] ?? 0) >
-        (props.list[props.isSortAsc ? a : b].tags
-          .find((e) =>
-            e.includes(
-              `$${Object.keys(props.fieldsList).reduce(
-                (a, b) =>
-                  props.fieldsList[b as keyof typeof props.fieldsList] ? b : a,
-                "Created"
-              )}=`
+            ?.split("=")[1] ?? "",
+          props.list[props.isSortAsc ? a : b].tags
+            .find((e) =>
+              e.includes(
+                `$${Object.keys(props.fieldsList).reduce(
+                  (a, b) =>
+                    props.fieldsList[b as keyof typeof props.fieldsList]
+                      ? b
+                      : a,
+                  "Created"
+                )}=`
+              )
             )
-          )
-          ?.split("=")[1] ?? 0)
-          ? 1
-          : 0
+            ?.split("=")[1] ?? ""
+        )
       );
+  };
+
+  const sortCompare = (a: string, b: string) => {
+    if (a === b) return 0;
+
+    const getNumeric = (str: string): number | string => {
+      if (!isNaN(+str)) return +str;
+      if (!isNaN(parseFloat(str))) return parseFloat(str);
+      if (!isNaN(parseInt(str))) return parseInt(str);
+      return str;
+    };
+
+    return getNumeric(a) > getNumeric(b) ? 1 : -1;
   };
 
   const handleListItemBlur = async () => {
