@@ -20,10 +20,15 @@ export interface ListSectionProps {
   theme: string;
   tempFilterSet: { [filterId: string]: Filter };
   addListItem: () => void;
+  setListLength: (length: number) => void;
 }
 
 export default function ListSection(props: ListSectionProps) {
   const [isLastItemEmpty, setIsLastItemEmpty] = useState(false);
+
+  useEffect(() => {
+    props.setListLength(getListItems().length);
+  }, [props.list, props.isShowingCompleted, props.tempFilterSet]);
 
   const handleListSectionClick = () => {
     if (

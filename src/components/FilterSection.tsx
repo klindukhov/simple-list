@@ -58,6 +58,7 @@ export interface FilterSectionProps {
   toggleViewMode: () => void;
   handleFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
   selectNewSaveFile: () => void;
+  listLength: number;
 }
 
 export default function FilterSection(props: FilterSectionProps) {
@@ -253,6 +254,7 @@ export default function FilterSection(props: FilterSectionProps) {
               </SquareButton>
             )}
           </ShowCompletedDiv>
+          <Counter>{props.listLength}</Counter>
           <SquareButtonJustifyEnd
             onClick={() => props.toggleIsShowingCompleted()}
           >
@@ -468,6 +470,12 @@ export default function FilterSection(props: FilterSectionProps) {
   );
 }
 
+const Counter = styled.div`
+  display: grid;
+  justify-items: end;
+  width: 100%;
+`;
+
 const HiddenInput = styled.input`
   display: none;
 `;
@@ -591,7 +599,7 @@ const SelectInput = styled.select`
 
 const FiltersUsedElement = styled(FilteringPanelGroupElement)`
   margin-top: 1rem;
-  grid-template-columns: 1fr 15%;
+  grid-template-columns: 1fr 15% 15%;
 `;
 
 const SavedFilters = styled.div`

@@ -42,6 +42,8 @@ export default function App() {
     size: "1rem",
   };
 
+  const [listLength, setListLength] = useState(0);
+
   const [savedFiltersState, setSavedFiltersState] = useState<{
     [filterSetName: string]: { [filterId: string]: Filter };
   }>({});
@@ -180,8 +182,6 @@ export default function App() {
 
   const [isSortAsc, setIsSortAcs] = useState(false);
 
-  // const [focusedListItemId, setFocusedListItemId] = useState<string>("0");
-
   const [searchBarValue, setSearchBarValue] = useState("");
 
   const getTagsList = (itemList: { [itemId: string]: IndexItem }): string[] => {
@@ -265,6 +265,7 @@ export default function App() {
         listApi.setIsSaveDirectorySelected(false);
         setIsFileSelectionPopUpCancellable(true);
       },
+      listLength: listLength,
     };
   };
 
@@ -283,6 +284,7 @@ export default function App() {
       theme: theme,
       tempFilterSet: getTempFilterSet(),
       addListItem: addListItem,
+      setListLength: setListLength,
     };
   };
 
