@@ -6,7 +6,6 @@ import { Check, PencilSimple, Trash, X } from "@phosphor-icons/react";
 import { RemirrorEditor } from "./ui/RemirrorEditor";
 import PreviewCheckmark from "./ui/PreviewCheckMark";
 import { CaretLeftRotaiton, SquareButton } from "./ui/common";
-import AutocompleteInput from "./ui/AutocompleteInput";
 import { IndexItem, ListApi } from "../api";
 
 export interface ListItemdetailSectionProps {
@@ -264,20 +263,13 @@ export default function ListItemDetailSection(
                       (newTag.length + 1 < 2 ? 2 : newTag.length + 1) + "ch"
                     }
                   >
-                    <AutocompleteInput
-                      hintList={getHintTags(props.tagsList, newTag)}
+                    <input
+                      list="hintList"
                       id="addTagChip"
                       value={newTag}
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                         setNewTag((e.target as HTMLInputElement).value)
                       }
-                      onHintApply={(hint: string) => {
-                        props.listApi.addListItemTag(
-                          props.focusedListItemId,
-                          hint
-                        );
-                        setNewTag("");
-                      }}
                       onBlur={() => {
                         if (newTag !== "+" && newTag !== "" && newTag !== " ") {
                           props.listApi.addListItemTag(
@@ -295,6 +287,11 @@ export default function ListItemDetailSection(
                         }
                       }}
                     />
+                    <datalist id="hintList">
+                      {getHintTags(props.tagsList, newTag).map((hint) => (
+                        <option value={hint}>{hint}</option>
+                      ))}
+                    </datalist>
                   </AddTagChip>
                 )}
               </ListItemDetailsTagsList>
@@ -562,7 +559,7 @@ const AddTagChip = styled.div<{ $width: string }>`
   display: grid;
   align-content: center;
   background-color: transparent !important;
-  & > div > input {
+  & > input {
     background-color: transparent;
     box-sizing: border-box;
     color: inherit;
@@ -577,6 +574,12 @@ const AddTagChip = styled.div<{ $width: string }>`
     &:hover {
       opacity: 0.7;
     }
+    &::-webkit-calendar-picker-indicator {
+      display: none !important;
+    }
+  }
+  & > datalist {
+    display: none;
   }
 `;
 
