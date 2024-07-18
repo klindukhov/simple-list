@@ -12,7 +12,6 @@ import {
 } from "@phosphor-icons/react";
 
 import { RemirrorEditor } from "./ui/RemirrorEditor";
-import AutocompleteInput from "./ui/AutocompleteInput";
 import { SquareButton } from "./ui/common";
 import { IndexItem } from "../api";
 
@@ -271,17 +270,13 @@ export default function ListItemDetailSection(
                         (newTag.length + 1 < 2 ? 2 : newTag.length + 1) + "ch"
                       }
                     >
-                      <AutocompleteInput
-                        hintList={getHintTags(props.tagsList, newTag)}
+                      <input
                         id="addTagChip"
+                        list="hintList"
                         value={newTag}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                           setNewTag((e.target as HTMLInputElement).value)
                         }
-                        onHintApply={(hint: string) => {
-                          props.addTagToListItem(props.focusedListItemId, hint);
-                          setNewTag("");
-                        }}
                         onBlur={() => {
                           if (
                             newTag !== "+" &&
@@ -305,6 +300,11 @@ export default function ListItemDetailSection(
                           }
                         }}
                       />
+                      <datalist id="hintList">
+                        {getHintTags(props.tagsList, newTag).map((hint) => (
+                          <option key={hint} value={hint}></option>
+                        ))}
+                      </datalist>
                     </AddTagChip>
                   )}
                 </ListItemDetailsTagsList>
@@ -628,7 +628,7 @@ const AddTagChip = styled.div<{ $width: string }>`
   display: grid;
   align-content: center;
   background-color: transparent !important;
-  & > div > input {
+  & > input {
     background-color: transparent;
     box-sizing: border-box;
     color: inherit;
@@ -642,6 +642,9 @@ const AddTagChip = styled.div<{ $width: string }>`
     max-width: 20rem;
     &:hover {
       opacity: 0.7;
+    }
+    &::-webkit-calendar-picker-indicator {
+      display: none !important;
     }
   }
 `;
