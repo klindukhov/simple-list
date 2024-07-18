@@ -142,7 +142,7 @@ export const useListApi = (): [{ [itemId: string]: IndexItem }, ListApi] => {
 
     Filesystem.writeFile({
       path: DIRECTORY_PATH + itemId,
-      data: JSON.stringify(newDescription),
+      data: newDescription,
       directory: Directory.ExternalStorage,
       encoding: Encoding.UTF8,
     });
@@ -182,7 +182,7 @@ export const useListApi = (): [{ [itemId: string]: IndexItem }, ListApi] => {
       encoding: Encoding.UTF8,
     })
       .then((contents) => {
-        setFocusedItemDescription(JSON.parse(contents.data.toString() ?? ""));
+        setFocusedItemDescription(contents.data.toString() ?? "");
         setFocusedListItemId(itemId);
       })
       .catch(() => {
@@ -214,7 +214,7 @@ export const useListApi = (): [{ [itemId: string]: IndexItem }, ListApi] => {
         if (descriptionItem.description) {
           Filesystem.writeFile({
             path: DIRECTORY_PATH + itemId,
-            data: JSON.stringify(descriptionItem.description),
+            data: descriptionItem.description,
             directory: Directory.ExternalStorage,
             encoding: Encoding.UTF8,
           });
@@ -240,7 +240,7 @@ export const useListApi = (): [{ [itemId: string]: IndexItem }, ListApi] => {
           list[id] = {
             id: id,
             summary: itemList[id].summary,
-            description: JSON.parse(contents.data.toString() || ""),
+            description: contents.data.toString() || "",
             tags: itemList[id].tags,
           };
         } catch (e) {
