@@ -5,10 +5,10 @@ import { Check, PencilSimple, Trash, X } from "@phosphor-icons/react";
 
 import { RemirrorEditor } from "./ui/RemirrorEditor";
 import PreviewCheckmark from "./ui/PreviewCheckMark";
-import { CaretLeftRotaiton, SquareButton } from "./ui/common";
+import { CaretLeftRotation, SquareButton } from "./ui/common";
 import { IndexItem, ListApi } from "../api";
 
-export interface ListItemdetailSectionProps {
+export interface ListItemDetailSectionProps {
   list: { [itemId: string]: IndexItem };
   listApi: ListApi;
   focusedListItemId: string;
@@ -18,7 +18,7 @@ export interface ListItemdetailSectionProps {
 }
 
 export default function ListItemDetailSection(
-  props: ListItemdetailSectionProps
+  props: ListItemDetailSectionProps,
 ) {
   const [isSummaryFocused, setIsSummaryFocused] = useState(false);
   const [newTag, setNewTag] = useState("");
@@ -32,7 +32,7 @@ export default function ListItemDetailSection(
   const getIsItemCompleted = (id: string) => {
     return props.list[id].tags.includes(
       props.list[id].tags.find((tag) => tag.includes("Completed")) ??
-        "Completed"
+        "Completed",
     );
   };
 
@@ -41,13 +41,13 @@ export default function ListItemDetailSection(
       props.listApi.deleteListItemTag(
         props.focusedListItemId,
         props.list[props.focusedListItemId].tags.find((tag) =>
-          tag.includes("Completed")
-        ) ?? "Completed"
+          tag.includes("Completed"),
+        ) ?? "Completed",
       );
     } else {
       props.listApi.addListItemTag(
         props.focusedListItemId,
-        "$Completed=" + Date.now()
+        "$Completed=" + Date.now(),
       );
     }
   };
@@ -58,8 +58,8 @@ export default function ListItemDetailSection(
       e.target.value === ""
         ? " "
         : e.target.value.length > 2 && e.target.value[0] === " "
-        ? e.target.value.substring(1)
-        : e.target.value
+          ? e.target.value.substring(1)
+          : e.target.value,
     );
   };
 
@@ -96,8 +96,8 @@ export default function ListItemDetailSection(
                 height="2rem"
                 checked={props.list[props.focusedListItemId].tags.includes(
                   props.list[props.focusedListItemId].tags.find((tag) =>
-                    tag.includes("Completed")
-                  ) ?? "Completed"
+                    tag.includes("Completed"),
+                  ) ?? "Completed",
                 )}
               />
               {!isSummaryFocused && (
@@ -125,7 +125,7 @@ export default function ListItemDetailSection(
                         props.list[props.focusedListItemId].tags
                           .find((e) => e.includes("$Created="))
                           ?.split("=")[1] ?? 0
-                      )
+                      ),
                     ).toLocaleDateString("en-GB")}
                   </Txt>
 
@@ -136,7 +136,7 @@ export default function ListItemDetailSection(
                         props.list[props.focusedListItemId].tags
                           .find((e) => e.includes("$Updated="))
                           ?.split("=")[1] ?? 0
-                      )
+                      ),
                     ).toLocaleDateString("en-GB")}
                   </Txt>
                   {getIsItemCompleted(props.focusedListItemId) && (
@@ -147,7 +147,7 @@ export default function ListItemDetailSection(
                           props.list[props.focusedListItemId].tags
                             .find((e) => e.includes("$Completed="))
                             ?.split("=")[1] ?? 0
-                        )
+                        ),
                       ).toLocaleDateString("en-GB")}
                     </Txt>
                   )}
@@ -170,7 +170,7 @@ export default function ListItemDetailSection(
                 </EditButton>
               </ListItemDetailsFieldElementCreated>
             )}
-            <ListItemFiedls $areFieldsBeingEdited={areFieldsBeingEdited}>
+            <ListItemFields $areFieldsBeingEdited={areFieldsBeingEdited}>
               {props.viewMode === "Task" &&
                 props.list[props.focusedListItemId].tags
                   .filter(
@@ -178,7 +178,7 @@ export default function ListItemDetailSection(
                       e[0] === "$" &&
                       !e.includes("$Created=") &&
                       !e.includes("$Completed=") &&
-                      !e.includes("$Updated=")
+                      !e.includes("$Updated="),
                   )
                   .map((tag) => (
                     <React.Fragment key={tag.split("$")[1].split("=")[0]}>
@@ -189,7 +189,7 @@ export default function ListItemDetailSection(
                           props.listApi.setProperty(
                             props.focusedListItemId,
                             tag.split("$")[1].split("=")[0],
-                            e.target.value
+                            e.target.value,
                           )
                         }
                         onKeyDown={(e) =>
@@ -202,7 +202,7 @@ export default function ListItemDetailSection(
                           onClick={() =>
                             props.listApi.deleteListItemTag(
                               props.focusedListItemId,
-                              tag
+                              tag,
                             )
                           }
                         >
@@ -222,7 +222,7 @@ export default function ListItemDetailSection(
                       if (newCustomFieldInput !== "") {
                         props.listApi.addListItemTag(
                           props.focusedListItemId,
-                          "$" + newCustomFieldInput + "="
+                          "$" + newCustomFieldInput + "=",
                         );
                       }
                       setNewCustomFieldInput("");
@@ -248,7 +248,7 @@ export default function ListItemDetailSection(
                           onClick={() =>
                             props.listApi.deleteListItemTag(
                               props.focusedListItemId,
-                              tag
+                              tag,
                             )
                           }
                         >
@@ -274,7 +274,7 @@ export default function ListItemDetailSection(
                         if (newTag !== "+" && newTag !== "" && newTag !== " ") {
                           props.listApi.addListItemTag(
                             props.focusedListItemId,
-                            newTag
+                            newTag,
                           );
                         }
                         setNewTag("");
@@ -295,14 +295,14 @@ export default function ListItemDetailSection(
                   </AddTagChip>
                 )}
               </ListItemDetailsTagsList>
-            </ListItemFiedls>
+            </ListItemFields>
             {props.viewMode === "Task" && (
               <DescriptionTitle>
                 <Txt>Description:</Txt>
                 <SquareButton
                   onClick={() => setIsRemirrorMenuOpen(!isRemirrorMenuOpen)}
                 >
-                  <CaretLeftRotaiton $isRotated={isRemirrorMenuOpen} />
+                  <CaretLeftRotation $isRotated={isRemirrorMenuOpen} />
                 </SquareButton>
               </DescriptionTitle>
             )}
@@ -314,7 +314,7 @@ export default function ListItemDetailSection(
                 setState={(state: string) => {
                   props.listApi.setListItemDescription(
                     props.focusedListItemId,
-                    state
+                    state,
                   );
                 }}
                 showMenu={
@@ -452,7 +452,7 @@ const EditButton = styled.div`
   }
 `;
 
-const ListItemFiedls = styled.div<{
+const ListItemFields = styled.div<{
   $areFieldsBeingEdited: boolean;
 }>`
   display: grid;

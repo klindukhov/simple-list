@@ -8,14 +8,13 @@ import {
 import ListSection, { ListSectionProps } from "./components/ListSection";
 import FilterSection, { FilterSectionProps } from "./components/FilterSection";
 import ListItemDetailSection, {
-  ListItemdetailSectionProps,
+  ListItemDetailSectionProps,
 } from "./components/ListItemDetailsSection";
 import { v4 as uuidv4 } from "uuid";
 
 import { ThemeProvider } from "styled-components";
 import { lightTheme, darkTheme, GlobalStyles } from "./components/ui/Themes.ts";
 import { Folder, CaretLeft, IconContext, X, List } from "@phosphor-icons/react";
-import { setNewSaveDirectory } from "./api";
 import { getSaveDirectory } from "./api";
 import { WideButton } from "./components/ui/common.ts";
 import { SquareButton } from "./components/ui/common.ts";
@@ -289,7 +288,7 @@ export default function App() {
     };
   };
 
-  const getListItemSectionProps = (): ListItemdetailSectionProps => {
+  const getListItemSectionProps = (): ListItemDetailSectionProps => {
     return {
       list: itemList,
       listApi: listApi,
@@ -331,7 +330,7 @@ export default function App() {
               <PopUpBottomRow $isCancellable={isFileSelectionPopUpCancellable}>
                 <WideButtonReverse
                   onClick={async () => {
-                    const newSaveDir = await setNewSaveDirectory();
+                    const newSaveDir = await listApi.setNewSaveDirectory();
                     listApi.setIsSaveDirectorySelected(newSaveDir !== "");
                     setIsFileSelectionPopUpCancellable(newSaveDir === "");
                     if (newSaveDir !== "")

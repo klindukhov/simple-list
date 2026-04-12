@@ -20,7 +20,7 @@ import {
 } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
 import React from "react";
-import { CaretLeftRotaiton, SquareButton, WideButton } from "./ui/common";
+import { CaretLeftRotation, SquareButton, WideButton } from "./ui/common";
 import {
   EMPTY_FILTER_TEMPLATE,
   FILTER_PROPERTY_OPERATORS,
@@ -52,9 +52,9 @@ export interface FilterSectionProps {
   savedFilters: { [filtersetName: string]: { [filterId: string]: Filter } };
   addSavedFilter: (
     filtersetName: string,
-    filterset: { [filterId: string]: Filter }
+    filterset: { [filterId: string]: Filter },
   ) => void;
-  removeSavedFilter: (filteName: string) => void;
+  removeSavedFilter: (filterName: string) => void;
   toggleViewMode: () => void;
   handleFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
   selectNewSaveFile: () => void;
@@ -91,7 +91,7 @@ export default function FilterSection(props: FilterSectionProps) {
       Object.fromEntries([
         ["new", false],
         Object.entries(props.tempFilterSet).map(
-          (entry) => ((entry[1] as unknown as boolean) = false)
+          (entry) => ((entry[1] as unknown as boolean) = false),
         ),
       ]);
 
@@ -141,11 +141,11 @@ export default function FilterSection(props: FilterSectionProps) {
 
   const toggleIsFilterBeingEdited = (id: string) => {
     setNewFilter(
-      id === "new" ? EMPTY_FILTER_TEMPLATE : props.tempFilterSet[id]
+      id === "new" ? EMPTY_FILTER_TEMPLATE : props.tempFilterSet[id],
     );
     const tempIsFilterBeingEdited = { ...isFilterBeingEdited };
     Object.keys(tempIsFilterBeingEdited).forEach(
-      (filterId) => (tempIsFilterBeingEdited[filterId] = false)
+      (filterId) => (tempIsFilterBeingEdited[filterId] = false),
     );
     tempIsFilterBeingEdited[id] = true;
     setIsFilterBeingEdited(tempIsFilterBeingEdited);
@@ -171,7 +171,7 @@ export default function FilterSection(props: FilterSectionProps) {
     }
   };
 
-  const [isDisplayingsavedFilters, setIsDisplayingSavedFilters] =
+  const [isDisplayingSavedFilters, setIsDisplayingSavedFilters] =
     useState(false);
 
   return (
@@ -211,11 +211,11 @@ export default function FilterSection(props: FilterSectionProps) {
         <SearchBarElement>
           <InputField
             onChange={(e) => props.setSearchBarValue(e.target.value)}
-            id="searhBarInput"
+            id="searchBarInput"
           />
           {props.searchBarValue === "" && (
             <MagnifyingGlassWrapper
-              onClick={() => document.getElementById("searhBarInput")?.focus()}
+              onClick={() => document.getElementById("searchBarInput")?.focus()}
             >
               <MagnifyingGlass size={"1.5rem"} />
             </MagnifyingGlassWrapper>
@@ -240,20 +240,20 @@ export default function FilterSection(props: FilterSectionProps) {
           <ShowCompletedDiv>
             <Txt>
               {Object.keys(props.savedFilters).filter(
-                (filterName) => filterName !== "tempFilterSet"
+                (filterName) => filterName !== "tempFilterSet",
               ).length > 0
                 ? "Saved filters"
                 : "Filters"}
             </Txt>
             {Object.keys(props.savedFilters).filter(
-              (filterName) => filterName !== "tempFilterSet"
+              (filterName) => filterName !== "tempFilterSet",
             ).length > 0 && (
               <SquareButton
                 onClick={() =>
-                  setIsDisplayingSavedFilters(!isDisplayingsavedFilters)
+                  setIsDisplayingSavedFilters(!isDisplayingSavedFilters)
                 }
               >
-                <CaretLeftRotaiton $isRotated={isDisplayingsavedFilters} />
+                <CaretLeftRotation $isRotated={isDisplayingSavedFilters} />
               </SquareButton>
             )}
           </ShowCompletedDiv>
@@ -275,7 +275,7 @@ export default function FilterSection(props: FilterSectionProps) {
         </FiltersUsedElement>
         <SavedFilters>
           {props.savedFilters &&
-            isDisplayingsavedFilters &&
+            isDisplayingSavedFilters &&
             Object.keys(props.savedFilters)
               .filter((filterName) => filterName !== "tempFilterSet")
               .map((filterName) => (
@@ -465,7 +465,7 @@ export default function FilterSection(props: FilterSectionProps) {
                       </FilterElement>
                     )}
                 </React.Fragment>
-              )
+              ),
             )}
         </FiltersContainer>
       </FilteringSidePanel>

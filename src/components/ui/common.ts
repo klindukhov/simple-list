@@ -39,8 +39,7 @@ export const WideButton = styled(SquareButton)`
   }
 `;
 
-
-export const CaretLeftRotaiton = styled(CaretLeft)<{ $isRotated: boolean }>`
+export const CaretLeftRotation = styled(CaretLeft)<{ $isRotated: boolean }>`
   transform: rotate(${(props) => (props.$isRotated ? "-90deg" : "0deg")});
   transition-duration: 100ms;
 `;

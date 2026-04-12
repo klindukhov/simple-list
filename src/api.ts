@@ -26,6 +26,7 @@ export interface ListApi {
   getExportList: () => Promise<string>;
   isSaveDirectorySelected: boolean;
   setIsSaveDirectorySelected: (isSelected: boolean) => void;
+  setNewSaveDirectory: () => Promise<string>;
 }
 
 export interface IndexItem {
@@ -33,25 +34,6 @@ export interface IndexItem {
   summary: string;
   tags: string[];
 }
-
-export const setNewSaveDirectory = async (): Promise<string> => {
-  try {
-    const simpleListDirectoryHandle = await window.showDirectoryPicker();
-    localForage.setItem(
-      LOCAL_FORAGE_SAVE_DIRECTORY_KEY,
-      simpleListDirectoryHandle,
-    );
-
-    const indexFileHandle: FileSystemFileHandle =
-      await simpleListDirectoryHandle.getFileHandle(INDEX_FILE_NAME, {
-        create: true,
-      });
-    localForage.setItem(LOCAL_FORAGE_INDEX_FILE_KEY, indexFileHandle);
-    return simpleListDirectoryHandle.name;
-  } catch {
-    return "";
-  }
-};
 
 export const getSaveDirectory = async (): Promise<string> => {
   const fileHandle: FileSystemFileHandle =
@@ -126,6 +108,31 @@ export const useListApi = (): [{ [itemId: string]: IndexItem }, ListApi] => {
         setIsSaveDirectorySelected(false);
       });
   }, []);
+
+  const setNewSaveDirectory = async (): Promise<string> => {
+    try {
+      const simpleListDirectoryHandle = await window.showDirectoryPicker();
+
+      const listString: string = await getExportString();
+
+      localForage.setItem(
+        LOCAL_FORAGE_SAVE_DIRECTORY_KEY,
+        simpleListDirectoryHandle,
+      );
+
+      const indexFileHandle: FileSystemFileHandle =
+        await simpleListDirectoryHandle.getFileHandle(INDEX_FILE_NAME, {
+          create: true,
+        });
+      localForage.setItem(LOCAL_FORAGE_INDEX_FILE_KEY, indexFileHandle);
+
+      parseFromFile(listString);
+
+      return simpleListDirectoryHandle.name;
+    } catch {
+      return "";
+    }
+  };
 
   const setIndexList = (indexList: { [itemId: string]: IndexItem }) => {
     setItemList(indexList);
@@ -296,29 +303,27 @@ export const useListApi = (): [{ [itemId: string]: IndexItem }, ListApi] => {
 
       let list: { [itemId: string]: DescriptionItem } = {};
 
-      const itemIds = Object.keys(itemList);
-
-      for await (const value of directoryHandle.values()) {
-        if (value.kind === "file" && itemIds.includes(value.name)) {
-          const itemId = value.name;
-          try {
-            const file = await (value as FileSystemFileHandle).getFile();
-            const text = await file.text();
-            list[itemId] = {
-              id: itemId,
-              summary: itemList[itemId].summary,
-              description: text,
-              tags: itemList[itemId].tags,
-            };
-          } catch (e) {
-            list[itemId] = {
-              id: itemId,
-              summary: itemList[itemId].summary,
-              description: "",
-              tags: itemList[itemId].tags,
-            };
-            console.error("" + e);
-          }
+      for (const id in itemList) {
+        try {
+          const itemDescriptionFileHandle =
+            await directoryHandle.getFileHandle(id);
+          const file = await (
+            itemDescriptionFileHandle as FileSystemFileHandle
+          ).getFile();
+          const text = await file.text();
+          list[id] = {
+            id: id,
+            summary: itemList[id].summary,
+            description: text,
+            tags: itemList[id].tags,
+          };
+        } catch (e) {
+          list[id] = {
+            id: id,
+            summary: itemList[id].summary,
+            description: "",
+            tags: itemList[id].tags,
+          };
         }
       }
       return list;
@@ -348,6 +353,7 @@ export const useListApi = (): [{ [itemId: string]: IndexItem }, ListApi] => {
       getExportList: useCallback(getExportString, [getExportString]),
       isSaveDirectorySelected: isSaveDirectorySelected,
       setIsSaveDirectorySelected: setIsSaveDirectorySelected,
+      setNewSaveDirectory: setNewSaveDirectory,
     },
   ];
 };
