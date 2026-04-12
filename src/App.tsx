@@ -16,6 +16,7 @@ import { ThemeProvider } from "styled-components";
 import { lightTheme, darkTheme, GlobalStyles } from "./components/ui/Themes.ts";
 import { Folder, CaretLeft, IconContext, X, List } from "@phosphor-icons/react";
 import { setNewSaveDirectory } from "./api";
+import { getSaveDirectory } from "./api";
 import { WideButton } from "./components/ui/common.ts";
 import { SquareButton } from "./components/ui/common.ts";
 
@@ -57,7 +58,7 @@ export default function App() {
 
   const addSavedFilter = (
     filterSetName: string,
-    filterSet: { [filterId: string]: Filter }
+    filterSet: { [filterId: string]: Filter },
   ): void => {
     const tempSavedFilters = { ...savedFiltersState };
 
@@ -148,10 +149,10 @@ export default function App() {
               isShowingCompleted ||
               !e[1].tags.includes(
                 e[1].tags.find((tag) => tag.includes("Completed")) ??
-                  "Completed"
-              )
-          )
-        )
+                  "Completed",
+              ),
+          ),
+        ),
       )
         .map((id) => itemList[id].tags)
         .reduce((allTags, tags) => [...allTags, ...tags], []);
@@ -160,8 +161,8 @@ export default function App() {
         new Set(
           allTags
             .filter((tag) => tag[0] === "$")
-            .map((e) => e.split("$")[1].split("=")[0])
-        )
+            .map((e) => e.split("$")[1].split("=")[0]),
+        ),
       );
 
       const sortingList: { [tag: string]: boolean } = {};
@@ -170,7 +171,7 @@ export default function App() {
       });
       return sortingList;
     },
-    [isShowingCompleted]
+    [isShowingCompleted],
   );
 
   const [fieldsList, setFieldsList] = useState<{ [tag: string]: boolean }>({});
@@ -193,10 +194,10 @@ export default function App() {
           (e) =>
             isShowingCompleted ||
             !e[1].tags.includes(
-              e[1].tags.find((tag) => tag.includes("Completed")) ?? "Completed"
-            )
-        )
-      )
+              e[1].tags.find((tag) => tag.includes("Completed")) ?? "Completed",
+            ),
+        ),
+      ),
     )
       .map((id) => itemList[id].tags)
       .reduce((allTags, tags) => [...allTags, ...tags]);
@@ -220,12 +221,12 @@ export default function App() {
           (filter.fieldToFilter === "Tags" &&
             filter.expectedValue !== "Untagged" &&
             filter.operator !== "Exclude") ||
-          filter.operator === "Equals"
+          filter.operator === "Equals",
       )
       .map((filter) =>
         filter.operator === "Equals"
           ? `$${filter.fieldToFilter}=${filter.expectedValue}`
-          : filter.expectedValue
+          : filter.expectedValue,
       );
 
     listApi.addNewListItem(newTags);
@@ -302,7 +303,7 @@ export default function App() {
   const getTheme = (
     theme: string,
     isFilteringPanelOpen: boolean,
-    viewMode: string
+    viewMode: string,
   ) => {
     const themeContext: { [key: string]: string | boolean } =
       theme === "light" ? lightTheme : darkTheme;
@@ -312,6 +313,12 @@ export default function App() {
     return themeContext;
   };
 
+  const [currentSaveDirectoryDisplayed, setCurrentSaveDirectoryDisplayed] =
+    useState("");
+  useEffect(() => {
+    getSaveDirectory().then((dir) => setCurrentSaveDirectoryDisplayed(dir));
+  }, []);
+
   return (
     <ThemeProvider theme={getTheme(theme, isFilteringPanelOpen, viewMode)}>
       <GlobalStyles />
@@ -319,13 +326,16 @@ export default function App() {
         {!listApi.isSaveDirectorySelected && (
           <PopUpBackdrop>
             <PopUp>
-              Please select new save folder location.
+              Please select new save folder location. <br />
+              <br /> Current folder: {currentSaveDirectoryDisplayed}
               <PopUpBottomRow $isCancellable={isFileSelectionPopUpCancellable}>
                 <WideButtonReverse
                   onClick={async () => {
-                    const isNewFileSaved = await setNewSaveDirectory();
-                    listApi.setIsSaveDirectorySelected(isNewFileSaved);
-                    setIsFileSelectionPopUpCancellable(!isNewFileSaved);
+                    const newSaveDir = await setNewSaveDirectory();
+                    listApi.setIsSaveDirectorySelected(newSaveDir !== "");
+                    setIsFileSelectionPopUpCancellable(newSaveDir === "");
+                    if (newSaveDir !== "")
+                      setCurrentSaveDirectoryDisplayed(newSaveDir);
                   }}
                 >
                   Select <Folder />
@@ -381,8 +391,8 @@ const Page = styled.div`
         ? "15% 40% 45%"
         : "15% 15% 70%"
       : props.theme.viewMode === "Task"
-      ? "40% 60%"
-      : "15% 85%"};
+        ? "40% 60%"
+        : "15% 85%"};
 
   overflow-x: hidden;
 `;

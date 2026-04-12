@@ -198,7 +198,10 @@ export default function FilterSection(props: FilterSectionProps) {
             Import
             <DownloadSimple />
           </WideButton>
-          <SquareButton onClick={props.selectNewSaveFile}>
+          <SquareButton
+            title="Select new folder"
+            onClick={props.selectNewSaveFile}
+          >
             <Folder />
           </SquareButton>
           <SquareButtonJustifyEnd onClick={props.toggleViewMode}>

@@ -14,7 +14,7 @@ export interface ListApi {
   setProperty: (
     itemId: string,
     propertyKey: string,
-    propertyValue: string
+    propertyValue: string,
   ) => void;
   setListItemDescription: (itemId: string, newDescription: string) => void;
   addNewListItem: (tags: string[]) => void;
@@ -34,12 +34,12 @@ export interface IndexItem {
   tags: string[];
 }
 
-export const setNewSaveDirectory = async (): Promise<boolean> => {
+export const setNewSaveDirectory = async (): Promise<string> => {
   try {
     const simpleListDirectoryHandle = await window.showDirectoryPicker();
     localForage.setItem(
       LOCAL_FORAGE_SAVE_DIRECTORY_KEY,
-      simpleListDirectoryHandle
+      simpleListDirectoryHandle,
     );
 
     const indexFileHandle: FileSystemFileHandle =
@@ -47,10 +47,18 @@ export const setNewSaveDirectory = async (): Promise<boolean> => {
         create: true,
       });
     localForage.setItem(LOCAL_FORAGE_INDEX_FILE_KEY, indexFileHandle);
-    return true;
+    return simpleListDirectoryHandle.name;
   } catch {
-    return false;
+    return "";
   }
+};
+
+export const getSaveDirectory = async (): Promise<string> => {
+  const fileHandle: FileSystemFileHandle =
+    (await localForage.getItem(LOCAL_FORAGE_SAVE_DIRECTORY_KEY)) ??
+    new FileSystemFileHandle();
+
+  return fileHandle.name;
 };
 
 const getIndex = async (): Promise<{
@@ -89,7 +97,7 @@ export const setSavedFilters = (list: {
 
 const getWithRefreshedUpdatedProperty = (
   index: { [itemId: string]: IndexItem },
-  itemId: string
+  itemId: string,
 ): { [itemId: string]: IndexItem } => {
   const tagIndex = index[itemId].tags.findIndex((t) => t.includes("$Updated="));
 
@@ -146,12 +154,12 @@ export const useListApi = (): [{ [itemId: string]: IndexItem }, ListApi] => {
   const setProperty = (
     itemId: string,
     propertyKey: string,
-    propertyValue: string
+    propertyValue: string,
   ) => {
     let itemListCopy = { ...itemList };
 
     const tagIndex = itemListCopy[itemId].tags.findIndex((t) =>
-      t.includes(`\$${propertyKey}=`)
+      t.includes(`\$${propertyKey}=`),
     );
 
     if (tagIndex !== -1) {
@@ -165,7 +173,7 @@ export const useListApi = (): [{ [itemId: string]: IndexItem }, ListApi] => {
 
   const setListItemDescription = async (
     itemId: string,
-    newDescription: string
+    newDescription: string,
   ) => {
     setFocusedItemDescription(newDescription);
     let itemListCopy = { ...itemList };
@@ -271,7 +279,7 @@ export const useListApi = (): [{ [itemId: string]: IndexItem }, ListApi] => {
           await writableStream.write(descriptionItem.description);
           await writableStream.close();
         }
-      }
+      },
     );
 
     setIndexList(itemListCopy);
