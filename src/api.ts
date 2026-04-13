@@ -29,6 +29,23 @@ export interface ListApi {
   isSaveDirectorySelected: boolean;
   setIsSaveDirectorySelected: (isSelected: boolean) => void;
   setNewSaveDirectory: () => Promise<string>;
+  addSavedFilter: (
+    filterSetName: string,
+    filterSet: {
+      [filterId: string]: Filter;
+    },
+  ) => void;
+  removeSavedFilter: (filterSetName: string) => void;
+  savedFiltersState: {
+    [filterSetName: string]: {
+      [filterId: string]: Filter;
+    };
+  };
+  setSavedFilters: (savedFiltersParam: {
+    [filterSetName: string]: {
+      [filterId: string]: Filter;
+    };
+  }) => void;
 }
 
 export interface IndexItem {
@@ -71,11 +88,19 @@ const setIndexFile = async (indexList: { [itemId: string]: IndexItem }) => {
   await writableStream.close();
 };
 
-export const getSavedFilters = async (): Promise<{
+const getSavedFilters = async (): Promise<{
   [filterSetId: string]: { [filterId: string]: Filter };
 }> => {
   let savedFiltersFileHandle: FileSystemFileHandle | null =
     await localForage.getItem(LOCAL_FORAGE_SAVED_FILTERS_FILE_KEY);
+
+  if (savedFiltersFileHandle) {
+    try {
+      await savedFiltersFileHandle.getFile();
+    } catch {
+      savedFiltersFileHandle = null;
+    }
+  }
 
   if (!savedFiltersFileHandle) {
     const directoryHandle: FileSystemDirectoryHandle | null =
@@ -96,12 +121,12 @@ export const getSavedFilters = async (): Promise<{
     );
   }
 
-  return (
-    JSON.parse(await (await savedFiltersFileHandle.getFile()).text()) ?? {}
+  return JSON.parse(
+    (await (await savedFiltersFileHandle.getFile()).text()) || "{}",
   );
 };
 
-export const setSavedFilters = async (savedFiltersList: {
+const setSavedFiltersFile = async (savedFiltersList: {
   [filterSetId: string]: { [filterId: string]: Filter };
 }) => {
   const savedFiltersFileHandle: FileSystemFileHandle | null =
@@ -152,7 +177,10 @@ export const useListApi = (): [{ [itemId: string]: IndexItem }, ListApi] => {
     try {
       const simpleListDirectoryHandle = await window.showDirectoryPicker();
 
-      const listString: string = await getExportString();
+      let listString: string = "";
+      try {
+        listString = await getExportString();
+      } catch {}
 
       localForage.setItem(
         LOCAL_FORAGE_SAVE_DIRECTORY_KEY,
@@ -166,6 +194,12 @@ export const useListApi = (): [{ [itemId: string]: IndexItem }, ListApi] => {
       localForage.setItem(LOCAL_FORAGE_INDEX_FILE_KEY, indexFileHandle);
 
       parseFromFile(listString);
+
+      if ((await (await indexFileHandle.getFile()).text()) === "") {
+        const writableStream = await indexFileHandle.createWritable();
+        await writableStream.write(JSON.stringify({}));
+        await writableStream.close();
+      }
 
       return simpleListDirectoryHandle.name;
     } catch {
@@ -303,6 +337,13 @@ export const useListApi = (): [{ [itemId: string]: IndexItem }, ListApi] => {
 
     let itemListCopy = { ...itemList };
 
+    if (SAVED_FILTERS_FILE_NAME in descriptionItemList) {
+      setSavedFilters(
+        JSON.parse(descriptionItemList[SAVED_FILTERS_FILE_NAME].description),
+      );
+      delete descriptionItemList[SAVED_FILTERS_FILE_NAME];
+    }
+
     Object.entries(descriptionItemList).forEach(
       async ([itemId, descriptionItem]) => {
         itemListCopy[itemId] = {
@@ -365,11 +406,70 @@ export const useListApi = (): [{ [itemId: string]: IndexItem }, ListApi] => {
           };
         }
       }
+
+      list[SAVED_FILTERS_FILE_NAME] = {
+        id: SAVED_FILTERS_FILE_NAME,
+        summary: "",
+        description: JSON.stringify(await getSavedFilters()),
+        tags: [],
+      };
+
       return list;
     };
 
     return JSON.stringify(await getList());
   };
+
+  const [savedFiltersState, setSavedFiltersState] = useState<{
+    [filterSetName: string]: { [filterId: string]: Filter };
+  }>({});
+
+  const setSavedFilters = (savedFiltersParam: {
+    [filterSetName: string]: { [filterId: string]: Filter };
+  }) => {
+    setSavedFiltersState(savedFiltersParam);
+    setSavedFiltersFile(savedFiltersParam);
+  };
+
+  const addSavedFilter = (
+    filterSetName: string,
+    filterSet: { [filterId: string]: Filter },
+  ): void => {
+    const tempSavedFilters = { ...savedFiltersState };
+
+    let filterSetNameNonDuplicated = filterSetName;
+    while (
+      Object.keys(savedFiltersState).includes(filterSetNameNonDuplicated)
+    ) {
+      filterSetNameNonDuplicated += "1";
+    }
+
+    tempSavedFilters[filterSetNameNonDuplicated] = filterSet;
+    setSavedFilters(tempSavedFilters);
+  };
+
+  const removeSavedFilter = (filterSetName: string): void => {
+    const tempSavedFilters = { ...savedFiltersState };
+
+    delete tempSavedFilters[filterSetName];
+
+    setSavedFilters(tempSavedFilters);
+  };
+
+  useEffect(() => {
+    getSavedFilters().then((filters) => {
+      if (
+        filters["tempFilterSet"] &&
+        Object.keys(filters["tempFilterSet"]).length > 0
+      ) {
+        setSavedFiltersState(filters);
+      } else {
+        const tempSavedFilters = { ...filters };
+        tempSavedFilters["tempFilterSet"] = {};
+        setSavedFiltersState(tempSavedFilters);
+      }
+    });
+  }, []);
 
   return [
     itemList,
@@ -393,6 +493,10 @@ export const useListApi = (): [{ [itemId: string]: IndexItem }, ListApi] => {
       isSaveDirectorySelected: isSaveDirectorySelected,
       setIsSaveDirectorySelected: setIsSaveDirectorySelected,
       setNewSaveDirectory: setNewSaveDirectory,
+      addSavedFilter: addSavedFilter,
+      removeSavedFilter: removeSavedFilter,
+      savedFiltersState: savedFiltersState,
+      setSavedFilters: setSavedFilters,
     },
   ];
 };

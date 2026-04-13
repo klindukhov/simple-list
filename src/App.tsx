@@ -1,10 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
-import {
-  getSavedFilters,
-  setSavedFilters as setSavedFiltersApi,
-  useListApi,
-} from "./api";
+import { useListApi } from "./api";
 import ListSection, { ListSectionProps } from "./components/ListSection";
 import FilterSection, { FilterSectionProps } from "./components/FilterSection";
 import ListItemDetailSection, {
@@ -44,65 +40,14 @@ export default function App() {
 
   const [listLength, setListLength] = useState(0);
 
-  const [savedFiltersState, setSavedFiltersState] = useState<{
-    [filterSetName: string]: { [filterId: string]: Filter };
-  }>({});
-
-  const setSavedFilters = (savedFiltersParam: {
-    [filterSetName: string]: { [filterId: string]: Filter };
-  }) => {
-    setSavedFiltersState(savedFiltersParam);
-    setSavedFiltersApi(savedFiltersParam);
-  };
-
-  const addSavedFilter = (
-    filterSetName: string,
-    filterSet: { [filterId: string]: Filter },
-  ): void => {
-    const tempSavedFilters = { ...savedFiltersState };
-
-    let filterSetNameNonDuplicated = filterSetName;
-    while (
-      Object.keys(savedFiltersState).includes(filterSetNameNonDuplicated)
-    ) {
-      filterSetNameNonDuplicated += "1";
-    }
-
-    tempSavedFilters[filterSetNameNonDuplicated] = filterSet;
-    setSavedFilters(tempSavedFilters);
-  };
-
-  const removeSavedFilter = (filterSetName: string): void => {
-    const tempSavedFilters = { ...savedFiltersState };
-
-    delete tempSavedFilters[filterSetName];
-
-    setSavedFilters(tempSavedFilters);
-  };
-
-  useEffect(() => {
-    getSavedFilters().then((filters) => {
-      if (
-        filters["tempFilterSet"] &&
-        Object.keys(filters["tempFilterSet"]).length > 0
-      ) {
-        setSavedFiltersState(filters);
-      } else {
-        const tempSavedFilters = { ...filters };
-        tempSavedFilters["tempFilterSet"] = {};
-        setSavedFiltersState(tempSavedFilters);
-      }
-    });
-  }, []);
-
   const getTempFilterSet = (): { [filterId: string]: Filter } => {
-    return savedFiltersState["tempFilterSet"] ?? {};
+    return listApi.savedFiltersState["tempFilterSet"] ?? {};
   };
 
   const setTempFilterSet = (filterSet: { [filterId: string]: Filter }) => {
-    const tempSavedFilters = { ...savedFiltersState };
+    const tempSavedFilters = { ...listApi.savedFiltersState };
     tempSavedFilters["tempFilterSet"] = filterSet;
-    setSavedFilters(tempSavedFilters);
+    listApi.setSavedFilters(tempSavedFilters);
   };
 
   const addFilterToTempFilterSet = (filterToAdd: Filter) => {
@@ -264,9 +209,9 @@ export default function App() {
       addFilterToFilterSet: addFilterToTempFilterSet,
       removeFilterFromFilterSet: removeFilterFromFilterSet,
       editFilter: editFilter,
-      savedFilters: savedFiltersState,
-      addSavedFilter: addSavedFilter,
-      removeSavedFilter: removeSavedFilter,
+      savedFilters: listApi.savedFiltersState,
+      addSavedFilter: listApi.addSavedFilter,
+      removeSavedFilter: listApi.removeSavedFilter,
       toggleViewMode: () => {
         setViewMode(viewMode === "Task" ? "Note" : "Task");
       },
