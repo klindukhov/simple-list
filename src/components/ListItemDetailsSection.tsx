@@ -289,7 +289,9 @@ export default function ListItemDetailSection(
                     />
                     <datalist id="hintList">
                       {getHintTags(props.tagsList, newTag).map((hint) => (
-                        <option value={hint}>{hint}</option>
+                        <option key={hint} value={hint}>
+                          {hint}
+                        </option>
                       ))}
                     </datalist>
                   </AddTagChip>

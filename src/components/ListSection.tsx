@@ -49,15 +49,15 @@ export default function ListSection(props: ListSectionProps) {
       Object.keys(
         getSearchResult(
           getFilteredList(props.list, props.tempFilterSet),
-          props.searchBarValue
-        )
+          props.searchBarValue,
+        ),
       ).length === 0
     );
   };
 
   const getSearchResult = (
     listParam: { [itemId: string]: IndexItem },
-    searchBarValueParam: string
+    searchBarValueParam: string,
   ) => {
     const searchResult: { [itemId: string]: IndexItem } = {};
     Object.keys(listParam).forEach((id) => {
@@ -74,20 +74,20 @@ export default function ListSection(props: ListSectionProps) {
 
   const getListFilteredByTag = (
     listParam: { [itemId: string]: IndexItem },
-    filter: Filter
+    filter: Filter,
   ) => {
     return Object.fromEntries(
       Object.entries(listParam).filter((entry) => {
         return FILTER_TAG_OPERATORS[
           filter.operator as keyof typeof FILTER_TAG_OPERATORS
         ](entry[1].tags, filter.expectedValue);
-      })
+      }),
     );
   };
 
-  const getListFilterdByFieldValue = (
+  const getListFilteredByFieldValue = (
     listParam: { [itemId: string]: IndexItem },
-    filter: Filter
+    filter: Filter,
   ): { [itemId: string]: IndexItem } => {
     const getFieldKey = (tag: string) => {
       return tag[0] === "$" ? tag.split("$")[1].split("=")[0] : "";
@@ -105,54 +105,54 @@ export default function ListSection(props: ListSectionProps) {
       ](
         getFieldValue(
           item.tags.find((tag) => filter.fieldToFilter === getFieldKey(tag)) ??
-            ""
+            "",
         ),
-        filter.expectedValue
+        filter.expectedValue,
       );
     };
 
     return Object.keys(listParam).reduce(
       (
         result: { [itemId: string]: IndexItem },
-        itemId: keyof typeof result
+        itemId: keyof typeof result,
       ) => {
         if (getIsItemIncluded(listParam[itemId], filter)) {
           result[itemId as keyof typeof result] = listParam[itemId];
         }
         return result;
       },
-      {} as { [itemId: string]: IndexItem }
+      {} as { [itemId: string]: IndexItem },
     );
   };
 
   const getFilteredList = (
     listParam: { [itemId: string]: IndexItem },
-    filterSet: { [filterId: string]: Filter }
+    filterSet: { [filterId: string]: Filter },
   ) => {
     const filteredListArr: { [itemId: string]: IndexItem }[] = [];
     Object.values(filterSet).forEach((filter) => {
       if (filter.fieldToFilter === "Tags") {
         filteredListArr.push(getListFilteredByTag(listParam, filter));
       } else {
-        filteredListArr.push(getListFilterdByFieldValue(listParam, filter));
+        filteredListArr.push(getListFilteredByFieldValue(listParam, filter));
       }
     });
 
     const getMergedFilteredList = (
-      listArr: { [itemId: string]: IndexItem }[]
+      listArr: { [itemId: string]: IndexItem }[],
     ) => {
       if (props.isFilteringMatchAny) {
         return listArr.reduce(
           (result, currentList) => ({ ...result, ...currentList }),
-          {}
+          {},
         );
       }
       const intersectLists = (
         o1: { [id: string]: IndexItem },
-        o2: { [id: string]: IndexItem }
+        o2: { [id: string]: IndexItem },
       ) => {
         return Object.fromEntries(
-          Object.entries(o1).filter((entry) => entry[0] in o2)
+          Object.entries(o1).filter((entry) => entry[0] in o2),
         );
       };
       return listArr.reduce((result, currentList) => {
@@ -173,7 +173,7 @@ export default function ListSection(props: ListSectionProps) {
     Object.keys(props.list).forEach((id) => {
       tempList[id] = props.list[id].tags.includes(
         props.list[id].tags.find((tag) => tag.includes("Completed")) ??
-          "Completed"
+          "Completed",
       );
     });
     setIsAppearingCompletedList(tempList);
@@ -184,7 +184,7 @@ export default function ListSection(props: ListSectionProps) {
       props.listApi.addListItemTag(
         id,
         props.list[id].tags.find((tag) => tag.includes("Completed")) ??
-          "Completed"
+          "Completed",
       );
     } else {
       const sleepNow = (delay: number) =>
@@ -198,7 +198,7 @@ export default function ListSection(props: ListSectionProps) {
         props.listApi.addListItemTag(id, "$Completed=" + Date.now());
       } else {
         sleepNow(2000).then(() =>
-          props.listApi.addListItemTag(id, "$Completed=" + Date.now())
+          props.listApi.addListItemTag(id, "$Completed=" + Date.now()),
         );
       }
     }
@@ -207,7 +207,7 @@ export default function ListSection(props: ListSectionProps) {
   const getIsItemCompleted = (id: string) => {
     return props.list[id].tags.includes(
       props.list[id].tags.find((tag) => tag.includes("Completed")) ??
-        "Completed"
+        "Completed",
     );
   };
 
@@ -216,47 +216,39 @@ export default function ListSection(props: ListSectionProps) {
   };
 
   const getListItems = () => {
-    return Object.keys(
+    const filteredSearchResultIds = Object.keys(
       getSearchResult(
         getFilteredList(props.list, props.tempFilterSet),
-        props.searchBarValue
-      )
-    )
-      .filter(
-        (id) =>
-          !getIsItemCompleted(id) ||
-          (getIsItemCompleted(id) && props.isShowingCompleted)
-      )
-      .sort((a, b) =>
-        sortCompare(
-          props.list[props.isSortAsc ? b : a].tags
-            .find((e) =>
-              e.includes(
-                `$${Object.keys(props.fieldsList).reduce(
-                  (a, b) =>
-                    props.fieldsList[b as keyof typeof props.fieldsList]
-                      ? b
-                      : a,
-                  "Created"
-                )}=`
-              )
-            )
-            ?.split("=")[1] ?? "",
-          props.list[props.isSortAsc ? a : b].tags
-            .find((e) =>
-              e.includes(
-                `$${Object.keys(props.fieldsList).reduce(
-                  (a, b) =>
-                    props.fieldsList[b as keyof typeof props.fieldsList]
-                      ? b
-                      : a,
-                  "Created"
-                )}=`
-              )
-            )
-            ?.split("=")[1] ?? ""
-        )
+        props.searchBarValue,
+      ),
+    ).filter(
+      (id) =>
+        !getIsItemCompleted(id) ||
+        (getIsItemCompleted(id) && props.isShowingCompleted),
+    );
+
+    const getFieldValue = (listItemId: string) => {
+      return (
+        props.list[listItemId].tags
+          .find((tag) =>
+            tag.includes(
+              `$${Object.keys(props.fieldsList).reduce(
+                (a, b) =>
+                  props.fieldsList[b as keyof typeof props.fieldsList] ? b : a,
+                "Created",
+              )}=`,
+            ),
+          )
+          ?.split("=")[1] ?? ""
       );
+    };
+
+    return filteredSearchResultIds.sort((a, b) =>
+      sortCompare(
+        getFieldValue(props.isSortAsc ? b : a),
+        getFieldValue(props.isSortAsc ? a : b),
+      ),
+    );
   };
 
   const sortCompare = (a: string, b: string) => {
@@ -291,7 +283,7 @@ export default function ListSection(props: ListSectionProps) {
       if (props.list[props.focusedListItemId].summary === "") {
         props.listApi.setListItemSummary(
           props.focusedListItemId,
-          "Untitled (clear all fields to delete)"
+          "Untitled (clear all fields to delete)",
         );
       }
     }

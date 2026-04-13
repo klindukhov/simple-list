@@ -136,7 +136,10 @@ export default function App() {
 
   const [itemList, listApi] = useListApi();
 
-  // Fields used in Filtering and Sorting (the field with "true" value is the one currently sorted by)
+  const [fieldsList, setFieldsList] = useState<{ [tag: string]: boolean }>({});
+
+  // Returns {[fieldName]: isUsedForSorting},
+  // "Created" is used as a default sorting field
   const generateFieldsList = useCallback(
     (itemList: { [itemId: string]: IndexItem }): { [tag: string]: boolean } => {
       if (Object.keys(itemList).length === 0) return {};
@@ -144,10 +147,10 @@ export default function App() {
       const allTags = Object.keys(
         Object.fromEntries(
           Object.entries(itemList).filter(
-            (e) =>
+            (listItem) =>
               isShowingCompleted ||
-              !e[1].tags.includes(
-                e[1].tags.find((tag) => tag.includes("Completed")) ??
+              !listItem[1].tags.includes(
+                listItem[1].tags.find((tag) => tag.includes("Completed")) ??
                   "Completed",
               ),
           ),
@@ -164,16 +167,23 @@ export default function App() {
         ),
       );
 
-      const sortingList: { [tag: string]: boolean } = {};
-      uniqueSortingTags.forEach((tag) => {
-        sortingList[tag] = tag === "Created";
-      });
+      let sortingList: { [tag: string]: boolean } = {};
+
+      if (Object.keys(fieldsList).length === 0) {
+        uniqueSortingTags.forEach((tag) => {
+          sortingList[tag] = tag === "Created";
+        });
+      } else {
+        uniqueSortingTags.forEach((tag) => {
+          sortingList[tag] = tag in fieldsList ? fieldsList[tag] : false;
+        });
+      }
+
       return sortingList;
     },
-    [isShowingCompleted],
+    [isShowingCompleted, itemList],
   );
 
-  const [fieldsList, setFieldsList] = useState<{ [tag: string]: boolean }>({});
   useEffect(() => {
     setFieldsList(generateFieldsList(itemList));
   }, [itemList, isShowingCompleted, generateFieldsList]);

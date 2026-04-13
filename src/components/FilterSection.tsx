@@ -72,10 +72,11 @@ export default function FilterSection(props: FilterSectionProps) {
     link.click();
   };
 
-  const handleSortChange = (selectedTag: string) => {
+  const handleSortChange = (selectedFieldName: string) => {
     const tempFieldsList: { [tag: string]: boolean } = { ...props.fieldsList };
-    for (const tag in tempFieldsList) {
-      tempFieldsList[tag as keyof typeof tempFieldsList] = tag === selectedTag;
+    for (const field in tempFieldsList) {
+      tempFieldsList[field as keyof typeof tempFieldsList] =
+        field === selectedFieldName;
     }
     props.setSortByList(tempFieldsList);
   };
@@ -225,9 +226,9 @@ export default function FilterSection(props: FilterSectionProps) {
           <Txt>Sort by:</Txt>
           <SelectInput onChange={(e) => handleSortChange(e.target.value)}>
             {props.fieldsList &&
-              Object.keys(props.fieldsList).map((e) => (
-                <option key={e} value={e}>
-                  {e}
+              Object.keys(props.fieldsList).map((fieldName) => (
+                <option key={fieldName} value={fieldName}>
+                  {fieldName}
                 </option>
               ))}
           </SelectInput>
