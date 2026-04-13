@@ -45,14 +45,14 @@ export interface FilterSectionProps {
   theme: string;
   toggleTheme: () => void;
   tempFilterSet: { [filterId: string]: Filter };
-  setTempFilterSet: (filterset: { [filterId: string]: Filter }) => void;
+  setTempFilterSet: (filterSet: { [filterId: string]: Filter }) => void;
   addFilterToFilterSet: (filter: Filter) => void;
   removeFilterFromFilterSet: (filterId: string) => void;
   editFilter: (filter: Filter) => void;
-  savedFilters: { [filtersetName: string]: { [filterId: string]: Filter } };
+  savedFilters: { [filterSetName: string]: { [filterId: string]: Filter } };
   addSavedFilter: (
-    filtersetName: string,
-    filterset: { [filterId: string]: Filter },
+    filterSetName: string,
+    filterSet: { [filterId: string]: Filter },
   ) => void;
   removeSavedFilter: (filterName: string) => void;
   toggleViewMode: () => void;
@@ -81,7 +81,7 @@ export default function FilterSection(props: FilterSectionProps) {
     props.setSortByList(tempFieldsList);
   };
 
-  const [isFiltersetBeingSaved, setIsFiltersetBeingSaved] = useState(false);
+  const [isFilterSetBeingSaved, setIsFilterSetBeingSaved] = useState(false);
 
   const [newFilter, setNewFilter] = useState<Filter>(EMPTY_FILTER_TEMPLATE);
   const [isFilterBeingEdited, setIsFilterBeingEdited] = useState<{
@@ -162,13 +162,13 @@ export default function FilterSection(props: FilterSectionProps) {
   };
 
   const [newSavedFilterName, setNewSavedFilterName] = useState("");
-  const handleNewFiltersetSave = () => {
+  const handleNewFilterSetSave = () => {
     if (newSavedFilterName !== "" && newSavedFilterName !== " ") {
       props.addSavedFilter(newSavedFilterName, props.tempFilterSet);
-      setIsFiltersetBeingSaved(false);
+      setIsFilterSetBeingSaved(false);
       setNewSavedFilterName("");
     } else {
-      setIsFiltersetBeingSaved(false);
+      setIsFilterSetBeingSaved(false);
     }
   };
 
@@ -280,7 +280,7 @@ export default function FilterSection(props: FilterSectionProps) {
             Object.keys(props.savedFilters)
               .filter((filterName) => filterName !== "tempFilterSet")
               .map((filterName) => (
-                <SavedFilterDiv>
+                <SavedFilterDiv key={filterName}>
                   <InputField disabled value={filterName} />{" "}
                   <WideButton
                     onClick={() =>
@@ -316,18 +316,18 @@ export default function FilterSection(props: FilterSectionProps) {
         </MatchAnyAllElement>
         {props.tempFilterSet && Object.keys(props.tempFilterSet).length > 0 && (
           <SaveFilterSetDiv>
-            {!isFiltersetBeingSaved && (
-              <WideButtonStart onClick={() => setIsFiltersetBeingSaved(true)}>
+            {!isFilterSetBeingSaved && (
+              <WideButtonStart onClick={() => setIsFilterSetBeingSaved(true)}>
                 Save current filters
               </WideButtonStart>
             )}
-            {isFiltersetBeingSaved && (
+            {isFilterSetBeingSaved && (
               <FilterSetNameInput>
                 <InputField
-                  placeholder="Filterset name"
+                  placeholder="Filter set name"
                   onChange={(e) => setNewSavedFilterName(e.target.value)}
                 />
-                <WideButton onClick={() => handleNewFiltersetSave()}>
+                <WideButton onClick={() => handleNewFilterSetSave()}>
                   {newSavedFilterName === "" || newSavedFilterName === " "
                     ? "Cancel"
                     : "Save"}

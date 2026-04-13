@@ -6,6 +6,8 @@ import { useCallback, useEffect, useState } from "react";
 const LOCAL_FORAGE_SAVE_DIRECTORY_KEY = "simpleListDirectoryHandle";
 const LOCAL_FORAGE_INDEX_FILE_KEY = "simpleListIndexHandle";
 const INDEX_FILE_NAME = "sl_Index";
+const LOCAL_FORAGE_SAVED_FILTERS_FILE_KEY = "simpleListSavedFiltersHandle";
+const SAVED_FILTERS_FILE_NAME = "sl_SavedFilters";
 
 export interface ListApi {
   setListItemSummary: (itemId: string, newSummary: string) => void;
@@ -71,11 +73,48 @@ const setIndexFile = async (indexList: { [itemId: string]: IndexItem }) => {
 
 export const getSavedFilters = async (): Promise<{
   [filterSetId: string]: { [filterId: string]: Filter };
-}> => (await localForage.getItem("savedFilters")) ?? {};
+}> => {
+  let savedFiltersFileHandle: FileSystemFileHandle | null =
+    await localForage.getItem(LOCAL_FORAGE_SAVED_FILTERS_FILE_KEY);
 
-export const setSavedFilters = (list: {
+  if (!savedFiltersFileHandle) {
+    const directoryHandle: FileSystemDirectoryHandle | null =
+      await localForage.getItem(LOCAL_FORAGE_SAVE_DIRECTORY_KEY);
+
+    if (!directoryHandle) {
+      throw new Error("Directory is not selected;");
+    }
+
+    savedFiltersFileHandle = await directoryHandle.getFileHandle(
+      SAVED_FILTERS_FILE_NAME,
+      { create: true },
+    );
+
+    localForage.setItem(
+      LOCAL_FORAGE_SAVED_FILTERS_FILE_KEY,
+      savedFiltersFileHandle,
+    );
+  }
+
+  return (
+    JSON.parse(await (await savedFiltersFileHandle.getFile()).text()) ?? {}
+  );
+};
+
+export const setSavedFilters = async (savedFiltersList: {
   [filterSetId: string]: { [filterId: string]: Filter };
-}) => localForage.setItem("savedFilters", list);
+}) => {
+  const savedFiltersFileHandle: FileSystemFileHandle | null =
+    await localForage.getItem(LOCAL_FORAGE_SAVED_FILTERS_FILE_KEY);
+
+  if (!savedFiltersFileHandle) {
+    throw new Error("Saved filters file is not found");
+  }
+
+  const writableStream = await savedFiltersFileHandle.createWritable();
+  await writableStream.write(JSON.stringify(savedFiltersList));
+  await writableStream.close();
+};
 
 const getWithRefreshedUpdatedProperty = (
   index: { [itemId: string]: IndexItem },
